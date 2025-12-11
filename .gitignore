@@ -1,0 +1,8 @@
+# Ignore docs
+docs/
+
+# Ignore zip
+*.zip
+
+.idea/
+*.egg-info/
