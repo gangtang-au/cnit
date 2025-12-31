@@ -6,7 +6,7 @@ dependencies:
   - python >=3.9,<3.13
   - numpy
   - scipy
-  - xarray
+  - xarray =2023.6.0
   - netcdf4
   - attrs
   - openscm-units >=0.5.0

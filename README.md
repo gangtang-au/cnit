@@ -65,21 +65,60 @@ from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModel
 from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModelConfig
 from cnit.utils.units import Q
 
-# Create model
+import warnings
+from pint import UnitStrippedWarning
+
+# These warnings are expected when scipy/xarray strip units
+warnings.filterwarnings("ignore", category=UnitStrippedWarning)
+
+
+# Create model with default parameters
 config = CarbonNitrogenCycleModelConfig()
 model = CarbonNitrogenCycleModel.from_config(config)
 
-# Set up forcing
+# Set up time axis and forcing
 time_axis = Q(np.arange(1850, 2101), "yr")
-dT_s = Q(np.linspace(0, 2, len(time_axis)), "K")
-CO2_s = Q(np.linspace(280, 560, len(time_axis)), "ppm")
-# ... other forcing inputs
+n_steps = len(time_axis)
 
-# Run simulation
-results = model.run(time_axis=time_axis, dT_s=dT_s, CO2_s=CO2_s, ...)
+# Simple forcing (constant values for illustration)
+dT_s = Q(np.linspace(0, 2, n_steps), "K")  # 2°C warming
+CO2_s = Q(np.linspace(280, 560, n_steps), "ppm")  # CO2 doubling
+
+# Land use emissions (zero for simplicity)
+CemsLUnet_s = Q(np.zeros(n_steps), "GtC/yr")
+CemsLUgrs_s = Q(np.zeros(n_steps), "GtC/yr")
+
+# Nitrogen inputs
+NflxAD_s = Q(np.linspace(0.05, 0.15, n_steps), "GtN/yr")  # Increasing deposition
+NflxFT_s = Q(np.linspace(0, 0.1, n_steps), "GtN/yr")  # Increasing fertilizer
+
+# Nitrogen land use emissions
+NemsLUnet_s = Q(np.zeros(n_steps), "GtN/yr")
+NemsLUgrs_s = Q(np.zeros(n_steps), "GtN/yr")
+NemsLUmin_s = Q(np.zeros(n_steps), "GtN/yr")
+
+# Run the model
+results = model.run(
+    time_axis=time_axis,
+    dT_s=dT_s,
+    CO2_s=CO2_s,
+    CemsLUnet_s=CemsLUnet_s,
+    CemsLUgrs_s=CemsLUgrs_s,
+    NflxAD_s=NflxAD_s,
+    NflxFT_s=NflxFT_s,
+    NemsLUnet_s=NemsLUnet_s,
+    NemsLUgrs_s=NemsLUgrs_s,
+    NemsLUmin_s=NemsLUmin_s,
+)
 
 # Access results
-print(f"Final plant carbon: {results['CplsP'][-1]}")
+cveg, cveg_unit = results["CplsP"].data, results["CplsP"].units
+nveg, nveg_unit = results["NplsP"].data, results["NplsP"].units
+npp, npp_unit = results["CflxNPP"].data, results["CflxNPP"].units
+
+print(f"Final plant carbon: {cveg[-1]} {cveg_unit}")
+print(f"Final plant nitrogen: {nveg[-1]} {nveg_unit}")
+print(f"NPP change: {npp[0]} → {npp[-1]} {npp_unit}")
 ```
 
 ## Documentation
