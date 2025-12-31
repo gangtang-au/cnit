@@ -1,6 +1,9 @@
 # CNit
 
-**CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based terrestrial biogeochemistry model that simulates coupled carbon and nitrogen cycles in terrestrial ecosystems.  It is the land component of MAGICC (Model for the Assessment of Greenhouse Gas Induced Climate Change).
+**CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based 
+terrestrial biogeochemistry model that simulates coupled carbon and nitrogen cycles 
+in terrestrial ecosystems.  It is the land component of **MAGICC** (Model for the 
+Assessment of Greenhouse Gas Induced Climate Change).
 
 ## Features
 
@@ -92,7 +95,7 @@ Copyright (c) 2025, Gang Tang and contributors.
 
 **Author, Developer, and Maintainer:**  
 Gang Tang  
-- gang.tang.au@gmail.com  
+- gang.tang.au@gmail.com (primary)
 - gang.tang@student.unimelb.edu.au  
 - tgang@bgc-jena.mpg.de
 

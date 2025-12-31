@@ -18,7 +18,6 @@ endif
 
 PYTHON=$(CONDA_PREFIX)/bin/python
 CONDA_ENV_FILE=environment.yml
-SETUP_CFG=setup.cfg
 PYPROJECT_TOML=pyproject.toml
 
 define PRINT_HELP_PYSCRIPT
@@ -35,11 +34,8 @@ help:  ## Print short description of each target
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 .PHONY: env
-env: $(CONDA_PREFIX)  ## Create/update conda environment and install package
-$(CONDA_PREFIX): $(CONDA_ENV_FILE) $(SETUP_CFG) $(PYPROJECT_TOML)
+env:   ## Create/update conda environment and install package
 	$(MAMBA_OR_CONDA) env update --name $(CONDA_DEFAULT_ENV) -f $(CONDA_ENV_FILE)
-	$(VENV_DIR)/bin/pip install -e .
-	touch $(CONDA_PREFIX)
 
 .PHONY: docs
 docs:  ## Build the docs
@@ -51,12 +47,12 @@ test:  ## Run the tests
 
 .PHONY: lint
 lint:  ## Run flake8 and black for code style checks
-	$(VENV_DIR)/bin/flake8 cnit
-	$(VENV_DIR)/bin/black --check cnit
+	$(VENV_DIR)/bin/flake8 src/cnit
+	$(VENV_DIR)/bin/black --check src/cnit tests
 
 .PHONY: format
 format:  ## Auto-format code with black
-	$(VENV_DIR)/bin/black cnit
+	$(VENV_DIR)/bin/black src/cnit tests
 
 .PHONY: clean
 clean:  ## Clean build, doc, and test artifacts
