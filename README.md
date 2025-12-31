@@ -67,7 +67,6 @@ from cnit.utils.units import Q
 
 import warnings
 from pint import UnitStrippedWarning
-
 # These warnings are expected when scipy/xarray strip units
 warnings.filterwarnings("ignore", category=UnitStrippedWarning)
 

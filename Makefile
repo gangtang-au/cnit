@@ -36,6 +36,7 @@ help:  ## Print short description of each target
 .PHONY: env
 env:   ## Create/update conda environment and install package
 	$(MAMBA_OR_CONDA) env update --name $(CONDA_DEFAULT_ENV) -f $(CONDA_ENV_FILE)
+	$(VENV_DIR)/bin/pip install -e .[notebook,docs,tests]
 
 .PHONY: docs
 docs:  ## Build the docs

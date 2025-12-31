@@ -486,7 +486,7 @@ class NitrogenTurnoverCalculator:
 
     # Pool turnover times
     tau_NplsP: pint.Quantity = field(
-        default=Q(1, "yr"),
+        default=Q(10, "yr"),
         validator=check_units("yr"),
     )
     """Plant nitrogen pool turnover time under reference conditions [yr].  
@@ -506,7 +506,7 @@ class NitrogenTurnoverCalculator:
     """
 
     tau_NplsS: pint.Quantity = field(
-        default=Q(1, "yr"),
+        default=Q(100, "yr"),
         validator=check_units("yr"),
     )
     """Soil nitrogen pool turnover time under reference conditions [yr]. 
@@ -1507,7 +1507,7 @@ class NitrogenCycleModel:
     """
 
     NplsP0: pint.Quantity = field(
-        default=Q(1, "GtN"),
+        default=Q(10, "GtN"),
         validator=check_units("GtN"),
     )
     """Initial plant nitrogen pool size [GtN].
@@ -1527,7 +1527,7 @@ class NitrogenCycleModel:
     """
 
     NplsS0: pint.Quantity = field(
-        default=Q(1, "GtN"),
+        default=Q(100, "GtN"),
         validator=check_units("GtN"),
     )
     """Initial soil nitrogen pool size [GtN].

@@ -1419,7 +1419,7 @@ class EffectCarbonNitrogenCouplingCalculator:
     """
 
     sns_PU2NPPrd: pint.Quantity = field(
-        default=Q(0, "1"),
+        default=Q(2.5, "1"),
         validator=check_units("1"),
     )
     """Sensitivity of plant uptake to NPP.
@@ -1439,7 +1439,7 @@ class EffectCarbonNitrogenCouplingCalculator:
     """
 
     sns_BNF2NPPrd: pint.Quantity = field(
-        default=Q(0, "1"),
+        default=Q(2.5, "1"),
         validator=check_units("1"),
     )
     """Sensitivity of biological nitrogen fixation to NPP.
