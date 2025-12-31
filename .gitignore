@@ -6,3 +6,4 @@ docs/
 
 .idea/
 *.egg-info/
+**/.DS_Store

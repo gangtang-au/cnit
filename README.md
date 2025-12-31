@@ -97,7 +97,7 @@ NemsLUgrs_s = Q(np.zeros(n_steps), "GtN/yr")
 NemsLUmin_s = Q(np.zeros(n_steps), "GtN/yr")
 
 # Run the model
-results = model.run(
+res = model.run(
     time_axis=time_axis,
     dT_s=dT_s,
     CO2_s=CO2_s,
@@ -111,9 +111,9 @@ results = model.run(
 )
 
 # Access results
-cveg, cveg_unit = results["CplsP"].data, results["CplsP"].units
-nveg, nveg_unit = results["NplsP"].data, results["NplsP"].units
-npp, npp_unit = results["CflxNPP"].data, results["CflxNPP"].units
+cveg, cveg_unit = res["CplsP"].data, res["CplsP"].units
+nveg, nveg_unit = res["NplsP"].data, res["NplsP"].units
+npp, npp_unit = res["CflxNPP"].data, res["CflxNPP"].units
 
 print(f"Final plant carbon: {cveg[-1]} {cveg_unit}")
 print(f"Final plant nitrogen: {nveg[-1]} {nveg_unit}")
