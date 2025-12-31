@@ -1,3 +1,10 @@
+# macOS
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
 # Ignore docs
 docs/
 
@@ -6,4 +13,3 @@ docs/
 
 .idea/
 *.egg-info/
-**/.DS_Store
