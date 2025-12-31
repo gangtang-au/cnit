@@ -8,14 +8,23 @@ version = "2.1.0"
 description = "CNit: A Coupled Carbon-Nitrogen Cycle Model (Python)"
 keywords = ["cnit", "carbon cycle", "nitrogen cycle", "simple climate model", "magicc"]
 authors = [
-    {name="Gang Tang", email="gang.tang.au@gmail.com"},
-    {name="Zeb Nicholls", email="zebedee.nicholls@climate-energy-college.org"}
+    {name="Gang Tang", email="gang.tang.au@gmail.com"}
 ]
-license = {text = "TBD"}
+maintainers = [
+    {name="Gang Tang", email="gang.tang.au@gmail.com"}
+]
+
+contributors = [
+    {name="Zebedee Nicholls", email="zebedee.nicholls@climate-energy-college.org"},
+    {name="Alexander Norton", email="alex.norton@csiro.au"},
+    {name="Sönke Zaehle", email="szaehle@bgc-jena.mpg.de"},
+    {name="Malte Meinshausen", email="malte.meinshausen@unimelb.edu.au"},
+]
+license = {text = "BSD-3-Clause"}
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
-    "Development Status :: Beta",
+    "Development Status :: 4 - Beta",
     "Operating System :: OS Independent",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",

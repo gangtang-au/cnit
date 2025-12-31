@@ -40,10 +40,10 @@ class EffectLanduseCalculator:
 
     The calculator implements two categories of land use effects:
 
-    1. **NPP effects**: Adjustments to primary production based on cumulative land
+    1. **Effects on NPP**: Adjustments to primary production based on cumulative land
        use changes, blending instantaneous and equilibrium perspectives to capture
        both immediate impacts and long-term recovery dynamics
-    2. **Turnover effects**: Short-term immediate effects on litter production,
+    2. **Effects on Turnovers**: Short-term immediate effects on litter production,
        decomposition, and soil respiration based on current regrowth flux
 
     Notes
@@ -67,7 +67,7 @@ class EffectLanduseCalculator:
       return. This operates over longer timescales and controls the ultimate
       equilibrium state.
 
-    - **Turnover effects** (``calculate_eff_LU_cLPLDSR``, ``calculate_eff_LU_nLPLDSR``):
+    - **Turnover adjustment** (``calculate_eff_LU_cLPLDSR``, ``calculate_eff_LU_nLPLDSR``):
       Capture immediate, short-term perturbations to organic matter cycling during
       recovery periods. These effects decay as regrowth completes, avoiding
       permanent equilibrium shifts.
@@ -85,8 +85,8 @@ class EffectLanduseCalculator:
        change to equilibrium turnover rates
 
     The regrowth flux provides a single, time-varying indicator of ongoing recovery
-    that can be used to parameterize how disturbance alters cycling rates during
-    the transient recovery period.
+    that can be used as a proxy to parameterize how disturbance alters cycling rates
+    during the transient recovery period.
     """
 
     sns_cLP2LUrgr: pint.Quantity = field(
@@ -138,129 +138,238 @@ class EffectLanduseCalculator:
         """
         Calculate the land use effect on Net Primary Production (NPP).
 
-        Computes a multiplicative effect factor accounting for both NPP reductions
-        from permanent deforestation and NPP enhancements from afforestation. The
-        calculation distinguishes between equilibrium (long-term potential) and
-        instantaneous (current state) effects, weighting them to capture transient
-        dynamics during ecosystem recovery and degradation.
+        This method computes a multiplicative effect factor that accounts for both NPP
+        reductions from deforestation and NPP enhancements from afforestation. The
+        calculation addresses a fundamental limitation of box models:  with constant
+        turnover times, carbon pools always return to their equilibrium state following
+        any perturbation.  Land use effects on NPP prevent this unrealistic behavior by
+        scaling NPP to reflect persistent changes in productive land area.
+
+        The method uses a refined parameterization that distinguishes between equilibrium
+        (long-term potential) and instantaneous (current realized) effects, blending them
+        to capture transient dynamics during ecosystem recovery and degradation.
 
         Parameters
         ----------
-        cumsum_CflxLUrgr : pint.Quantity
-            Cumulative regrowth carbon flux [GtC].
-        cumsum_CflxLUdfst : pint.Quantity
-            Cumulative deforestation carbon flux [GtC].
-        cumsum_CflxLUafst : pint.Quantity
-            Cumulative afforestation carbon flux [GtC].
-        cumsum_CflxLUafst_decay : pint.Quantity
-            Cumulative afforestation decay carbon flux [GtC].
-        CplsPLS0 : pint.Quantity
-            Initial total carbon pool size (Plant + Litter + Soil) [GtC].
-        frc_rgr : pint.Quantity
-            Fraction of deforestation that can regrow [dimensionless].
-        frc_afst_decay : pint.Quantity
-            Fraction of afforestation that decays [dimensionless].
+        cumsum_CflxLUrgr
+            Cumulative regrowth carbon flux [GtC].  Total carbon accumulated through
+            natural recovery following past deforestation events.
+        cumsum_CflxLUdfst
+            Cumulative deforestation carbon flux [GtC]. Total carbon lost through all
+            deforestation events.
+        cumsum_CflxLUafst
+            Cumulative afforestation carbon flux [GtC]. Total carbon gained through
+            afforestation and reforestation.
+        cumsum_CflxLUafst_decay
+            Cumulative afforestation decay carbon flux [GtC]. Total carbon lost from
+            afforested areas due to vegetation turnover.
+        CplsPLS0
+            Initial equilibrium total terrestrial carbon pool size (Plant + Litter + Soil)
+            [GtC]. Represents the baseline productive land carbon before land use changes.
+        frc_rgr
+            Regrowth fraction (varphi) [dimensionless]. Fraction of deforested area that
+            can undergo natural recovery (typical values 0.8-0.95).
+        frc_afst_decay
+            Afforestation decay fraction (phi) [dimensionless]. Fraction of afforested
+            carbon that decays due to turnover (phi = 1 - varphi).
 
         Returns
         -------
-        pint.Quantity
-            The land use effect factor for NPP.
+        Land use effect factor for NPP [dimensionless].  Multiplicative factor applied
+            to baseline NPP:
+
+            - Values < 1: Net NPP reduction (deforestation dominates)
+            - Values > 1: Net NPP enhancement (afforestation dominates)
+            - Value = 1: No net land use effect
 
         Notes
         -----
-        **Problem: Box Model Returns to Equilibrium**
+        **The Box Model Equilibrium Return**
 
-        In a box model with constant turnover times, pools always return to their
-        original equilibrium after perturbations. Land use effects on NPP prevent
-        this unrealistic behavior by scaling NPP to reflect net changes in
-        productive land area.
+        In a box model framework with constant turnover times, carbon pools always return
+        to their initial equilibrium state following any perturbation, whether deforestation
+        or afforestation. This occurs because:
 
-        **Deforestation Effect: Blending Two Perspectives**
+        ..  math::
 
-        The equilibrium deforestation effect represents the ultimate long-term
-        NPP reduction assuming all regrowth is complete:
+            \\frac{dC}{dt} = NPP - \\frac{C}{\\tau}
+
+        At equilibrium (dC/dt = 0): :math:`C_{eq} = NPP \\times \\tau`
+
+        Without land use effects on NPP, any perturbation to C eventually returns to the
+        original equilibrium regardless of land use history. This is unrealistic because
+        deforestation should reduce productive land area (lower equilibrium), while
+        afforestation should increase it.
+
+        Land use effects on NPP solve this by adjusting the equilibrium target to reflect
+        net changes in productive land area, ensuring that long-term pool sizes reflect
+        the persistent impact of land use change.
+
+        **Deforestation Effect: Balancing Two Perspectives**
+
+        Two complementary approaches characterize the deforestation effect:
+
+        **1. Equilibrium Perspective** (:math:`\\epsilon_{LUdfst}^{eqm}`)
+
+        Represents the ultimate long-term NPP reduction assuming all potential regrowth
+        is complete:
 
         .. math::
 
-            \\epsilon_{LUdfst}^{eqm} = \\frac{(1-\\varphi)\\sum_{0}^{t}LUdfst}{C_{Land,0}}
+            \\epsilon_{LUdfst}^{eqm} = \\frac{(1-\\varphi) \\sum_{0}^{t} LUdfst}{C_{Land0}}
 
-        where :math:`\\varphi` is the regrowth fraction (``frc_rgr``).
+        where :math:`\\varphi` is the regrowth fraction (`frc_rgr`) and :math:`C_{Land0}`
+        is the initial equilibrium land carbon (`CplsPLS0`).
 
-        **Limitation**: This assumes NPP immediately adjusts to the new equilibrium,
-        underestimating effects during the regrowth period because it doesn't account
-        for lagged regrowth.
+        **Physical interpretation**: Only the non-regrowing fraction : math:`(1-\\varphi)`
+        represents permanent loss of productive land.  If :math:`\\varphi = 0. 9`, then 90%
+        of deforested area eventually recovers, so only 10% contributes to long-term NPP
+        reduction.
 
-        The instantaneous deforestation effect represents the realized net impact
-        at the current time:
+        **Limitation**: This assumes NPP immediately adjusts to the new equilibrium level
+        after deforestation, potentially underestimating the effect during the regrowth
+        period.  The new equilibrium corresponds to the end of the regrowth period
+        (:math:`\\tau_{rgr}`), so at time t during active regrowth, :math:`\\epsilon_{LUdfst}^{eqm}`
+        underestimates the realized impact because it doesn't account for lagged regrowth.
 
-        .. math::
+        **2. Instantaneous Perspective** (:math:`\\epsilon_{LUdfst}^{inst}`)
 
-            \\epsilon_{LUdfst}^{inst} = \\frac{\\sum_{0}^{t}(LUdfst - LUrgr)}{C_{Land,0}}
+        Represents the realized net impact at the current time:
 
-        This accounts for the actual net carbon loss to date, which is larger than
-        the equilibrium effect initially but converges to the same value long-term.
+        ..  math::
 
-        **Limitations of each perspective alone**:
+            \\epsilon_{LUdfst}^{inst} = \\frac{\\sum_{0}^{t}(LUdfst - LUrgr)}{C_{Land0}}
 
-        - :math:`\\epsilon_{LUdfst}^{inst}` alone **overestimates** the effect because:
+        **Physical interpretation**: The actual net carbon loss to date. This captures the
+        current imbalance between cumulative deforestation and cumulative regrowth.
 
-          1. Simple constant regrowth flux assumption doesn't capture fast initial
-             regrowth, underestimating cumulative regrowth and exaggerating net loss
-          2. Young regrowing vegetation has high NPP potential not captured in the
-             simple cumulative balance
+        **Temporal behavior**:
 
-        - :math:`\\epsilon_{LUdfst}^{eqm}` alone **underestimates** the effect because
-          it assumes instantaneous adjustment to post-regrowth equilibrium
+        - Early in regrowth period: :math:`\\epsilon_{LUdfst}^{inst}` is larger than
+          :math:`\\epsilon_{LUdfst}^{eqm}` because regrowth hasn't caught up
+        - Long-term (after :math:`\\tau_{rgr}`): Both converge to the same value
 
-        **Combined Approach**: The effective deforestation effect blends both:
+        **Limitations of Using Either Perspective Alone**
+
+        **Why** :math:`\\epsilon_{LUdfst}^{inst}` **alone overestimates the effect:**
+
+        1. **Simplified regrowth dynamics**: The model assumes constant regrowth flux over
+           :math:`\\tau_{rgr}`, which doesn't capture rapid initial regrowth in real
+           ecosystems. This underestimates cumulative :math:`LUrgr`,
+           exaggerating the net loss :math:`(LUdfst - LUrgr)`.
+
+        2. **Missing high NPP of young vegetation**: Young regrowing forests have high NPP
+           potential relative to their carbon stock, which isn't captured in the simple
+           cumulative carbon balance.  The instantaneous effect treats all carbon equally,
+           missing the fact that a small amount of regrowth carbon represents substantial
+           NPP recovery.
+
+        **Why** :math:`\\epsilon_{LUdfst}^{eqm}` **alone underestimates the effect:**
+
+        - Assumes instantaneous adjustment to the post-regrowth equilibrium, ignoring the
+          actual lag in recovery.  During active regrowth, the realized NPP reduction is
+          larger than the long-term equilibrium would suggest.
+
+        **Combined Approach:  Weighted Blending**
+
+        The effective deforestation effect blends both perspectives with an adaptive
+        weighting scheme:
 
         .. math::
 
             \\epsilon_{LUdfst} = \\frac{1}{2}\\left[(1+0.8\\varphi) \\times \\epsilon_{LUdfst}^{eqm}
             + (1-0.8\\varphi) \\times \\epsilon_{LUdfst}^{inst}\\right]
 
-        The :math:`0.8\\varphi` tuning factor preserves physically meaningful balance:
+        **Rationale for the 0.8φ tuning factor:**
 
-        - At high regrowth fractions where :math:`\\epsilon_{LUdfst}^{eqm}` approaches
-          zero (e.g., :math:`\\varphi = 1`), the instantaneous effect alone would
-          exaggerate short-term NPP reductions
-        - The weighting ensures a minimum 10% contribution from the instantaneous
-          perspective: :math:`(1 - 0.8 \\times 1) / 2 = 0.1`
-        - This prevents over-reliance on either perspective at extremes
+        The factor : math:`0.8\\varphi` prevents problematic behavior at extreme regrowth
+        fractions:
 
-        **Afforestation Effect: Similar Blending**
+        - **Problem at high φ** (e.g., :math:`\\varphi = 1`):
 
-        The equilibrium and instantaneous afforestation effects are:
+          * :math:`\\epsilon_{LUdfst}^{eqm} = 0` (all area recovers, no long-term effect)
+          * :math:`\\epsilon_{LUdfst}^{inst}` remains large during regrowth
+          * Simple average would give :math:`\\epsilon_{LUdfst} = 0.5 \\times \\epsilon_{LUdfst}^{inst}`,
+            overemphasizing the exaggerated instantaneous response
+
+        - **Solution with 0.8φ weighting**:
+
+          * At :math:`\\varphi = 1`: weights are (0.9, 0.1) rather than (0.5, 0.5)
+          * Minimum 10% contribution from instantaneous effect: :math:`(1 - 0.8 \\times 1) / 2 = 0.1`
+          * Maximum 90% from equilibrium:  :math:`(1 + 0.8 \\times 1) / 2 = 0.9`
+          * This preserves physically meaningful balance across the full regrowth range
+            (0 ≤ φ ≤ 1)
+
+        - **Behavior across regrowth fractions**:
+
+          * Low φ (more permanent deforestation): Both perspectives matter similarly
+          * High φ (more regrowth): Equilibrium perspective dominates, appropriately
+            reducing reliance on the exaggerated instantaneous effect
+
+        **Afforestation Effect: Similar Blending Without Tuning**
+
+        The equilibrium and instantaneous afforestation effects mirror the deforestation
+        formulation:
 
         .. math::
 
-            \\epsilon_{LUafst}^{eqm} = \\frac{(1-\\phi)\\sum_{0}^{t}LUafst}{C_{Land,0}}
+            \\epsilon_{LUafst}^{eqm} = \\frac{(1-\\phi) \\sum_{0}^{t} LUafst}{C_{Land,0}}
 
         .. math::
 
             \\epsilon_{LUafst}^{inst} = \\frac{\\sum_{0}^{t}(LUafst - LUafst\\_decay)}{C_{Land,0}}
 
-        where :math:`\\phi` is the afforestation decay fraction (``frc_afst_decay``).
+        where :math:`\\phi` is the afforestation decay fraction (`frc_afst_decay`).
 
-        The effective afforestation effect uses a simple average:
+        The effective afforestation effect uses a simple unweighted average:
 
         .. math::
 
             \\epsilon_{LUafst} = \\frac{1}{2}\\left[\\epsilon_{LUafst}^{eqm} + \\epsilon_{LUafst}^{inst}\\right]
 
-        No :math:`\\phi` adjustment is needed because mature forest decay is more
-        gradual, so the instantaneous effect doesn't exaggerate impacts as it does
-        for deforestation.
+        **Why no φ adjustment for afforestation:**
+
+        The decay of carbon in mature forests is a gradual process, unlike the potentially
+        rapid initial regrowth after deforestation. The instantaneous effect for afforestation
+        doesn't suffer from the same exaggeration issues:
+
+        - Afforestation decay is slow and approximately linear (constant flux assumption is
+          more realistic)
+        - There's no equivalent to the "high NPP of young vegetation" bias working in the
+          opposite direction
+        - Therefore, equilibrium and instantaneous perspectives are equally valid and don't
+          require adaptive weighting
 
         **Total Land Use Effect on NPP**
 
-        The final effect combines deforestation (reduction) and afforestation
-        (amplification):
+        The final multiplicative effect combines deforestation (NPP reduction) and
+        afforestation (NPP amplification):
 
         .. math::
 
             \\epsilon_{LU(NPP)} = 1 - \\epsilon_{LUdfst} + \\epsilon_{LUafst}
 
+        **Physical interpretation:**
+
+        - :math:`-\\epsilon_{LUdfst}`: Reduces NPP proportional to net deforestation impact
+        - :math:`+\\epsilon_{LUafst}`: Increases NPP proportional to net afforestation impact
+        - Baseline of 1 represents no land use change
+
+        **Example scenarios:**
+
+        1. **Heavy deforestation, no afforestation**:  :math:`\\epsilon_{LUdfst} = 0.2`,
+           :math:`\\epsilon_{LUafst} = 0` → :math:`\\epsilon_{LU(NPP)} = 0.8` (20% NPP reduction)
+
+        2. **Heavy afforestation, no deforestation**: :math:`\\epsilon_{LUdfst} = 0`,
+           :math:`\\epsilon_{LUafst} = 0.15` → :math:`\\epsilon_{LU(NPP)} = 1.15` (15% NPP increase)
+
+        3. **Mixed**:  :math:`\\epsilon_{LUdfst} = 0.1`, :math:`\\epsilon_{LUafst} = 0.12`
+           → :math:`\\epsilon_{LU(NPP)} = 1.02` (2% net NPP increase)
+
+        See Also
+        --------
+        :py:meth:`cnit.physics.landuse.LanduseCalculator.calculate_CflxLU_series`: Calculates cumulative land use fluxes
+        :py:meth:`cnit.physics.carbon_cycle.CarbonNPPLPRCalculator.calculate`: Uses this effect to modify NPP
         """
 
         # Calculate non-regrowing deforestation carbon for equilibrium perspective
@@ -350,9 +459,9 @@ class EffectLanduseCalculator:
 
         .. math::
 
-            \\epsilon_{LU(i)} = \\exp(s_{i \\to LUrgr} \\times LUrgr)
+            \\epsilon_{LU(i)} = \\exp(s_{i2LUrgr} \\times LUrgr)
 
-        where :math:`s_{i \\to LUrgr}` is the sensitivity parameter for process
+        where :math:`s_{i2LUrgr}` is the sensitivity parameter for process
         :math:`i` (litter production, litter decomposition, or soil respiration)
         and :math:`LUrgr` is the current regrowth flux.
 
@@ -373,11 +482,11 @@ class EffectLanduseCalculator:
 
         **Interpretation of Sensitivities**
 
-        - **Positive** :math:`s_{i \\to LUrgr}`: Process rate increases with regrowth
+        - **Positive** :math:`s_{i2LUrgr}`: Process rate increases with regrowth
           (e.g., high litter production in rapidly accumulating young forests)
-        - **Negative** :math:`s_{i \\to LUrgr}`: Process rate decreases with regrowth
+        - **Negative** :math:`s_{i2LUrgr}`: Process rate decreases with regrowth
           (e.g., reduced soil respiration as system recovers from disturbance pulse)
-        - **Zero** :math:`s_{i \\to LUrgr}`: Process rate unaffected by land use state
+        - **Zero** :math:`s_{i2LUrgr}`: Process rate unaffected by land use state
 
         **No Long-Term Equilibrium Change**
 
@@ -900,7 +1009,7 @@ class EffectTemperatureCalculator:
 
             .. math::
 
-                \\epsilon_{T,NPP} = (1 - m) \\times e^{s_{NPP2dT}^{exp} \\times
+                \\epsilon_{T(NPP)} = (1 - m) \\times e^{s_{NPP2dT}^{exp} \\times
                 \\Delta T} +
                 m \\times \\frac{2}{1 + e^{-s_{NPP2dT}^{sig} \\times \\Delta T}}
 
@@ -928,7 +1037,7 @@ class EffectTemperatureCalculator:
 
         .. math::
 
-            \\epsilon_{T,LPR} = e^{s_{LPR2dT} \\times \\Delta T}
+            \\epsilon_{T(LPR)} = e^{s_{LPR2dT} \\times \\Delta T}
 
         where :math:`s_{LPR2dT} = \\mathrm{sns\\_LPR2dT}`.
 
@@ -979,7 +1088,7 @@ class EffectTemperatureCalculator:
         Each effect follows a simple exponential (Q10-type) response:
 
         .. math::
-           \\epsilon_{T,process} = \\exp(s_{process} \\times \\Delta T)
+           \\epsilon_{T(i)} = \\exp(s_{i2dT} \\times \\Delta T)
 
         **Soil Respiration: Critical for Climate-Carbon Feedback**
 
@@ -987,14 +1096,14 @@ class EffectTemperatureCalculator:
         parameter determining climate-carbon feedback strength:
 
         .. math::
-           \\epsilon_{T,cSR} = \\exp(s_{cSR} \\times \\Delta T)
+           \\epsilon_{T(cSR)} = \\exp(s_{cSR2dT} \\times \\Delta T)
 
         **Typical Q10 values for soil respiration**:
 
-        - Conservative: Q10 = 1.5 (:math:`s_{cSR}` = 0.041 K⁻¹)
-        - Moderate: Q10 = 2.0 (:math:`s_{cSR}` = 0.069 K⁻¹)
-        - High: Q10 = 2.5 (:math:`s_{cSR}` = 0.092 K⁻¹)
-        - Very high: Q10 = 3.0 (:math:`s_{cSR}` = 0.110 K⁻¹)
+        - Conservative: Q10 = 1.5 (:math:`s_{cSR2dT}` = 0.041 K⁻¹)
+        - Moderate: Q10 = 2.0 (:math:`s_{cSR2dT}` = 0.069 K⁻¹)
+        - High: Q10 = 2.5 (:math:`s_{cSR2dT}` = 0.092 K⁻¹)
+        - Very high: Q10 = 3.0 (:math:`s_{cSR2dT}` = 0.110 K⁻¹)
 
         **Feedback loop**: Warming → Enhanced soil respiration → CO2 release →
         More warming. Magnitude depends critically on Q10.
@@ -1070,10 +1179,10 @@ class EffectTemperatureCalculator:
         Both effects use simple exponential responses:
 
         .. math::
-           \\epsilon_{T,PU} = \\exp(s_{PU2dT} \\times \\Delta T)
+           \\epsilon_{T(PU)} = \\exp(s_{PU2dT} \\times \\Delta T)
 
         .. math::
-           \\epsilon_{T,BNF} = \\exp(s_{BNF2dT} \\times \\Delta T)
+           \\epsilon_{T(BNF)} = \\exp(s_{BNF2dT} \\times \\Delta T)
 
         **Plant Nitrogen Uptake**
 
@@ -1147,7 +1256,7 @@ class EffectTemperatureCalculator:
         All effects use exponential responses:
 
         .. math::
-           \\epsilon_{T,process} = \\exp(s_{process} \\times \\Delta T)
+           \\epsilon_{T(i)} = \\exp(s_{i2dT} \\times \\Delta T)
 
         **Nitrogen Mineralization (nSR): Supply of Plant-Available N**
 
@@ -1155,7 +1264,7 @@ class EffectTemperatureCalculator:
         is temperature-sensitive, typically with Q10 ~ 2.0-2.5:
 
         .. math::
-           \\epsilon_{T,nSR} = \\exp(s_{nSR} \\times \\Delta T)
+           \\epsilon_{T(nSR)} = \\exp(s_{nSR2dT} \\times \\Delta T)
 
         This is a **critical process** controlling N availability:
 
@@ -1163,7 +1272,7 @@ class EffectTemperatureCalculator:
         - May alleviate progressive nitrogen limitation under CO2 fertilization
         - Often mirrors carbon soil respiration temperature sensitivity
 
-        Typical sensitivities: :math:`s_{nSR}` ~ 0.05-0.09 K⁻¹ (Q10 ~ 1.6-2.5).
+        Typical sensitivities: :math:`s_{nSR2dT}` ~ 0.05-0.09 K⁻¹ (Q10 ~ 1.6-2.5).
 
         **Gaseous Nitrogen Losses (nLSgas): N Retention vs. Loss**
 
@@ -1179,7 +1288,7 @@ class EffectTemperatureCalculator:
         Denitrification is particularly important:
 
         - Occurs in waterlogged/anoxic microsites
-        - Strong temperature dependence: :math:`s_{nLSgas}` ~ 0.08-0.12 K⁻¹
+        - Strong temperature dependence: :math:`s_{nLSgas2dT}` ~ 0.08-0.12 K⁻¹
           (Q10 ~ 2.2-3.3)
         - Produces N2O (potent greenhouse gas) as intermediate
 
@@ -1228,7 +1337,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of Net Primary Production to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of net primary production to nitrogen plant uptake deficit [GtN/yr]
     """
 
     sns_cLP2PUdef: pint.Quantity = field(
@@ -1376,8 +1485,9 @@ class EffectCarbonNitrogenCouplingCalculator:
 
         .. math::
 
-            \\epsilon_{N,NPP} = \\begin{cases}
-              e^{-s_{NPP \\to PU_{def}} \\times F_{PU,def}} & \\text{if } \\mathrm{switch\\_N} \\neq 0 \\\\
+            \\epsilon_{N(NPP)} = \\begin{cases}
+              e^{-s_{NPP2PUdef} \\times PUdef} & \\text{if } \\mathrm{
+              switch\\_N} \\neq 0 \\\\
               1 & \\text{if } \\mathrm{switch\\_N} = 0
            \\end{cases}
         """
@@ -1390,7 +1500,8 @@ class EffectCarbonNitrogenCouplingCalculator:
             switch_N: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
         """
-        Calculate carbon-nitrogen coupling effects for carbon cycle processes: LP, LD, and SR.
+        Calculate carbon-nitrogen coupling effects for carbon cycle processes i: LP,
+        LD, and SR.
 
         Parameters
         ----------
@@ -1413,8 +1524,9 @@ class EffectCarbonNitrogenCouplingCalculator:
         Each effect is calculated as:
 
         .. math::
-           \\epsilon_{N,process} = \\begin{cases}
-              e^{s_{process} \\times F_{PU,def}} & \\text{if } \\mathrm{switch\\_N} \\neq 0 \\\\
+           \\epsilon_{N(i)} = \\begin{cases}
+              e^{s_{i2PUdef} \\times PUdef} & \\text{if } \\mathrm{switch\\_N}
+              \\neq 0 \\\\
               1 & \\text{if } \\mathrm{switch\\_N} = 0
            \\end{cases}
         """
@@ -1452,15 +1564,17 @@ class EffectCarbonNitrogenCouplingCalculator:
         Both effects use sigmoid formulations based on relative NPP change:
 
         .. math::
-           \\Delta NPP_{rel} = \\frac{NPP}{NPP_0} - 1
+           NPPrd = \\Delta NPPrel = \\frac{NPP}{NPP_0} - 1
 
         .. math::
-           \\epsilon_{C,PU} = \\frac{\\epsilon_{C,PU,max}}{1 + (\\epsilon_{C,PU,max} - 1)
-           \\times e^{-s_{PU} \\times \\Delta NPP_{rel}}}
+           \\epsilon_{C(PU)} = \\frac{\\epsilon_{C(PU)_{max}}}{1 + (\\epsilon_{C(
+           PU)_{max}} - 1)
+           \\times e^{-s_{PU2NPPrd} \\times NPPrd}}
 
         .. math::
-           \\epsilon_{C,BNF} = \\frac{\\epsilon_{C,BNF,max}}{1 + (\\epsilon_{C,BNF,max} - 1)
-           \\times e^{-s_{BNF} \\times \\Delta NPP_{rel}}}
+           \\epsilon_{C(BNF)} = \\frac{\\epsilon_{C(BNF)_{max}}}{1 + (\\epsilon_{C(
+           BNF)_{max}} - 1)
+           \\times e^{-s_{BNF2NPPrd} \\times NPPrd}}
 
         The sigmoid form ensures the effect equals 1 at :math:`NPP = NPP_0` and
         approaches :math:`\\epsilon_{max}` at high NPP, representing saturation
@@ -1501,10 +1615,10 @@ class EffectCarbonNitrogenCouplingCalculator:
         Both effects use exponential responses with positive exponents:
 
         .. math::
-           \\epsilon_{N,PU} = \\exp(s_{PU \\to PU_{def}} \\times F_{PU,def})
+           \\epsilon_{N(PU)} = \\exp(s_{PU2PUdef} \\times PUdef)
 
         .. math::
-           \\epsilon_{N,BNF} = \\exp(s_{BNF \\to PU_{def}} \\times F_{PU,def})
+           \\epsilon_{N(BNF)} = \\exp(s_{BNF2PUdef} \\times PUdef)
         """
         return (
             np.exp(self.sns_PU2PUdef * NflxPUdef),
@@ -1537,7 +1651,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         All effects use exponential responses with positive exponents:
 
         .. math::
-           \\epsilon_{N,process} = \\exp(s_{process \\to PU_{def}} \\times F_{PU,def})
+           \\epsilon_{N(i)} = \\exp(s_{i2PUdef} \\times PUdef)
         """
         return (
             np.exp(self.sns_nLP2PUdef * NflxPUdef),
