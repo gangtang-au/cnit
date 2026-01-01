@@ -139,10 +139,16 @@ Gang Tang
 ## Citation
 If you use CNit in your research, please cite:
 
-Tang, G., Nicholls, Z., Norton, A., Zaehle, S., and Meinshausen, M.: Synthesizing
+- Tang, G., Nicholls, Z., Norton, A., Zaehle, S., and Meinshausen, M.: Synthesizing
 global carbon–nitrogen coupling effects – the MAGICC coupled carbon–nitrogen cycle
 model v1.0, Geosci. Model Dev., 18, 2193–2230,
 https://doi.org/10.5194/gmd-18-2193-2025, 2025.
+
+- Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, 
+M. Understanding the Drivers of Carbon-Nitrogen Cycle Variability in CMIP6 ESMs 
+with MAGICC CNit v2.0: Model and Calibration Updates. ESS Open Archive. 
+June 16, 2025. https://doi.org/10.22541/essoar.175008280.09297369/v1 
+[accepted by Journal of Advances in Modeling Earth Systems (JAMES)]
 
 ## Related Projects
 
