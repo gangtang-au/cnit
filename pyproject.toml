@@ -60,6 +60,12 @@ tests = [
     "pytest-regressions[dataframe]"
 ]
 
+[project.urls]
+Homepage = "https://github.com/gangtang-au/cnit"
+Documentation = "https://cnit.readthedocs.io"
+Repository = "https://github.com/gangtang-au/cnit"
+Changelog = "https://cnit.readthedocs.io/en/latest/changelog.html"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 include-package-data = true
