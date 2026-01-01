@@ -122,7 +122,7 @@ The full documentation for CNit is available at
 ## License
 BSD 3-Clause License. See LICENSE for details.
 
-Copyright (c) 2025, Gang Tang and contributors.
+Copyright (c) 2026, Gang Tang and contributors.
 
 ## Authors and Contributors
 
