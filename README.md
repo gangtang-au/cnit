@@ -61,19 +61,12 @@ make env
 
 ```python
 import numpy as np
-from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModel
-from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModelConfig
-from cnit.utils.units import Q
-
-import warnings
-from pint import UnitStrippedWarning
-# These warnings are expected when scipy/xarray strip units
-warnings.filterwarnings("ignore", category=UnitStrippedWarning)
-
+from cnit import CNitModel, CNitModelConfig, CNitExpConfig
+from cnit import Q # Local pint.quantity class for units handling
 
 # Create model with default parameters
-config = CarbonNitrogenCycleModelConfig()
-model = CarbonNitrogenCycleModel.from_config(config)
+config = CNitModelConfig()
+model = CNitModel.from_config(config)
 
 # Set up time axis and forcing
 time_axis = Q(np.arange(1850, 2101), "yr")
