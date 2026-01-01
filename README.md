@@ -1,4 +1,4 @@
-<p align="center">
+<p align="left">
   <img src="docs/_static/CNit_logo.png" alt="CNit logo" width="100">
 </p>
 
