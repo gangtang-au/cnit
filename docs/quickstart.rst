@@ -43,7 +43,7 @@ To set up a development environment for this project, follow these steps:
 
    .. code-block:: bash
 
-      git clone https://github.com/yourusername/cnit.git
+      git clone https://github.com/gangtang-au/cnit.git
       cd cnit
 
 4. **Install all dependencies and set up the package**:
@@ -66,7 +66,7 @@ To set up a development environment for this project, follow these steps:
 
    conda create --name cnit python=3.9
    conda activate cnit
-   git clone https://github.com/yourusername/cnit.git
+   git clone https://github.com/gangtang-au/cnit.git
    cd cnit
    make env
 
@@ -263,7 +263,6 @@ The results Dataset contains:
 Next Steps
 ----------
 
-- See :doc:`examples/index` for more detailed examples
 - Read :doc:`overview` to understand the model structure
 - Browse :doc:`api/cnit.physics` for detailed API documentation
 - Check :doc:`example` for realistic forcing data

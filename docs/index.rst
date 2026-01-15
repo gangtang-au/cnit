@@ -116,7 +116,7 @@ CNit is released under the **BSD 3-Clause License**.
 
 Copyright (c) 2025, Gang Tang and contributors.
 
-See the `LICENSE file <https://github.com/yourusername/cnit/blob/main/LICENSE>`_
+See the `LICENSE file <https://github.com/gangtang-au/cnit/blob/main/LICENSE>`_
 for full details.
 
 **If you use CNit in your research, please cite our papers.**
@@ -126,11 +126,10 @@ for full details.
   cycle model v1.0, Geosci. Model Dev., 18, 2193–2230,
   https://doi.org/10.5194/gmd-18-2193-2025, 2025.
 
-* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M.
-  Understanding the Drivers of Carbon-Nitrogen Cycle Variability in CMIP6 ESMs
-  with MAGICC CNit v2.0: Model and Calibration Updates. ESS Open Archive.
-  June 16, 2025. https://doi.org/10.22541/essoar.175008280.09297369/v1 [accepted by
-  Journal of Advances in Modeling Earth Systems (JAMES)]
+* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2026).
+  Understanding the drivers of carbon–nitrogen cycle variability in CMIP6 ESMs
+  with MAGICC CNit v2.0: Model and calibration updates. Journal of Advances in
+  Modeling Earth Systems, 18, e2025MS005270. https://doi.org/10.1029/2025MS005270
 
 Related Projects
 ----------------
