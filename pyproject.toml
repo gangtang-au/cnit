@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cnit"
+version = "2.1.0"
+description = "CNit: A Coupled Carbon-Nitrogen Cycle Model (Python)"
+keywords = ["cnit", "carbon cycle", "nitrogen cycle", "simple climate model", "magicc"]
+authors = [
+    {name="Gang Tang", email="gang.tang.au@gmail.com"},
+    {name="Zebedee Nicholls", email="zebedee.nicholls@climate-energy-college.org"},
+    {name="Alexander Norton", email="alex.norton@csiro.au"},
+    {name="Sönke Zaehle", email="szaehle@bgc-jena.mpg.de"},
+    {name="Malte Meinshausen", email="malte.meinshausen@unimelb.edu.au"},
+]
+maintainers = [
+    {name="Gang Tang", email="gang.tang.au@gmail.com"}
+]
+license = {text = "BSD-3-Clause"}
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering"
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "xarray ==2023.6.0",
+    "netCDF4",
+    "attrs",
+    "openscm-units >=0.5.0",
+    "pint >=0.19"
+]
+
+[project.optional-dependencies]
+notebook = [
+    "notebook >=6,<7",
+    "matplotlib",
+]
+docs = [
+    "sphinx >=1.4",
+    "sphinx-rtd-theme >=1.0",
+    "sphinx-autodoc-typehints >=1.22",
+    "sphinxcontrib-bibtex",
+]
+tests = [
+    "pytest",
+    "pytest-regressions[dataframe]"
+]
+
+[project.urls]
+Homepage = "https://github.com/gangtang-au/cnit"
+Documentation = "https://cnit.readthedocs.io"
+Repository = "https://github.com/gangtang-au/cnit"
+Changelog = "https://cnit.readthedocs.io/en/latest/changelog.html"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+license-files = []
+
+[tool.setuptools.packages.find]
+where = ["src"]

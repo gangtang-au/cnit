@@ -1,0 +1,32 @@
+name: cnit
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python >=3.9,<3.13
+  - numpy
+  - scipy
+  - xarray =2023.6.0
+  - netcdf4
+  - attrs
+  - openscm-units >=0.5.0
+  - pint >=0.19
+  # Optional: Notebook dependencies
+  - notebook >=6,<7
+  - matplotlib
+  - nb_black
+  # Optional:  Docs dependencies
+  - sphinx >=1.4
+  - sphinx-rtd-theme >=1.0
+  - sphinx-autodoc-typehints >=1.22
+  - sphinxcontrib-bibtex
+  # Optional: Test dependencies
+  - pytest
+  - pytest-regressions
+  # Build tools
+  - pip
+  - wheel
+  - setuptools >=61
+  # Editable pip install with all extras
+  - pip:
+      - -e .[notebook,docs,tests]
