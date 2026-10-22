@@ -5,23 +5,16 @@ CNit is a process-based terrestrial biogeochemistry model that simulates
 coupled carbon and nitrogen cycles in terrestrial ecosystems.
 """
 
-# Version
-try:
-    from importlib.metadata import version, PackageNotFoundError
-except ImportError:
-    from importlib_metadata import version, PackageNotFoundError
-
-try:
-    __version__ = version("cnit")
-except PackageNotFoundError:
-    __version__ = "unknown"
+from cnit._version import __version__
+from cnit.utils.units import Q
 
 # Suppress expected warnings
 import warnings
 
 try:
     from pint import UnitStrippedWarning
-    warnings.filterwarnings('ignore', category=UnitStrippedWarning)
+
+    warnings.filterwarnings("ignore", category=UnitStrippedWarning)
 except ImportError:
     pass
 
@@ -36,9 +29,6 @@ from cnit.physics.carbon_nitrogen_cycle import (
 CNitModel = CarbonNitrogenCycleModel
 CNitModelConfig = CarbonNitrogenCycleModelConfig
 CNitExpConfig = CarbonNitrogenCycleExperimentConfig
-
-# Utility imports
-from cnit.utils.units import Q
 
 # Define public API
 __all__ = [

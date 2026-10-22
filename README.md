@@ -45,7 +45,8 @@ To set up a development environment for this project, follow these steps:
    make env
    ```
 
-This will install all required dependencies (including notebook, docs, and testing tools) and install the package in editable mode.
+This will install all required dependencies (including notebook, documentation,
+testing, linting, and formatting tools) and install the package in editable mode.
 
 > **Note:**  
 > The Makefile will check that you are not in the `base` environment and will refuse to run if you are.
@@ -71,6 +72,7 @@ config = CNitModelConfig()
 model = CNitModel.from_config(config)
 
 # Set up time axis and forcing
+# We use the _s suffix to indicate series (time-dependent) inputs.
 time_axis = Q(np.arange(1850, 2101), "yr")
 n_steps = len(time_axis)
 
@@ -86,7 +88,7 @@ CemsLUgrs_s = Q(np.zeros(n_steps), "GtC/yr")
 NflxAD_s = Q(np.linspace(0.05, 0.15, n_steps), "GtN/yr")  # Increasing deposition
 NflxFT_s = Q(np.linspace(0, 0.1, n_steps), "GtN/yr")  # Increasing fertilizer
 
-# Nitrogen land use emissions
+# Nitrogen land use emissions (zero for simplicity)
 NemsLUnet_s = Q(np.zeros(n_steps), "GtN/yr")
 NemsLUgrs_s = Q(np.zeros(n_steps), "GtN/yr")
 NemsLUmin_s = Q(np.zeros(n_steps), "GtN/yr")
@@ -129,7 +131,7 @@ Copyright (c) 2026, Gang Tang and contributors.
 **Author, Developer, and Maintainer:**  
 Gang Tang  
 - gang.tang.au@gmail.com (primary)
-- gang.tang@student.unimelb.edu.au  
+- gang.tang.1@unimelb.edu.au
 - tgang@bgc-jena.mpg.de
 
 **Contributors:**

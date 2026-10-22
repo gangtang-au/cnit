@@ -6,23 +6,27 @@ All notable changes to CNit will be documented here.
 The format follows `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.2.0 (2026-10-22)
+--------------------------
+
+**Added**
+
+* Model configuration helpers and support for loading calibration parameters
+  from user-supplied CSV files.
+
+**Changed**
+
+* Refactored the carbon and nitrogen cycle calculations to use numeric values
+  inside the ODE solver, while preserving unit-aware model inputs and outputs.
+  The model equations and parameterizations are unchanged. The benchmarked
+  simulation ran approximately 6 times faster than in CNit 2.1.0.
+* Updated the quick start and examples to match the current model interface.
+
 Version 2.1.0 (2026-01-01)
 --------------------------
 
 Initial public release of CNit as a Python package with enhanced code and full
 documentation.
-
-**Previous Versions**
-
-The source code for earlier versions of CNit is available from previous Zenodo releases:
-
-* Tang, G., Nicholls, Z., Norton, A., Zaehle, S., & Meinshausen, M. (2024).
-  *Model Source Code for "Coupled Carbon-Nitrogen Cycle in MAGICC: Model Description and Calibration"*.
-  Zenodo. https://doi.org/10.5281/zenodo.12204421
-
-* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2025).
-  *Model Source Code for the MAGICC Coupled Carbon–Nitrogen Cycle Model – CNit*.
-  Zenodo. https://doi.org/10.5281/zenodo.15569386
 
 **Added**
 
@@ -44,17 +48,18 @@ The source code for earlier versions of CNit is available from previous Zenodo r
 
 See the :doc:`overview` for detailed model description.
 
-Upcoming
---------
+Earlier Source Releases
+-----------------------
 
-Future versions may include:
+Source code for earlier CNit versions is archived in these Zenodo releases:
 
-* Enhanced representation of nitrogen deposition
-* Additional nitrogen input pathways
-* Improved parameterization options
-* Additional example notebooks and use cases
-* Performance optimizations
-* Extended calibration examples
+* Tang, G., Nicholls, Z., Norton, A., Zaehle, S., & Meinshausen, M. (2024).
+  *Model Source Code for "Coupled Carbon-Nitrogen Cycle in MAGICC: Model Description and Calibration"*.
+  Zenodo. https://doi.org/10.5281/zenodo.12204421
+
+* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2025).
+  *Model Source Code for the MAGICC Coupled Carbon–Nitrogen Cycle Model – CNit*.
+  Zenodo. https://doi.org/10.5281/zenodo.15569386
 
 ..  note::
 

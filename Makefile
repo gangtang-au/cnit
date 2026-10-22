@@ -36,20 +36,18 @@ help:  ## Print short description of each target
 .PHONY: env
 env:   ## Create/update conda environment and install package
 	$(MAMBA_OR_CONDA) env update --name $(CONDA_DEFAULT_ENV) -f $(CONDA_ENV_FILE)
-	$(VENV_DIR)/bin/pip install -e .[notebook,docs,tests]
 
 .PHONY: docs
 docs:  ## Build the docs
-	$(MAKE) -C docs html
+	$(PYTHON) scripts/build_docs.py
 
 .PHONY: test
 test:  ## Run the tests
 	$(VENV_DIR)/bin/pytest tests -r a -vv
 
 .PHONY: lint
-lint:  ## Run flake8 and black for code style checks
-	$(VENV_DIR)/bin/flake8 src/cnit
-	$(VENV_DIR)/bin/black --check src/cnit tests
+lint:  ## Check Python code with Ruff
+	$(VENV_DIR)/bin/ruff check src/cnit tests
 
 .PHONY: format
 format:  ## Auto-format code with black

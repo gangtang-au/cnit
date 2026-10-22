@@ -1,9 +1,10 @@
 """
 Mathematical functions and operations
 """
+
 import numpy as np
 import pint
-from typing import Any, Callable
+from typing import Any, Callable, Union
 import scipy.interpolate
 
 from .units import UNIT_REGISTRY
@@ -77,6 +78,27 @@ def _get_interp(
         scipy.interpolate.interp1d(
             ta.m, v.m, bounds_error=False, fill_value="extrapolate", **kwargs
         )
+    )
+
+
+def _make_numeric_interp(
+    values: Any,
+    time_values: np.ndarray,
+    unit: str,
+    *,
+    extrapolate: bool,
+) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
+    """Build a unit-free interpolator from a quantity series."""
+    if isinstance(values, pint.Quantity):
+        values = values.to(unit).m
+    else:
+        values = np.asarray(values)
+
+    return scipy.interpolate.interp1d(
+        time_values,
+        values,
+        bounds_error=not extrapolate,
+        fill_value="extrapolate" if extrapolate else np.nan,
     )
 
 

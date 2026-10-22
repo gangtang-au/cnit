@@ -3,18 +3,19 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
+from pathlib import Path
 import sys
 
 # -- Path setup --------------------------------------------------------------
 # Add the 'src' directory to sys.path, so Sphinx can find your code modules!
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from cnit._version import __version__
 
 # -- Project information -----------------------------------------------------
 project = 'CNit'
-copyright = '2025, Gang Tang'
+copyright = '2026, Gang Tang'
 author = 'Gang Tang'
-release = '2.1.0'
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -22,6 +23,7 @@ extensions = [
     "sphinx.ext.napoleon",        # Support for NumPy/Google docstrings
     "sphinx_autodoc_typehints",   # Show type hints in docs
     "sphinxcontrib.bibtex",       # BibTeX citations
+    "nbsphinx",                    # Render Jupyter notebooks as documentation
 ]
 
 # Templates and static paths
@@ -59,6 +61,7 @@ bibtex_bibfiles = ["bibliography.bib"]
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'         # Use the popular ReadTheDocs theme
 html_static_path = ['_static']
+nbsphinx_execute = 'never'
 html_css_files = ['custom.css']          # Custom CSS file
 html_js_files = ['custom.js']
 

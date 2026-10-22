@@ -1,11 +1,10 @@
 """
 MAGICC Coupled Carbon-Nitrogen Cycle Model (CNit) Implementation
 """
-from dataclasses import asdict, fields
+
 from typing import Dict, List
 from attrs import define, field
 import numpy as np
-from scipy.interpolate import interp1d
 import xarray as xr
 import pint
 
@@ -14,25 +13,24 @@ from .effects import (
     EffectCO2Calculator,
     EffectTemperatureCalculator,
     EffectCarbonNitrogenCouplingCalculator,
-    EffectLanduseCalculator
+    EffectLanduseCalculator,
 )
 from .carbon_cycle import (
     CarbonNPPLPRCalculator,
     CarbonTurnoverCalculator,
     CarbonCycleCalculator,
-    CarbonCycleModel
+    CarbonCycleModel,
 )
 from .nitrogen_cycle import (
     NitrogenPUBNFCalculator,
     NitrogenTurnoverCalculator,
     NitrogenCycleCalculator,
-    NitrogenCycleModel
+    NitrogenCycleModel,
 )
 
 from ..configs.model_config import CarbonNitrogenCycleModelConfig
 from ..configs.experiment_config import CarbonNitrogenCycleExperimentConfig
 from ..utils.units import Q
-from ..utils.maths import _get_interp
 from ..utils.data_utils import make_dataset_from_var_dict
 
 one = Q(1, "1")
@@ -111,7 +109,7 @@ class CarbonNitrogenCycleModel:
     """
 
     # Calculators
-    calc_lu:  LanduseCalculator
+    calc_lu: LanduseCalculator
     """Calculator for land use fluxes. 
     
     Processes land use change emissions (gross deforestation, net emissions) and
@@ -182,7 +180,7 @@ class CarbonNitrogenCycleModel:
     """
 
     # Model switches
-    switch_N:  pint. Quantity = field(
+    switch_N: pint.Quantity = field(
         default=Q(1, "1"),
     )
     """Switch to enable/disable nitrogen cycle [dimensionless]. 
@@ -231,66 +229,18 @@ class CarbonNitrogenCycleModel:
         >>> model = CarbonNitrogenCycleModel.from_dict(params)
         """
 
-        # Optionally: check params keys against config fields for typo catching
-        valid_keys = {f.name for f in fields(CarbonNitrogenCycleModelConfig)}
-        invalid_keys = set(params) - valid_keys
-        if invalid_keys:
-            raise ValueError(f"Unknown parameter(s) in config: {invalid_keys}")
-
-        # Instantiation (explicit and clear)
-        calc_lu = LanduseCalculator()
-        calc_eff_CO2 = EffectCO2Calculator()
-        calc_eff_dT = EffectTemperatureCalculator()
-        calc_eff_CN = EffectCarbonNitrogenCouplingCalculator()
-        calc_eff_LU = EffectLanduseCalculator()
-        calc_npp_lpr = CarbonNPPLPRCalculator()
-        calc_pu_bnf = NitrogenPUBNFCalculator()
-        calc_c_turnover = CarbonTurnoverCalculator()
-        calc_c_cycle = CarbonCycleCalculator()
-        mdl_c_cycle = CarbonCycleModel(
-            calc_c_turnover=calc_c_turnover,
-            calc_c_cycle=calc_c_cycle,
-        )
-        calc_n_turnover = NitrogenTurnoverCalculator()
-        calc_n_cycle = NitrogenCycleCalculator()
-        mdl_n_cycle = NitrogenCycleModel(
-            calc_n_turnover=calc_n_turnover,
-            calc_n_cycle=calc_n_cycle,
-        )
-        mdl_cn_cycle = cls(
-            calc_lu=calc_lu,
-            calc_eff_CO2=calc_eff_CO2,
-            calc_eff_dT=calc_eff_dT,
-            calc_eff_CN=calc_eff_CN,
-            calc_eff_LU=calc_eff_LU,
-            calc_npp_lpr=calc_npp_lpr,
-            mdl_c_cycle=mdl_c_cycle,
-            calc_pu_bnf=calc_pu_bnf,
-            mdl_n_cycle=mdl_n_cycle,
-        )
-        # Set parameters on all components
-        for obj in [
-            mdl_cn_cycle,
-            calc_lu, calc_eff_CO2, calc_eff_dT, calc_eff_CN, calc_eff_LU,
-            calc_npp_lpr, calc_pu_bnf, calc_c_turnover, calc_c_cycle,
-            calc_n_turnover, calc_n_cycle, mdl_c_cycle, mdl_n_cycle
-        ]:
-            for attr, value in params.items():
-                if hasattr(obj, attr):
-                    setattr(obj, attr, value)
-
-        return mdl_cn_cycle
+        config = CarbonNitrogenCycleModelConfig.from_dict(params)
+        return cls.from_config(config)
 
     @classmethod
     def from_config(
-            cls,
-            config: CarbonNitrogenCycleModelConfig
+        cls, config: CarbonNitrogenCycleModelConfig
     ) -> "CarbonNitrogenCycleModel":
         """
         Build a fully configured CarbonNitrogenCycleModel from a config dataclass.
 
-        This is a convenience wrapper around : meth:`from_dict` that accepts a
-        configuration dataclass instead of a dictionary.
+        Each calculator and sub-model is constructed with its values from the
+        supplied config.
 
         Parameters
         ----------
@@ -304,14 +254,141 @@ class CarbonNitrogenCycleModel:
 
         See Also
         --------
-        from_dict : Build model from parameter dictionary
+        from_dict : Build model from parameter overrides
         CarbonNitrogenCycleModelConfig : Configuration dataclass definition
         """
-        cfg_dict = asdict(config)
-        return cls.from_dict(cfg_dict)
+        calc_lu = LanduseCalculator(
+            frc_rgr=config.frc_rgr,
+            tau_rgr=config.tau_rgr,
+            method_cLU=config.method_cLU,
+            method_nLU=config.method_nLU,
+        )
+        calc_eff_CO2 = EffectCO2Calculator(
+            CO2ref=config.CO2ref,
+            CO2b=config.CO2b,
+            sns_CO2_log=config.sns_CO2_log,
+            sns_CO2_sig=config.sns_CO2_sig,
+            eff_CO2_sig_max=config.eff_CO2_sig_max,
+            method_CO2_NPP=config.method_CO2_NPP,
+        )
+        calc_eff_dT = EffectTemperatureCalculator(
+            sns_NPP2dT=config.sns_NPP2dT,
+            sns_NPP2dT_sig=config.sns_NPP2dT_sig,
+            method_dT_NPP=config.method_dT_NPP,
+            sns_LPR2dT=config.sns_LPR2dT,
+            sns_cLP2dT=config.sns_cLP2dT,
+            sns_cLD2dT=config.sns_cLD2dT,
+            sns_cSR2dT=config.sns_cSR2dT,
+            sns_PU2dT=config.sns_PU2dT,
+            sns_BNF2dT=config.sns_BNF2dT,
+            sns_nLP2dT=config.sns_nLP2dT,
+            sns_nLD2dT=config.sns_nLD2dT,
+            sns_nSR2dT=config.sns_nSR2dT,
+            sns_nLSgas2dT=config.sns_nLSgas2dT,
+        )
+        calc_eff_CN = EffectCarbonNitrogenCouplingCalculator(
+            sns_NPP2PUdef=config.sns_NPP2PUdef,
+            sns_cLP2PUdef=config.sns_cLP2PUdef,
+            sns_cLD2PUdef=config.sns_cLD2PUdef,
+            sns_cSR2PUdef=config.sns_cSR2PUdef,
+            sns_PU2PUdef=config.sns_PU2PUdef,
+            sns_BNF2PUdef=config.sns_BNF2PUdef,
+            sns_nLP2PUdef=config.sns_nLP2PUdef,
+            sns_nLD2PUdef=config.sns_nLD2PUdef,
+            sns_nSR2PUdef=config.sns_nSR2PUdef,
+            eff_C_PU_max=config.eff_C_PU_max,
+            sns_PU2NPPrd=config.sns_PU2NPPrd,
+            eff_C_BNF_max=config.eff_C_BNF_max,
+            sns_BNF2NPPrd=config.sns_BNF2NPPrd,
+            NPP0=config.NPP0,
+        )
+        calc_eff_LU = EffectLanduseCalculator(
+            sns_cLP2LUrgr=config.sns_cLP2LUrgr,
+            sns_cLD2LUrgr=config.sns_cLD2LUrgr,
+            sns_cSR2LUrgr=config.sns_cSR2LUrgr,
+            sns_nLP2LUrgr=config.sns_nLP2LUrgr,
+            sns_nLD2LUrgr=config.sns_nLD2LUrgr,
+            sns_nSR2LUrgr=config.sns_nSR2LUrgr,
+        )
+        calc_npp_lpr = CarbonNPPLPRCalculator(
+            NPP0=config.NPP0,
+            LPR0=config.LPR0,
+        )
+        calc_pu_bnf = NitrogenPUBNFCalculator(
+            PU0=config.PU0,
+            BNF0=config.BNF0,
+            NCratio_PUreq=config.NCratio_PUreq,
+            NetMIN0=config.NetMIN0,
+            sns_NetMIN2dT=config.sns_NetMIN2dT,
+            NetMINlt0=config.NetMINlt0,
+            sns_NetMINlt2AD=config.sns_NetMINlt2AD,
+        )
+        calc_c_turnover = CarbonTurnoverCalculator(
+            tau_CplsP=config.tau_CplsP,
+            tau_CplsL=config.tau_CplsL,
+            tau_CplsS=config.tau_CplsS,
+        )
+        calc_c_cycle = CarbonCycleCalculator(
+            frc_NPP2P=config.frc_NPP2P,
+            frc_NPP2L=config.frc_NPP2L,
+            frc_cLP2L=config.frc_cLP2L,
+            frc_cLD2S=config.frc_cLD2S,
+            frc_cLUgrs2P=config.frc_cLUgrs2P,
+            frc_cLUgrs2L=config.frc_cLUgrs2L,
+        )
+        mdl_c_cycle = CarbonCycleModel(
+            calc_c_turnover=calc_c_turnover,
+            calc_c_cycle=calc_c_cycle,
+            CplsP0=config.CplsP0,
+            CplsL0=config.CplsL0,
+            CplsS0=config.CplsS0,
+            time0=config.time0,
+            switch_Cpls=config.switch_Cpls,
+        )
+        calc_n_turnover = NitrogenTurnoverCalculator(
+            tau_NplsP=config.tau_NplsP,
+            tau_NplsL=config.tau_NplsL,
+            tau_NplsS=config.tau_NplsS,
+            tau_NplsM=config.tau_NplsM,
+            frc_nLSgas=config.frc_nLSgas,
+        )
+        calc_n_cycle = NitrogenCycleCalculator(
+            frc_BNF2P=config.frc_BNF2P,
+            frc_BNF2L=config.frc_BNF2L,
+            frc_PU2P=config.frc_PU2P,
+            frc_PU2L=config.frc_PU2L,
+            frc_nLP2L=config.frc_nLP2L,
+            frc_nLD2S=config.frc_nLD2S,
+            frc_nLUgrs2P=config.frc_nLUgrs2P,
+            frc_nLUgrs2L=config.frc_nLUgrs2L,
+        )
+        mdl_n_cycle = NitrogenCycleModel(
+            calc_n_turnover=calc_n_turnover,
+            calc_n_cycle=calc_n_cycle,
+            NplsP0=config.NplsP0,
+            NplsL0=config.NplsL0,
+            NplsS0=config.NplsS0,
+            NplsM0=config.NplsM0,
+            time0=config.time0,
+            switch_Npls=config.switch_Npls,
+        )
+        model = cls(
+            calc_lu=calc_lu,
+            calc_eff_CO2=calc_eff_CO2,
+            calc_eff_dT=calc_eff_dT,
+            calc_eff_CN=calc_eff_CN,
+            calc_eff_LU=calc_eff_LU,
+            calc_npp_lpr=calc_npp_lpr,
+            mdl_c_cycle=mdl_c_cycle,
+            calc_pu_bnf=calc_pu_bnf,
+            mdl_n_cycle=mdl_n_cycle,
+            switch_N=config.switch_N,
+        )
+
+        return model
 
     def run_experiments(self, experiments: List["CarbonNitrogenCycleExperimentConfig"]):
-        """"
+        """
         Run multiple experiments with the model.
 
         This method facilitates running multiple model scenarios with different
@@ -355,22 +432,23 @@ class CarbonNitrogenCycleModel:
             self.switch_N = exp.switch_N
             res_exp = self.run(**input_dict)
             res_exp = res_exp.assign_coords(experiment=exp.name).expand_dims(
-                "experiment")
+                "experiment"
+            )
             results.append(res_exp)
         return xr.concat(results, dim="experiment", join="outer")
 
     def run(
-            self,
-            time_axis: pint.Quantity,
-            dT_s: pint.Quantity,
-            CO2_s: pint.Quantity,
-            CemsLUnet_s: pint.Quantity,
-            CemsLUgrs_s: pint.Quantity,
-            NflxAD_s: pint.Quantity,
-            NflxFT_s: pint.Quantity,
-            NemsLUnet_s: pint.Quantity,
-            NemsLUgrs_s: pint.Quantity,
-            NemsLUmin_s: pint.Quantity,
+        self,
+        time_axis: pint.Quantity,
+        dT_s: pint.Quantity,
+        CO2_s: pint.Quantity,
+        CemsLUnet_s: pint.Quantity,
+        CemsLUgrs_s: pint.Quantity,
+        NflxAD_s: pint.Quantity,
+        NflxFT_s: pint.Quantity,
+        NemsLUnet_s: pint.Quantity,
+        NemsLUgrs_s: pint.Quantity,
+        NemsLUmin_s: pint.Quantity,
     ):
         """
         Run the coupled carbon-nitrogen cycle model.
@@ -508,7 +586,8 @@ class CarbonNitrogenCycleModel:
         NflxBNF_s = CflxNPPLPR_NflxPUBNF_s["NflxBNF"]
 
         res_dict_extra = {
-            k: v for k, v in (CflxLU_s | CflxNPPLPR_NflxPUBNF_s).items()
+            k: v
+            for k, v in (CflxLU_s | CflxNPPLPR_NflxPUBNF_s).items()
             if k not in ["CflxLUgrs", "CflxNPP", "CflxLPR", "NflxPU", "NflxBNF"]
         }
         res_extra = make_dataset_from_var_dict(res_dict_extra, time_axis)
@@ -526,24 +605,21 @@ class CarbonNitrogenCycleModel:
                 self.calc_eff_LU.calculate_eff_LU_cLPLDSR(CflxLUrgr=CflxLUrgr_s)
             )
 
-            res_c = (
-                self.mdl_c_cycle.run(
-                    time_axis=time_axis,
-                    CflxNPP_t=_get_interp(CflxNPP_s, time_axis),
-                    CflxLPR_t=_get_interp(CflxLPR_s, time_axis),
-                    CflxLUgrs_t=_get_interp(CflxLUgrs_s, time_axis),
-                    eff_dT_cLP_t=interp1d(time_axis, eff_dT_cLP),
-                    eff_dT_cLD_t=interp1d(time_axis, eff_dT_cLD),
-                    eff_dT_cSR_t=interp1d(time_axis, eff_dT_cSR),
-                    eff_N_cLP_t=interp1d(time_axis, eff_N_cLP),
-                    eff_N_cLD_t=interp1d(time_axis, eff_N_cLD),
-                    eff_N_cSR_t=interp1d(time_axis, eff_N_cSR),
-                    eff_LU_cLP_t=interp1d(time_axis, eff_LU_cLP),
-                    eff_LU_cLD_t=interp1d(time_axis, eff_LU_cLD),
-                    eff_LU_cSR_t=interp1d(time_axis, eff_LU_cSR),
-                )
-                .add_non_state_variables()
-            )
+            res_c = self.mdl_c_cycle.run(
+                time_axis=time_axis,
+                CflxNPP_s=CflxNPP_s,
+                CflxLPR_s=CflxLPR_s,
+                CflxLUgrs_s=CflxLUgrs_s,
+                eff_dT_cLP_s=eff_dT_cLP,
+                eff_dT_cLD_s=eff_dT_cLD,
+                eff_dT_cSR_s=eff_dT_cSR,
+                eff_N_cLP_s=eff_N_cLP,
+                eff_N_cLD_s=eff_N_cLD,
+                eff_N_cSR_s=eff_N_cSR,
+                eff_LU_cLP_s=eff_LU_cLP,
+                eff_LU_cLD_s=eff_LU_cLD,
+                eff_LU_cSR_s=eff_LU_cSR,
+            ).add_non_state_variables()
         else:
             res_dict_c = {
                 "CplsP": self.mdl_c_cycle.CplsP0 * ones,
@@ -570,28 +646,25 @@ class CarbonNitrogenCycleModel:
             eff_LU_nLP, eff_LU_nLD, eff_LU_nSR = (
                 self.calc_eff_LU.calculate_eff_LU_nLPLDSR(CflxLUrgr=CflxLUrgr_s)
             )
-            res_n = (
-                self.mdl_n_cycle.run(
-                    time_axis=time_axis,
-                    NflxPU_t=_get_interp(NflxPU_s, time_axis),
-                    NflxBNF_t=_get_interp(NflxBNF_s, time_axis),
-                    NflxAD_t=_get_interp(NflxAD_s, time_axis),
-                    NflxFT_t=_get_interp(NflxFT_s, time_axis),
-                    NflxLUgrs_t=_get_interp(NflxLUgrs_s, time_axis),
-                    NflxLUmin_t=_get_interp(NflxLUmin_s, time_axis),
-                    eff_dT_nLP_t=interp1d(time_axis, eff_dT_nLP),
-                    eff_dT_nLD_t=interp1d(time_axis, eff_dT_nLD),
-                    eff_dT_nSR_t=interp1d(time_axis, eff_dT_nSR),
-                    eff_dT_nLSgas_t=interp1d(time_axis, eff_dT_nLSgas),
-                    eff_N_nLP_t=interp1d(time_axis, eff_N_nLP),
-                    eff_N_nLD_t=interp1d(time_axis, eff_N_nLD),
-                    eff_N_nSR_t=interp1d(time_axis, eff_N_nSR),
-                    eff_LU_nLP_t=interp1d(time_axis, eff_LU_nLP),
-                    eff_LU_nLD_t=interp1d(time_axis, eff_LU_nLD),
-                    eff_LU_nSR_t=interp1d(time_axis, eff_LU_nSR),
-                )
-                .add_non_state_variables()
-            )
+            res_n = self.mdl_n_cycle.run(
+                time_axis=time_axis,
+                NflxPU_s=NflxPU_s,
+                NflxBNF_s=NflxBNF_s,
+                NflxAD_s=NflxAD_s,
+                NflxFT_s=NflxFT_s,
+                NflxLUgrs_s=NflxLUgrs_s,
+                NflxLUmin_s=NflxLUmin_s,
+                eff_dT_nLP_s=eff_dT_nLP,
+                eff_dT_nLD_s=eff_dT_nLD,
+                eff_dT_nSR_s=eff_dT_nSR,
+                eff_dT_nLSgas_s=eff_dT_nLSgas,
+                eff_N_nLP_s=eff_N_nLP,
+                eff_N_nLD_s=eff_N_nLD,
+                eff_N_nSR_s=eff_N_nSR,
+                eff_LU_nLP_s=eff_LU_nLP,
+                eff_LU_nLD_s=eff_LU_nLD,
+                eff_LU_nSR_s=eff_LU_nSR,
+            ).add_non_state_variables()
         else:
             res_dict_n = {
                 "NplsP": self.mdl_n_cycle.NplsP0 * ones,
@@ -604,16 +677,16 @@ class CarbonNitrogenCycleModel:
         return xr.merge([res_extra, res_c, res_n])
 
     def calculate_CflxNPPLPR_NflxPUBNF(
-            self,
-            dT: pint.Quantity,
-            CO2: pint.Quantity,
-            CflxLUrgr: pint.Quantity,
-            cumsum_CflxLUrgr: pint.Quantity,
-            cumsum_CflxLUdfst: pint.Quantity,
-            cumsum_CflxLUafst: pint.Quantity,
-            cumsum_CflxLUafst_decay: pint.Quantity,
-            NflxAD: pint.Quantity,
-            NflxFT: pint.Quantity,
+        self,
+        dT: pint.Quantity,
+        CO2: pint.Quantity,
+        CflxLUrgr: pint.Quantity,
+        cumsum_CflxLUrgr: pint.Quantity,
+        cumsum_CflxLUdfst: pint.Quantity,
+        cumsum_CflxLUafst: pint.Quantity,
+        cumsum_CflxLUafst_decay: pint.Quantity,
+        NflxAD: pint.Quantity,
+        NflxFT: pint.Quantity,
     ):
         """
         Calculate coupled carbon and nitrogen fluxes with nitrogen limitation feedback.
@@ -735,8 +808,8 @@ class CarbonNitrogenCycleModel:
             cumsum_CflxLUafst=cumsum_CflxLUafst,
             cumsum_CflxLUafst_decay=cumsum_CflxLUafst_decay,
             CplsPLS0=self.mdl_c_cycle.CplsP0
-                     + self.mdl_c_cycle.CplsL0
-                     + self.mdl_c_cycle.CplsS0,
+            + self.mdl_c_cycle.CplsL0
+            + self.mdl_c_cycle.CplsS0,
             frc_rgr=self.calc_lu.frc_rgr,
             frc_afst_decay=1 - self.calc_lu.frc_rgr,
         )
@@ -822,106 +895,105 @@ class CarbonNitrogenCycleModel:
         return CflxNPPLPR_s | NflxPUBNF_s
 
     def calculate_mdl_eqm0(
-            self,
-            dT_s: pint.Quantity,
-            CO2_s: pint.Quantity,
-            CemsLUnet_s: pint.Quantity,
-            CemsLUgrs_s: pint.Quantity,
-            NflxAD_s: pint.Quantity,
-            NflxFT_s: pint.Quantity,
-            NemsLUnet_s: pint.Quantity,
-            NemsLUgrs_s: pint.Quantity,
-            NemsLUmin_s: pint.Quantity,
+        self,
+        dT_s: pint.Quantity,
+        CO2_s: pint.Quantity,
+        CemsLUnet_s: pint.Quantity,
+        CemsLUgrs_s: pint.Quantity,
+        NflxAD_s: pint.Quantity,
+        NflxFT_s: pint.Quantity,
+        NemsLUnet_s: pint.Quantity,
+        NemsLUgrs_s: pint.Quantity,
+        NemsLUmin_s: pint.Quantity,
     ):
         """
-                Calculate equilibrium initial state for the model.
+        Calculate equilibrium initial state for the model.
 
-                This method calculates the equilibrium pool sizes and turnover times that
-                would result from steady forcing conditions. It is typically used to initialize
-                the model in equilibrium with preindustrial conditions before running transient
-                simulations.
+        This method calculates the equilibrium pool sizes and turnover times that
+        would result from steady forcing conditions. It is typically used to initialize
+        the model in equilibrium with preindustrial conditions before running transient
+        simulations.
 
-                The method uses the first timestep values of all forcing to calculate steady-state
-                fluxes, then uses inverse turnover calculations to determine equilibrium pool
-                sizes and turnover times.
+        The method uses the first timestep values of all forcing to calculate steady-state
+        fluxes, then uses inverse turnover calculations to determine equilibrium pool
+        sizes and turnover times.
 
-                Parameters
-                ----------
-                dT_s
-                    Time series of temperature anomaly [K].  Only first value used.
-                CO2_s
-                    Time series of atmospheric CO2 concentration [ppm]. Only first value used.
-                CemsLUnet_s
-                    Time series of net land use carbon emissions [GtC/yr]. Only first value used.
-                CemsLUgrs_s
-                    Time series of gross land use carbon emissions [GtC/yr].  Only first value used.
-                NflxAD_s
-                    Time series of atmospheric nitrogen deposition [GtN/yr]. Only first value used.
-                NflxFT_s
-                    Time series of nitrogen fertilizer [GtN/yr]. Only first value used.
-                NemsLUnet_s
-                    Time series of net land use nitrogen emissions [GtN/yr]. Only first value used.
-                NemsLUgrs_s
-                    Time series of gross land use nitrogen emissions [GtN/yr]. Only first value used.
-                NemsLUmin_s
-                    Time series of land use mineral nitrogen emissions [GtN/yr]. Only first value used.
+        Parameters
+        ----------
+        dT_s
+            Time series of temperature anomaly [K].  Only first value used.
+        CO2_s
+            Time series of atmospheric CO2 concentration [ppm]. Only first value used.
+        CemsLUnet_s
+            Time series of net land use carbon emissions [GtC/yr]. Only first value used.
+        CemsLUgrs_s
+            Time series of gross land use carbon emissions [GtC/yr].  Only first value used.
+        NflxAD_s
+            Time series of atmospheric nitrogen deposition [GtN/yr]. Only first value used.
+        NflxFT_s
+            Time series of nitrogen fertilizer [GtN/yr]. Only first value used.
+        NemsLUnet_s
+            Time series of net land use nitrogen emissions [GtN/yr]. Only first value used.
+        NemsLUgrs_s
+            Time series of gross land use nitrogen emissions [GtN/yr]. Only first value used.
+        NemsLUmin_s
+            Time series of land use mineral nitrogen emissions [GtN/yr]. Only first value used.
 
-                Returns
-                -------
-                Dict[str, pint.Quantity]
-                    Dictionary containing equilibrium values for:
+        Returns
+        -------
+        Dict[str, pint.Quantity]
+            Dictionary containing equilibrium values for:
 
-                    **Carbon Equilibrium:**
+            **Carbon Equilibrium:**
 
-                    - CflxLP_inverse, CflxLD_inverse, CflxSR_inverse: Turnover fluxes
-                    - CflxLP2L_inverse, CflxLP2S_inverse:  Litter production partitioning
-                    - CflxLD2S_inverse, CflxLD2A_inverse: Litter decomposition partitioning
-                    - tau_CplsP_inverse, tau_CplsL_inverse, tau_CplsS_inverse: Turnover times
+            - CflxLP_inverse, CflxLD_inverse, CflxSR_inverse: Turnover fluxes
+            - CflxLP2L_inverse, CflxLP2S_inverse:  Litter production partitioning
+            - CflxLD2S_inverse, CflxLD2A_inverse: Litter decomposition partitioning
+            - tau_CplsP_inverse, tau_CplsL_inverse, tau_CplsS_inverse: Turnover times
 
-                    **Nitrogen Equilibrium** (if nitrogen cycle active):
+            **Nitrogen Equilibrium** (if nitrogen cycle active):
 
-                    - NflxLP_inverse, NflxLD_inverse, NflxSR_inverse, NflxLS_inverse: Turnover fluxes
-                    - NflxLP2L_inverse, NflxLP2S_inverse: Litter production partitioning
-                    - NflxLD2S_inverse, NflxLD2M_inverse: Litter decomposition partitioning
-                    - tau_NplsP_inverse, tau_NplsL_inverse, tau_NplsS_inverse, tau_NplsM_inverse:
-                      Turnover times
+            - NflxLP_inverse, NflxLD_inverse, NflxSR_inverse, NflxLS_inverse: Turnover fluxes
+            - NflxLP2L_inverse, NflxLP2S_inverse: Litter production partitioning
+            - NflxLD2S_inverse, NflxLD2M_inverse: Litter decomposition partitioning
+            - tau_NplsP_inverse, tau_NplsL_inverse, tau_NplsS_inverse, tau_NplsM_inverse:
+              Turnover times
 
-                Notes
-                -----
-                **Equilibrium Concept:**
+        Notes
+        -----
+        **Equilibrium Concept:**
 
-                At equilibrium, pool sizes are constant (dC/dt = 0, dN/dt = 0), which means:
+        At equilibrium, pool sizes are constant (dC/dt = 0, dN/dt = 0), which means:
 
-                - Inputs = Outputs for each pool
-                - Fluxes are determined by forcing conditions
-                - Pool sizes and turnover times are mutually consistent
+        - Inputs = Outputs for each pool
+        - Fluxes are determined by forcing conditions
+        - Pool sizes and turnover times are mutually consistent
 
-                **Usage:**
+        **Usage:**
 
-                Typical workflow for equilibrium initialization:
+        Typical workflow for equilibrium initialization:
 
-                ..  code-block:: python
+        ..  code-block:: python
 
-                    # Calculate equilibrium
-                    eqm = model.calculate_mdl_eqm0(
-                        dT_s=preindustrial_temp,
-                        CO2_s=preindustrial_CO2,
-                        # ... other preindustrial forcing ...
-                    )
+            # Calculate equilibrium
+            eqm = model.calculate_mdl_eqm0(
+                dT_s=preindustrial_temp,
+                CO2_s=preindustrial_CO2,
+                # ... other preindustrial forcing ...
+            )
 
-                    # Set initial pool sizes (if desired)
-                    model.mdl_c_cycle.CplsP0 = eqm_pool_sizes["CplsP"]
+            # Set initial pool sizes (if desired)
+            model.mdl_c_cycle.CplsP0 = eqm_pool_sizes["CplsP"]
 
-                    # Set equilibrium turnover times
-                    model.mdl_c_cycle.calc_c_turnover. tau_CplsP = eqm["tau_CplsP_inverse"]
+            # Set equilibrium turnover times
+            model.mdl_c_cycle.calc_c_turnover. tau_CplsP = eqm["tau_CplsP_inverse"]
 
-                See Also
-                --------
-                calculate_eqm0 : Core equilibrium calculation
-                inverse_carbon_turnover : Carbon equilibrium equations
-                inverse_nitrogen_turnover : Nitrogen equilibrium equations
+        See Also
+        --------
+        calculate_eqm0 : Core equilibrium calculation
+        inverse_carbon_turnover : Carbon equilibrium equations
+        inverse_nitrogen_turnover : Nitrogen equilibrium equations
         """
-
 
         CflxLU_s = self.calc_lu.calculate_CflxLU_series(
             CemsLUnet_s=CemsLUnet_s[:1],
@@ -963,86 +1035,86 @@ class CarbonNitrogenCycleModel:
         )
 
     def calculate_eqm0(
-            self,
-            dT: pint.Quantity,
-            CflxNPP: pint.Quantity,
-            CflxLPR: pint.Quantity,
-            CflxLUgrs: pint.Quantity,
-            CflxLUrgr: pint.Quantity,
-            NflxPUdef: pint.Quantity,
-            NflxPU: pint.Quantity,
-            NflxBNF: pint.Quantity,
-            NflxAD: pint.Quantity,
-            NflxFT: pint.Quantity,
-            NflxLUgrs: pint.Quantity,
-            NflxLUmin: pint.Quantity,
+        self,
+        dT: pint.Quantity,
+        CflxNPP: pint.Quantity,
+        CflxLPR: pint.Quantity,
+        CflxLUgrs: pint.Quantity,
+        CflxLUrgr: pint.Quantity,
+        NflxPUdef: pint.Quantity,
+        NflxPU: pint.Quantity,
+        NflxBNF: pint.Quantity,
+        NflxAD: pint.Quantity,
+        NflxFT: pint.Quantity,
+        NflxLUgrs: pint.Quantity,
+        NflxLUmin: pint.Quantity,
     ):
         """
-                Calculate equilibrium state from specified fluxes.
+        Calculate equilibrium state from specified fluxes.
 
-                This method calculates equilibrium pool sizes and turnover times given a set
-                of fluxes and environmental conditions. It assumes steady state (dC/dt = 0,
-                dN/dt = 0) and solves for the pool sizes and turnover times that satisfy
-                mass balance.
+        This method calculates equilibrium pool sizes and turnover times given a set
+        of fluxes and environmental conditions. It assumes steady state (dC/dt = 0,
+        dN/dt = 0) and solves for the pool sizes and turnover times that satisfy
+        mass balance.
 
-                Parameters
-                ----------
-                dT
-                    Temperature anomaly [K]. Used for calculating environmental effects.
-                CflxNPP
-                    Net primary production [GtC/yr]. Carbon input to system.
-                CflxLPR
-                    Litter production respiration [GtC/yr].  Autotrophic respiration.
-                CflxLUgrs
-                    Gross land use carbon emissions [GtC/yr]. Carbon output from system.
-                CflxLUrgr
-                    Land use regrowth [GtC/yr]. Used for land use effects.
-                NflxPUdef
-                    Nitrogen deficit [GtN/yr]. Used for nitrogen effects.
-                NflxPU
-                    Plant nitrogen uptake [GtN/yr]. N transfer from mineral to organic pools.
-                NflxBNF
-                    Biological nitrogen fixation [GtN/yr]. External N input.
-                NflxAD
-                    Atmospheric nitrogen deposition [GtN/yr].  External N input.
-                NflxFT
-                    Nitrogen fertilizer [GtN/yr]. External N input.
-                NflxLUgrs
-                    Gross land use nitrogen emissions [GtN/yr]. N output from organic pools.
-                NflxLUmin
-                    Land use mineral nitrogen losses [GtN/yr]. N output from mineral pool.
+        Parameters
+        ----------
+        dT
+            Temperature anomaly [K]. Used for calculating environmental effects.
+        CflxNPP
+            Net primary production [GtC/yr]. Carbon input to system.
+        CflxLPR
+            Litter production respiration [GtC/yr].  Autotrophic respiration.
+        CflxLUgrs
+            Gross land use carbon emissions [GtC/yr]. Carbon output from system.
+        CflxLUrgr
+            Land use regrowth [GtC/yr]. Used for land use effects.
+        NflxPUdef
+            Nitrogen deficit [GtN/yr]. Used for nitrogen effects.
+        NflxPU
+            Plant nitrogen uptake [GtN/yr]. N transfer from mineral to organic pools.
+        NflxBNF
+            Biological nitrogen fixation [GtN/yr]. External N input.
+        NflxAD
+            Atmospheric nitrogen deposition [GtN/yr].  External N input.
+        NflxFT
+            Nitrogen fertilizer [GtN/yr]. External N input.
+        NflxLUgrs
+            Gross land use nitrogen emissions [GtN/yr]. N output from organic pools.
+        NflxLUmin
+            Land use mineral nitrogen losses [GtN/yr]. N output from mineral pool.
 
-                Returns
-                -------
-                Dict[str, pint.Quantity]
-                    Dictionary containing equilibrium values (see : meth:`calculate_mdl_eqm0`
-                    for complete list).
+        Returns
+        -------
+        Dict[str, pint.Quantity]
+            Dictionary containing equilibrium values (see : meth:`calculate_mdl_eqm0`
+            for complete list).
 
-                Notes
-                -----
-                **Equilibrium Mass Balance:**
+        Notes
+        -----
+        **Equilibrium Mass Balance:**
 
-                For each pool, at equilibrium (dX/dt = 0):
+        For each pool, at equilibrium (dX/dt = 0):
 
-                .. math::
+        .. math::
 
-                    \\sum Inputs = \\sum Outputs
+            \\sum Inputs = \\sum Outputs
 
-                This allows solving for either:
-                - Pool sizes (given fluxes and turnover times), or
-                - Turnover times (given fluxes and pool sizes)
+        This allows solving for either:
+        - Pool sizes (given fluxes and turnover times), or
+        - Turnover times (given fluxes and pool sizes)
 
-                The inverse methods solve for turnover times from the equilibrium condition.
+        The inverse methods solve for turnover times from the equilibrium condition.
 
-                **Environmental Effects:**
+        **Environmental Effects:**
 
-                All environmental effects are calculated at the specified conditions (dT, CO2, etc.)
-                and applied to determine equilibrium turnover rates.
+        All environmental effects are calculated at the specified conditions (dT, CO2, etc.)
+        and applied to determine equilibrium turnover rates.
 
-                See Also
-                --------
-                inverse_carbon_turnover :  Solve carbon equilibrium equations
-                inverse_nitrogen_turnover : Solve nitrogen equilibrium equations
+        See Also
+        --------
+        inverse_carbon_turnover :  Solve carbon equilibrium equations
+        inverse_nitrogen_turnover : Solve nitrogen equilibrium equations
         """
         eff_dT_cLP, eff_dT_cLD, eff_dT_cSR = self.calc_eff_dT.calculate_eff_dT_cLPLDSR(
             dT=dT
@@ -1107,73 +1179,73 @@ class CarbonNitrogenCycleModel:
             return carbon_cycle_eqm
 
     def inverse_turnover_flux(
-            self,
-            influx: pint.Quantity,
-            outflux: pint.Quantity,
-            pool_size_change: pint.Quantity,
+        self,
+        influx: pint.Quantity,
+        outflux: pint.Quantity,
+        pool_size_change: pint.Quantity,
     ):
         """
-                Calculate turnover flux from mass balance.
+        Calculate turnover flux from mass balance.
 
-                This helper method calculates the turnover flux from a pool given the mass
-                balance equation:
+        This helper method calculates the turnover flux from a pool given the mass
+        balance equation:
 
-                .. math::
+        .. math::
 
-                    \\frac{dPool}{dt} = Influx - Turnover - Outflux
+            \\frac{dPool}{dt} = Influx - Turnover - Outflux
 
-                Rearranging for turnover:
+        Rearranging for turnover:
 
-                .. math::
+        .. math::
 
-                    Turnover = Influx - Outflux - \\frac{dPool}{dt}
+            Turnover = Influx - Outflux - \\frac{dPool}{dt}
 
-                At equilibrium (dPool/dt = 0):
+        At equilibrium (dPool/dt = 0):
 
-                .. math::
+        .. math::
 
-                    Turnover = Influx - Outflux
+            Turnover = Influx - Outflux
 
-                Parameters
-                ----------
-                influx
-                    Total input to pool [GtC/yr or GtN/yr].
-                outflux
-                    Total output from pool (excluding turnover) [GtC/yr or GtN/yr].
-                pool_size_change
-                    Rate of change of pool size [GtC/yr or GtN/yr].  Zero at equilibrium.
+        Parameters
+        ----------
+        influx
+            Total input to pool [GtC/yr or GtN/yr].
+        outflux
+            Total output from pool (excluding turnover) [GtC/yr or GtN/yr].
+        pool_size_change
+            Rate of change of pool size [GtC/yr or GtN/yr].  Zero at equilibrium.
 
-                Returns
-                -------
-                    Turnover flux from pool [GtC/yr or GtN/yr].
+        Returns
+        -------
+            Turnover flux from pool [GtC/yr or GtN/yr].
 
-                Notes
-                -----
-                This method is used by both carbon and nitrogen equilibrium calculations.
-                For equilibrium calculations, pool_size_change = 0.
+        Notes
+        -----
+        This method is used by both carbon and nitrogen equilibrium calculations.
+        For equilibrium calculations, pool_size_change = 0.
         """
         return influx - outflux - pool_size_change
 
     def inverse_carbon_turnover(
-            self,
-            CflxNPP: pint.Quantity,
-            CflxLPR: pint.Quantity,
-            CflxLUgrs: pint.Quantity,
-            eff_dT_cLP: pint.Quantity,
-            eff_dT_cLD: pint.Quantity,
-            eff_dT_cSR: pint.Quantity,
-            eff_N_cLP: pint.Quantity,
-            eff_N_cLD: pint.Quantity,
-            eff_N_cSR: pint.Quantity,
-            eff_LU_cLP: pint.Quantity,
-            eff_LU_cLD: pint.Quantity,
-            eff_LU_cSR: pint.Quantity,
-            CplsP: pint.Quantity = None,
-            CplsL: pint.Quantity = None,
-            CplsS: pint.Quantity = None,
-            dCplsP_dt: pint.Quantity = Q(0, "GtC/yr"),
-            dCplsL_dt: pint.Quantity = Q(0, "GtC/yr"),
-            dCplsS_dt: pint.Quantity = Q(0, "GtC/yr"),
+        self,
+        CflxNPP: pint.Quantity,
+        CflxLPR: pint.Quantity,
+        CflxLUgrs: pint.Quantity,
+        eff_dT_cLP: pint.Quantity,
+        eff_dT_cLD: pint.Quantity,
+        eff_dT_cSR: pint.Quantity,
+        eff_N_cLP: pint.Quantity,
+        eff_N_cLD: pint.Quantity,
+        eff_N_cSR: pint.Quantity,
+        eff_LU_cLP: pint.Quantity,
+        eff_LU_cLD: pint.Quantity,
+        eff_LU_cSR: pint.Quantity,
+        CplsP: pint.Quantity = None,
+        CplsL: pint.Quantity = None,
+        CplsS: pint.Quantity = None,
+        dCplsP_dt: pint.Quantity = Q(0, "GtC/yr"),
+        dCplsL_dt: pint.Quantity = Q(0, "GtC/yr"),
+        dCplsS_dt: pint.Quantity = Q(0, "GtC/yr"),
     ) -> Dict[str, pint.Quantity]:
         """
         Calculate equilibrium carbon fluxes and turnover times from mass balance.
@@ -1241,7 +1313,7 @@ class CarbonNitrogenCycleModel:
 
             \\frac{dC_S}{dt} = NPP2S + cLP2S + cLD2S - cSR - cLUgrs_S = 0
 
-        These are solved sequentially to find cLP, cLD, and cSR.
+        These are solved sequentially to find equilibrium cLP, cLD, and cSR.
 
         **Turnover Time Calculation:**
 
@@ -1328,106 +1400,106 @@ class CarbonNitrogenCycleModel:
         }
 
     def inverse_nitrogen_turnover(
-            self,
-            NflxPU: pint.Quantity,
-            NflxBNF: pint.Quantity,
-            NflxAD: pint.Quantity,
-            NflxFT: pint.Quantity,
-            NflxLUgrs: pint.Quantity,
-            NflxLUmin: pint.Quantity,
-            eff_dT_nLP: pint.Quantity,
-            eff_dT_nLD: pint.Quantity,
-            eff_dT_nSR: pint.Quantity,
-            eff_dT_nLSgas: pint.Quantity,
-            eff_N_nLP: pint.Quantity,
-            eff_N_nLD: pint.Quantity,
-            eff_N_nSR: pint.Quantity,
-            eff_LU_nLP: pint.Quantity,
-            eff_LU_nLD: pint.Quantity,
-            eff_LU_nSR: pint.Quantity,
-            NplsP: pint.Quantity = None,
-            NplsL: pint.Quantity = None,
-            NplsS: pint.Quantity = None,
-            NplsM: pint.Quantity = None,
-            dNplsP_dt: pint.Quantity = Q(0, "GtN/yr"),
-            dNplsL_dt: pint.Quantity = Q(0, "GtN/yr"),
-            dNplsS_dt: pint.Quantity = Q(0, "GtN/yr"),
-            dNplsM_dt: pint.Quantity = Q(0, "GtN/yr"),
+        self,
+        NflxPU: pint.Quantity,
+        NflxBNF: pint.Quantity,
+        NflxAD: pint.Quantity,
+        NflxFT: pint.Quantity,
+        NflxLUgrs: pint.Quantity,
+        NflxLUmin: pint.Quantity,
+        eff_dT_nLP: pint.Quantity,
+        eff_dT_nLD: pint.Quantity,
+        eff_dT_nSR: pint.Quantity,
+        eff_dT_nLSgas: pint.Quantity,
+        eff_N_nLP: pint.Quantity,
+        eff_N_nLD: pint.Quantity,
+        eff_N_nSR: pint.Quantity,
+        eff_LU_nLP: pint.Quantity,
+        eff_LU_nLD: pint.Quantity,
+        eff_LU_nSR: pint.Quantity,
+        NplsP: pint.Quantity = None,
+        NplsL: pint.Quantity = None,
+        NplsS: pint.Quantity = None,
+        NplsM: pint.Quantity = None,
+        dNplsP_dt: pint.Quantity = Q(0, "GtN/yr"),
+        dNplsL_dt: pint.Quantity = Q(0, "GtN/yr"),
+        dNplsS_dt: pint.Quantity = Q(0, "GtN/yr"),
+        dNplsM_dt: pint.Quantity = Q(0, "GtN/yr"),
     ):
         """
-                Calculate equilibrium nitrogen fluxes and turnover times from mass balance.
+        Calculate equilibrium nitrogen fluxes and turnover times from mass balance.
 
-                This method solves the nitrogen cycle equilibrium equations to determine:
-                1. Turnover fluxes (nLP, nLD, nSR, nLS) from mass balance
-                2. Partitioned fluxes using allocation fractions
-                3. Equilibrium turnover times from pool sizes and fluxes
+        This method solves the nitrogen cycle equilibrium equations to determine:
+        1. Turnover fluxes (nLP, nLD, nSR, nLS) from mass balance
+        2. Partitioned fluxes using allocation fractions
+        3. Equilibrium turnover times from pool sizes and fluxes
 
-                Similar to : meth:`inverse_carbon_turnover` but includes the mineral nitrogen
-                pool and its associated fluxes.
+        Similar to : meth:`inverse_carbon_turnover` but includes the mineral nitrogen
+        pool and its associated fluxes.
 
-                Parameters
-                ----------
-                NflxPU
-                    Plant nitrogen uptake [GtN/yr]. Mineral to organic transfer.
-                NflxBNF
-                    Biological nitrogen fixation [GtN/yr]. External input.
-                NflxAD
-                    Atmospheric deposition [GtN/yr].  External input.
-                NflxFT
-                    Fertilizer application [GtN/yr]. External input.
-                NflxLUgrs
-                    Gross land use nitrogen emissions [GtN/yr]. Output from organic pools.
-                NflxLUmin
-                    Land use mineral nitrogen losses [GtN/yr]. Output from mineral pool.
-                eff_dT_nLP, eff_dT_nLD, eff_dT_nSR, eff_dT_nLSgas
-                    Temperature effects on nitrogen processes [dimensionless].
-                eff_N_nLP, eff_N_nLD, eff_N_nSR
-                    Carbon-nitrogen coupling effects [dimensionless].
-                eff_LU_nLP, eff_LU_nLD, eff_LU_nSR
-                    Land use effects on nitrogen processes [dimensionless].
-                NplsP, NplsL, NplsS, NplsM
-                    Current nitrogen pool sizes [GtN].  If None, uses initial values from model.
-                dNplsP_dt, dNplsL_dt, dNplsS_dt, dNplsM_dt
-                    Pool size changes [GtN/yr]. Zero for equilibrium calculation.
+        Parameters
+        ----------
+        NflxPU
+            Plant nitrogen uptake [GtN/yr]. Mineral to organic transfer.
+        NflxBNF
+            Biological nitrogen fixation [GtN/yr]. External input.
+        NflxAD
+            Atmospheric deposition [GtN/yr].  External input.
+        NflxFT
+            Fertilizer application [GtN/yr]. External input.
+        NflxLUgrs
+            Gross land use nitrogen emissions [GtN/yr]. Output from organic pools.
+        NflxLUmin
+            Land use mineral nitrogen losses [GtN/yr]. Output from mineral pool.
+        eff_dT_nLP, eff_dT_nLD, eff_dT_nSR, eff_dT_nLSgas
+            Temperature effects on nitrogen processes [dimensionless].
+        eff_N_nLP, eff_N_nLD, eff_N_nSR
+            Carbon-nitrogen coupling effects [dimensionless].
+        eff_LU_nLP, eff_LU_nLD, eff_LU_nSR
+            Land use effects on nitrogen processes [dimensionless].
+        NplsP, NplsL, NplsS, NplsM
+            Current nitrogen pool sizes [GtN].  If None, uses initial values from model.
+        dNplsP_dt, dNplsL_dt, dNplsS_dt, dNplsM_dt
+            Pool size changes [GtN/yr]. Zero for equilibrium calculation.
 
-                Returns
-                -------
-                Dict[str, pint.Quantity]
-                    Dictionary containing:
+        Returns
+        -------
+        Dict[str, pint.Quantity]
+            Dictionary containing:
 
-                    **Turnover Fluxes:**
-                    - NflxLP_inverse, NflxLD_inverse, NflxSR_inverse, NflxLS_inverse
+            **Turnover Fluxes:**
+            - NflxLP_inverse, NflxLD_inverse, NflxSR_inverse, NflxLS_inverse
 
-                    **Partitioned Fluxes:**
-                    - NflxLP2L_inverse, NflxLP2S_inverse:  LP allocation
-                    - NflxLD2S_inverse, NflxLD2M_inverse: LD allocation
+            **Partitioned Fluxes:**
+            - NflxLP2L_inverse, NflxLP2S_inverse:  LP allocation
+            - NflxLD2S_inverse, NflxLD2M_inverse: LD allocation
 
-                    **Equilibrium Turnover Times:**
-                    - tau_NplsP_inverse, tau_NplsL_inverse, tau_NplsS_inverse, tau_NplsM_inverse
+            **Equilibrium Turnover Times:**
+            - tau_NplsP_inverse, tau_NplsL_inverse, tau_NplsS_inverse, tau_NplsM_inverse
 
-                Notes
-                -----
-                **Mass Balance Equations:**
+        Notes
+        -----
+        **Mass Balance Equations:**
 
-                For equilibrium in each pool:
+        For equilibrium in each pool:
 
-                .. math::
+        .. math::
 
-                    \\frac{dN_P}{dt} = BNF2P + PU2P - nLP - nLUgrs_P = 0
+            \\frac{dN_P}{dt} = BNF2P + PU2P - nLP - nLUgrs_P = 0
 
-                    \\frac{dN_L}{dt} = BNF2L + PU2L + nLP2L - nLD - nLUgrs_L = 0
+            \\frac{dN_L}{dt} = BNF2L + PU2L + nLP2L - nLD - nLUgrs_L = 0
 
-                    \\frac{dN_S}{dt} = BNF2S + PU2S + nLP2S + nLD2S - nSR - nLUgrs_S = 0
+            \\frac{dN_S}{dt} = BNF2S + PU2S + nLP2S + nLD2S - nSR - nLUgrs_S = 0
 
-                    \\frac{dN_M}{dt} = AD + FT + nLD2M + nSR - PU - nLS - nLUmin = 0
+            \\frac{dN_M}{dt} = AD + FT + nLD2M + nSR - PU - nLS - nLUmin = 0
 
-                These are solved sequentially to find nLP, nLD, nSR, and nLS.
+        These are solved sequentially to find equilibrium nLP, nLD, nSR, and nLS.
 
-                See Also
-                --------
-                inverse_carbon_turnover :  Analogous carbon calculation
-                :py:meth:`cnit.physics.nitrogen_cycle.NitrogenTurnoverCalculator.calculate_nLPLDSR`: Forward nitrogen turnover
-                :py:meth:`cnit.physics.nitrogen_cycle.NitrogenTurnoverCalculator.calculate_nLS`: Forward mineral N losses
+        See Also
+        --------
+        inverse_carbon_turnover :  Analogous carbon calculation
+        :py:meth:`cnit.physics.nitrogen_cycle.NitrogenTurnoverCalculator.calculate_nLPLDSR`: Forward nitrogen turnover
+        :py:meth:`cnit.physics.nitrogen_cycle.NitrogenTurnoverCalculator.calculate_nLS`: Forward mineral N losses
         """
         calc_n_cycle = self.mdl_n_cycle.calc_n_cycle
 
@@ -1486,7 +1558,7 @@ class CarbonNitrogenCycleModel:
 
         frc_nLSgas = self.mdl_n_cycle.calc_n_turnover.frc_nLSgas
         tau_NplsM_inverse = (
-                NplsM / NflxLS_inverse * (frc_nLSgas * eff_dT_nLSgas + (1 - frc_nLSgas))
+            NplsM / NflxLS_inverse * (frc_nLSgas * eff_dT_nLSgas + (1 - frc_nLSgas))
         )
 
         # Handle edge case for litter pool
