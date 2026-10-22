@@ -236,7 +236,7 @@ class LanduseCalculator:
     natural regrowth.
     """
 
-    tau_rgr: pint. Quantity = field(
+    tau_rgr: pint.Quantity = field(
         default=Q(100, "yr"),
         validator=check_units("yr"),
     )
@@ -246,7 +246,7 @@ class LanduseCalculator:
     Regrowth is distributed as a constant flux over this period.
     """
 
-    method_cLU:  pint.Quantity = field(
+    method_cLU: pint.Quantity = field(
         default=Q(0, "1"),
         validator=check_units("1"),
     )
@@ -274,9 +274,9 @@ class LanduseCalculator:
     """
 
     def calculate_CflxLU_series(
-            self,
-            CemsLUnet_s: pint.Quantity,
-            CemsLUgrs_s: pint.Quantity,
+        self,
+        CemsLUnet_s: pint.Quantity,
+        CemsLUgrs_s: pint.Quantity,
     ) -> Dict[str, pint.Quantity]:
         """
         Calculate carbon flux time series from land use change forcing.
@@ -397,10 +397,10 @@ class LanduseCalculator:
         )
 
     def calculate_NflxLU_series(
-            self,
-            NemsLUnet_s: pint.Quantity,
-            NemsLUgrs_s: pint.Quantity,
-            NemsLUmin_s: pint.Quantity,
+        self,
+        NemsLUnet_s: pint.Quantity,
+        NemsLUgrs_s: pint.Quantity,
+        NemsLUmin_s: pint.Quantity,
     ) -> Dict[str, pint.Quantity]:
         """
         Calculate nitrogen flux time series from land use change forcing.
@@ -486,12 +486,12 @@ class LanduseCalculator:
         ) | {"NflxLUmin": NemsLUmin_s}
 
     def _calculate_flux_series(
-            self,
-            net_flux: pint.Quantity,
-            gross_flux: pint.Quantity,
-            method_calc: pint.Quantity,
-            unit: str,
-            prefix: str,
+        self,
+        net_flux: pint.Quantity,
+        gross_flux: pint.Quantity,
+        method_calc: pint.Quantity,
+        unit: str,
+        prefix: str,
     ) -> Dict[str, pint.Quantity]:
         """
         Core flux calculation engine used by both carbon and nitrogen methods.
@@ -541,7 +541,6 @@ class LanduseCalculator:
         - tau_rgr_int: Regrowth timescale (tau_rgr)
         - tau_afst_decay_int: Afforestation decay timescale (tau_afst_decay = tau_rgr)
         """
-
 
         frc_rgr = self.frc_rgr.m
         tau_rgr_int = int(self.tau_rgr.m)
@@ -615,17 +614,17 @@ class LanduseCalculator:
         }
 
     def _calculate_from_net_flux(
-            self,
-            net_flux_values: np.ndarray,
-            gross_flux_values: np.ndarray,
-            regrowth_flux_values: np.ndarray,
-            deforest_flux_values: np.ndarray,
-            afforest_flux_values: np.ndarray,
-            afforest_decay_flux_values: np.ndarray,
-            tau_rgr_int: int,
-            frc_rgr: float,
-            tau_afst_decay_int: int,
-            frc_afst_decay: float,
+        self,
+        net_flux_values: np.ndarray,
+        gross_flux_values: np.ndarray,
+        regrowth_flux_values: np.ndarray,
+        deforest_flux_values: np.ndarray,
+        afforest_flux_values: np.ndarray,
+        afforest_decay_flux_values: np.ndarray,
+        tau_rgr_int: int,
+        frc_rgr: float,
+        tau_afst_decay_int: int,
+        frc_afst_decay: float,
     ) -> None:
         """
         Calculate flux values when using net flux as input.
@@ -663,15 +662,15 @@ class LanduseCalculator:
                 deforest_flux_values[i] = gross_flux_values[i]
                 regrowth_per_step = gross_flux_values[i] * frc_rgr / tau_rgr_int
                 regrowth_flux_values[
-                i + 1: min(i + 1 + tau_rgr_int, length_input)
+                    i + 1 : min(i + 1 + tau_rgr_int, length_input)
                 ] += regrowth_per_step
             else:
                 afforest_flux_values[i] = -gross_flux_values[i]
                 afforest_decay_per_step = (
-                        afforest_flux_values[i] * frc_afst_decay / tau_afst_decay_int
+                    afforest_flux_values[i] * frc_afst_decay / tau_afst_decay_int
                 )
                 afforest_decay_flux_values[
-                i + 1: min(i + 1 + tau_afst_decay_int, length_input)
+                    i + 1 : min(i + 1 + tau_afst_decay_int, length_input)
                 ] += afforest_decay_per_step
 
         # Final step
@@ -682,17 +681,17 @@ class LanduseCalculator:
             afforest_flux_values[-1] = -gross_flux_values[-1]
 
     def _calculate_from_gross_flux(
-            self,
-            net_flux_values: np.ndarray,
-            gross_flux_values: np.ndarray,
-            regrowth_flux_values: np.ndarray,
-            deforest_flux_values: np.ndarray,
-            afforest_flux_values: np.ndarray,
-            afforest_decay_flux_values: np.ndarray,
-            tau_rgr_int: int,
-            frc_rgr: float,
-            tau_afst_decay_int: int,
-            frc_afst_decay: float,
+        self,
+        net_flux_values: np.ndarray,
+        gross_flux_values: np.ndarray,
+        regrowth_flux_values: np.ndarray,
+        deforest_flux_values: np.ndarray,
+        afforest_flux_values: np.ndarray,
+        afforest_decay_flux_values: np.ndarray,
+        tau_rgr_int: int,
+        frc_rgr: float,
+        tau_afst_decay_int: int,
+        frc_afst_decay: float,
     ) -> None:
         """
         Calculate flux values when using gross flux as input.
@@ -718,15 +717,15 @@ class LanduseCalculator:
                 deforest_flux_values[i] = gross_flux_values[i]
                 regrowth_per_step = deforest_flux_values[i] * frc_rgr / tau_rgr_int
                 regrowth_flux_values[
-                i + 1: min(i + 1 + tau_rgr_int, length_input)
+                    i + 1 : min(i + 1 + tau_rgr_int, length_input)
                 ] += regrowth_per_step
             else:
                 afforest_flux_values[i] = -gross_flux_values[i]
                 afforest_decay_per_step = (
-                        afforest_flux_values[i] * frc_afst_decay / tau_afst_decay_int
+                    afforest_flux_values[i] * frc_afst_decay / tau_afst_decay_int
                 )
                 afforest_decay_flux_values[
-                i + 1: min(i + 1 + tau_afst_decay_int, length_input)
+                    i + 1 : min(i + 1 + tau_afst_decay_int, length_input)
                 ] += afforest_decay_per_step
 
         # Calculate net flux as gross flux minus regrowth

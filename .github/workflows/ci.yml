@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install CNit, test, and lint dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[tests,lint]"
+
+      - name: Report numerical dependency versions
+        run: |
+          python - <<'PY'
+          from importlib.metadata import PackageNotFoundError, version
+
+          for package in (
+              "numpy",
+              "scipy",
+              "xarray",
+              "pandas",
+              "pint",
+              "openscm-units",
+          ):
+              try:
+                  print(f"{package}=={version(package)}")
+              except PackageNotFoundError:
+                  print(f"{package}: not installed")
+          PY
+
+      - name: Run tests and README Quick Start smoke test
+        run: python -m pytest tests -q --ignore=tests/test_model_results_regression.py
+
+      - name: Check Python code with Ruff
+        run: ruff check src/cnit tests
+
+  model-results-regression:
+    name: Model results regression (current vs main)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install CNit and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[tests]"
+
+      - name: Compare model results with main
+        env:
+          CNIT_BASELINE_REF: origin/main
+        run: python -m pytest tests/test_model_results_regression.py -q
+
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes pandoc
+
+      - name: Install CNit and documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[docs]"
+
+      - name: Build Sphinx documentation
+        run: python scripts/build_docs.py
+
+  package-install:
+    name: Build and install distributions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Build wheel and source distribution
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Install wheel in a clean environment and run a smoke simulation
+        run: |
+          python -m venv "$RUNNER_TEMP/cnit-wheel-env"
+          "$RUNNER_TEMP/cnit-wheel-env/bin/python" -m pip install dist/*.whl
+          "$RUNNER_TEMP/cnit-wheel-env/bin/python" scripts/package_install_smoke.py data/cali_cmip6_best_fitting.csv
+
+      - name: Install source distribution in a clean environment and run a smoke simulation
+        run: |
+          python -m venv "$RUNNER_TEMP/cnit-sdist-env"
+          "$RUNNER_TEMP/cnit-sdist-env/bin/python" -m pip install dist/*.tar.gz
+          "$RUNNER_TEMP/cnit-sdist-env/bin/python" scripts/package_install_smoke.py data/cali_cmip6_best_fitting.csv

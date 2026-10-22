@@ -38,7 +38,7 @@ Quick Navigation
 
    → See :doc:`quickstart` for installation and basic usage.
 
-   → See :doc:`example` for a complete example with code and outputs.
+   → See :doc:`example` for complete CMIP6 ESM and TRENDY DGVM notebooks with code and outputs.
 
 **🛠️ For Developers**
    Contribute to CNit development.

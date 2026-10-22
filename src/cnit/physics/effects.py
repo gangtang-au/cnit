@@ -126,14 +126,14 @@ class EffectLanduseCalculator:
     """Sensitivity of nitrogen soil respiration to regrowth flux [yr/GtC]"""
 
     def calculate_eff_LU_NPP(
-            self,
-            cumsum_CflxLUrgr: pint.Quantity,
-            cumsum_CflxLUdfst: pint.Quantity,
-            cumsum_CflxLUafst: pint.Quantity,
-            cumsum_CflxLUafst_decay: pint.Quantity,
-            CplsPLS0: pint.Quantity,
-            frc_rgr: pint.Quantity,
-            frc_afst_decay: pint.Quantity,
+        self,
+        cumsum_CflxLUrgr: pint.Quantity,
+        cumsum_CflxLUdfst: pint.Quantity,
+        cumsum_CflxLUafst: pint.Quantity,
+        cumsum_CflxLUafst_decay: pint.Quantity,
+        CplsPLS0: pint.Quantity,
+        frc_rgr: pint.Quantity,
+        frc_afst_decay: pint.Quantity,
     ) -> pint.Quantity:
         """
         Calculate the land use effect on Net Primary Production (NPP).
@@ -386,12 +386,12 @@ class EffectLanduseCalculator:
         weight_frc_rgr = 0.8
         weight_rgr_eqm = weight_frc_rgr * frc_rgr
         eff_dfst_effective = (
-                0.5
-                * (
-                        cumsum_CflxLUdfst_nonrgr_eqm * (1 + weight_rgr_eqm)
-                        + cumsum_CflxLUdfst_nonrgr_instant * (1 - weight_rgr_eqm)
-                )
-                / CplsPLS0
+            0.5
+            * (
+                cumsum_CflxLUdfst_nonrgr_eqm * (1 + weight_rgr_eqm)
+                + cumsum_CflxLUdfst_nonrgr_instant * (1 - weight_rgr_eqm)
+            )
+            / CplsPLS0
         )
 
         # Calculate persistent afforestation carbon for equilibrium perspective
@@ -405,17 +405,17 @@ class EffectLanduseCalculator:
         # Simple average for afforestation (no phi adjustment needed)
         # Mature forest decay is gradual, so no exaggeration issues
         eff_afst_effective = (
-                0.5
-                * (cumsum_CflxLUafst_persist_eqm + cumsum_CflxLUafst_persist_instant)
-                / CplsPLS0
+            0.5
+            * (cumsum_CflxLUafst_persist_eqm + cumsum_CflxLUafst_persist_instant)
+            / CplsPLS0
         )
 
         # Total effect: 1 (baseline) - reduction (dfst) + amplification (afst)
         return 1 - eff_dfst_effective + eff_afst_effective
 
     def calculate_eff_LU_cLPLDSR(
-            self,
-            CflxLUrgr: pint.Quantity,
+        self,
+        CflxLUrgr: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
         """
         Calculate land use effect factors on carbon cycle turnover processes.
@@ -507,8 +507,8 @@ class EffectLanduseCalculator:
         )
 
     def calculate_eff_LU_nLPLDSR(
-            self,
-            CflxLUrgr: pint.Quantity,
+        self,
+        CflxLUrgr: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
         """
         Calculate land use effect factors on nitrogen turnover processes.
@@ -656,8 +656,8 @@ class EffectCO2Calculator:
     """
 
     def calculate_eff_CO2_NPP(
-            self,
-            CO2: pint.Quantity,
+        self,
+        CO2: pint.Quantity,
     ) -> pint.Quantity:
         """
         Calculate the CO2 fertilization effect factor for Net Primary Production (NPP).
@@ -787,31 +787,31 @@ class EffectCO2Calculator:
         CO2_680 = Q(680, "ppm")
         CO2_340 = Q(340, "ppm")
         r = (1 + self.sns_CO2_log * np.log(CO2_680 / self.CO2ref)) / (
-                1 + self.sns_CO2_log * np.log(CO2_340 / self.CO2ref)
+            1 + self.sns_CO2_log * np.log(CO2_340 / self.CO2ref)
         )
         s_CO2_rect = ((CO2_680 - self.CO2b) - r * (CO2_340 - self.CO2b)) / (
-                (r - 1) * (CO2_680 - self.CO2b) * (CO2_340 - self.CO2b)
+            (r - 1) * (CO2_680 - self.CO2b) * (CO2_340 - self.CO2b)
         )
         eff_CO2_rect = (1 / (self.CO2ref - self.CO2b) + s_CO2_rect) / (
-                1 / (CO2 - self.CO2b) + s_CO2_rect
+            1 / (CO2 - self.CO2b) + s_CO2_rect
         )
 
         # calculate the sigmoid form (ALEX) CO2 effect factors
         eff_CO2_sig = self.eff_CO2_sig_max / (
-                1
-                + (self.eff_CO2_sig_max - 1)
-                * np.exp(-self.sns_CO2_sig * (CO2 / self.CO2ref - 1))
+            1
+            + (self.eff_CO2_sig_max - 1)
+            * np.exp(-self.sns_CO2_sig * (CO2 / self.CO2ref - 1))
         )
 
         # calculate the effective effect factor (linear combination of different
         # forms, default value = 1)
         if 0 <= self.method_CO2_NPP <= 1:
             eff_CO2_NPP = (
-                                  1 - self.method_CO2_NPP
-                          ) * eff_CO2_log + self.method_CO2_NPP * eff_CO2_rect
+                1 - self.method_CO2_NPP
+            ) * eff_CO2_log + self.method_CO2_NPP * eff_CO2_rect
         elif 1 < self.method_CO2_NPP <= 2:
             eff_CO2_NPP = (2 - self.method_CO2_NPP) * eff_CO2_rect + (
-                    self.method_CO2_NPP - 1
+                self.method_CO2_NPP - 1
             ) * eff_CO2_sig
         else:
             eff_CO2_NPP = 1
@@ -978,8 +978,8 @@ class EffectTemperatureCalculator:
     """
 
     def calculate_eff_dT_NPPLPR(
-            self,
-            dT: pint.Quantity,
+        self,
+        dT: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity]:
         """
         Calculate temperature effects for NPP and litter production respiration (LPR).
@@ -1049,14 +1049,14 @@ class EffectTemperatureCalculator:
         exponential_component = np.exp(dT * self.sns_NPP2dT)
         sigmoid_component = 2 / (1 + np.exp(-self.sns_NPP2dT_sig * dT))
         eff_dT_NPP = (
-                             1 - self.method_dT_NPP
-                     ) * exponential_component + self.method_dT_NPP * sigmoid_component
+            1 - self.method_dT_NPP
+        ) * exponential_component + self.method_dT_NPP * sigmoid_component
 
         return eff_dT_NPP, np.exp(dT * self.sns_LPR2dT)
 
     def calculate_eff_dT_cLPLDSR(
-            self,
-            dT: pint.Quantity,
+        self,
+        dT: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
         """
         Calculate temperature effects for carbon cycle turnover processes.
@@ -1150,8 +1150,8 @@ class EffectTemperatureCalculator:
         )
 
     def calculate_eff_dT_PUBNF(
-            self,
-            dT: pint.Quantity,
+        self,
+        dT: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity]:
         """
         Calculate temperature effects for nitrogen acquisition processes.
@@ -1220,8 +1220,8 @@ class EffectTemperatureCalculator:
         return np.exp(dT * self.sns_PU2dT), np.exp(dT * self.sns_BNF2dT)
 
     def calculate_eff_dT_nLPLDSRLS(
-            self,
-            dT: pint.Quantity,
+        self,
+        dT: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity, pint.Quantity]:
         """
         Calculate temperature effects for nitrogen cycle turnover processes.
@@ -1460,9 +1460,9 @@ class EffectCarbonNitrogenCouplingCalculator:
     """
 
     def calculate_eff_N_NPP(
-            self,
-            NflxPUdef: pint.Quantity,
-            switch_N: pint.Quantity,
+        self,
+        NflxPUdef: pint.Quantity,
+        switch_N: pint.Quantity,
     ) -> pint.Quantity:
         """
         Calculate the carbon-nitrogen coupling effect for Net Primary Production (NPP).
@@ -1495,9 +1495,9 @@ class EffectCarbonNitrogenCouplingCalculator:
         return np.where(switch_N != 0, np.exp(-self.sns_NPP2PUdef * NflxPUdef), one)
 
     def calculate_eff_N_cLPLDSR(
-            self,
-            NflxPUdef: pint.Quantity,
-            switch_N: pint.Quantity,
+        self,
+        NflxPUdef: pint.Quantity,
+        switch_N: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
         """
         Calculate carbon-nitrogen coupling effects for carbon cycle processes i: LP,
@@ -1538,9 +1538,9 @@ class EffectCarbonNitrogenCouplingCalculator:
         )
 
     def calculate_eff_C_PUBNF(
-            self,
-            CflxNPP: pint.Quantity,
-            CflxNPP0: pint.Quantity,
+        self,
+        CflxNPP: pint.Quantity,
+        CflxNPP0: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity]:
         """
         Calculate carbon availability effects on nitrogen acquisition processes.
@@ -1583,17 +1583,16 @@ class EffectCarbonNitrogenCouplingCalculator:
         CflxNPPrd = CflxNPP / CflxNPP0 - 1
 
         return (
-                self.eff_C_PU_max
-                / (1 + (self.eff_C_PU_max - 1) * np.exp(-self.sns_PU2NPPrd * CflxNPPrd))
+            self.eff_C_PU_max
+            / (1 + (self.eff_C_PU_max - 1) * np.exp(-self.sns_PU2NPPrd * CflxNPPrd))
         ), (
-                self.eff_C_BNF_max
-                / (1 + (self.eff_C_BNF_max - 1) * np.exp(
-            -self.sns_BNF2NPPrd * CflxNPPrd))
+            self.eff_C_BNF_max
+            / (1 + (self.eff_C_BNF_max - 1) * np.exp(-self.sns_BNF2NPPrd * CflxNPPrd))
         )
 
     def calculate_eff_N_PUBNF(
-            self,
-            NflxPUdef: pint.Quantity,
+        self,
+        NflxPUdef: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity]:
         """
         Calculate nitrogen deficit effects on nitrogen acquisition processes.
@@ -1626,8 +1625,8 @@ class EffectCarbonNitrogenCouplingCalculator:
         )
 
     def calculate_eff_N_nLPLDSR(
-            self,
-            NflxPUdef: pint.Quantity,
+        self,
+        NflxPUdef: pint.Quantity,
     ) -> Tuple[pint.Quantity, pint.Quantity, pint.Quantity]:
         """
         Calculate carbon-nitrogen coupling effects for nitrogen cycle processes: LP, LD, and SR

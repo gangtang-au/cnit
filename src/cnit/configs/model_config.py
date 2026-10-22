@@ -1,145 +1,177 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
+import csv
+from pathlib import Path
 import pint
-
-from ..physics.landuse import LanduseCalculator
-from ..physics.effects import (
-    EffectCO2Calculator,
-    EffectTemperatureCalculator,
-    EffectCarbonNitrogenCouplingCalculator,
-    EffectLanduseCalculator
-)
-from ..physics.carbon_cycle import (
-    CarbonNPPLPRCalculator,
-    CarbonTurnoverCalculator,
-    CarbonCycleCalculator,
-    CarbonCycleModel
-)
-from ..physics.nitrogen_cycle import (
-    NitrogenPUBNFCalculator,
-    NitrogenTurnoverCalculator,
-    NitrogenCycleCalculator,
-    NitrogenCycleModel
-)
 
 from ..utils.units import Q
 
-calc_lu = LanduseCalculator()
-calc_eff_CO2 = EffectCO2Calculator()
-calc_eff_dT = EffectTemperatureCalculator()
-calc_eff_CN = EffectCarbonNitrogenCouplingCalculator()
-calc_eff_LU = EffectLanduseCalculator()
-calc_npp_lpr = CarbonNPPLPRCalculator()
-calc_c_turnover = CarbonTurnoverCalculator()
-calc_c_cycle = CarbonCycleCalculator()
-mdl_c_cycle = CarbonCycleModel(
-    calc_c_turnover=calc_c_turnover,
-    calc_c_cycle=calc_c_cycle,
-)
-calc_pu_bnf = NitrogenPUBNFCalculator()
-calc_n_turnover = NitrogenTurnoverCalculator()
-calc_n_cycle = NitrogenCycleCalculator()
-mdl_n_cycle = NitrogenCycleModel(
-    calc_n_turnover=calc_n_turnover,
-    calc_n_cycle=calc_n_cycle,
-)
 
-
-@dataclass(slots=True)
+@dataclass
 class CarbonNitrogenCycleModelConfig:
-    frc_rgr: pint.Quantity = calc_lu.frc_rgr
-    tau_rgr: pint.Quantity = calc_lu.tau_rgr
-    method_cLU: pint.Quantity = calc_lu.method_cLU
-    method_nLU: pint.Quantity = calc_lu.method_nLU
+    frc_rgr: pint.Quantity = Q(0.9, "1")
+    tau_rgr: pint.Quantity = Q(100, "yr")
+    method_cLU: pint.Quantity = Q(0, "1")
+    method_nLU: pint.Quantity = Q(1, "1")
 
-    CO2ref: pint.Quantity = calc_eff_CO2.CO2ref
-    CO2b: pint.Quantity = calc_eff_CO2.CO2b
-    sns_CO2_log: pint.Quantity = calc_eff_CO2.sns_CO2_log
-    sns_CO2_sig: pint.Quantity = calc_eff_CO2.sns_CO2_sig
-    eff_CO2_sig_max: pint.Quantity = calc_eff_CO2.eff_CO2_sig_max
-    method_CO2_NPP: pint.Quantity = calc_eff_CO2.method_CO2_NPP
+    CO2ref: pint.Quantity = Q(284.875, "ppm")
+    CO2b: pint.Quantity = Q(31, "ppm")
+    sns_CO2_log: pint.Quantity = Q(1, "1")
+    sns_CO2_sig: pint.Quantity = Q(1, "1")
+    eff_CO2_sig_max: pint.Quantity = Q(2, "1")
+    method_CO2_NPP: pint.Quantity = Q(0, "1")
 
-    sns_NPP2dT: pint.Quantity = calc_eff_dT.sns_NPP2dT
-    sns_NPP2dT_sig: pint.Quantity = calc_eff_dT.sns_NPP2dT_sig
-    method_dT_NPP: pint.Quantity = calc_eff_dT.method_dT_NPP
-    sns_LPR2dT: pint.Quantity = calc_eff_dT.sns_LPR2dT
-    sns_cLP2dT: pint.Quantity = calc_eff_dT.sns_cLP2dT
-    sns_cLD2dT: pint.Quantity = calc_eff_dT.sns_cLD2dT
-    sns_cSR2dT: pint.Quantity = calc_eff_dT.sns_cSR2dT
-    sns_PU2dT: pint.Quantity = calc_eff_dT.sns_PU2dT
-    sns_BNF2dT: pint.Quantity = calc_eff_dT.sns_BNF2dT
-    sns_nLP2dT: pint.Quantity = calc_eff_dT.sns_nLP2dT
-    sns_nLD2dT: pint.Quantity = calc_eff_dT.sns_nLD2dT
-    sns_nSR2dT: pint.Quantity = calc_eff_dT.sns_nSR2dT
-    sns_nLSgas2dT: pint.Quantity = calc_eff_dT.sns_nLSgas2dT
+    sns_NPP2dT: pint.Quantity = Q(0, "1/K")
+    sns_NPP2dT_sig: pint.Quantity = Q(0, "1/K")
+    method_dT_NPP: pint.Quantity = Q(0, "1")
+    sns_LPR2dT: pint.Quantity = Q(0, "1/K")
+    sns_cLP2dT: pint.Quantity = Q(0, "1/K")
+    sns_cLD2dT: pint.Quantity = Q(0, "1/K")
+    sns_cSR2dT: pint.Quantity = Q(0, "1/K")
+    sns_PU2dT: pint.Quantity = Q(0, "1/K")
+    sns_BNF2dT: pint.Quantity = Q(0, "1/K")
+    sns_nLP2dT: pint.Quantity = Q(0, "1/K")
+    sns_nLD2dT: pint.Quantity = Q(0, "1/K")
+    sns_nSR2dT: pint.Quantity = Q(0, "1/K")
+    sns_nLSgas2dT: pint.Quantity = Q(0, "1/K")
 
-    sns_NPP2PUdef: pint.Quantity = calc_eff_CN.sns_NPP2PUdef
-    sns_cLP2PUdef: pint.Quantity = calc_eff_CN.sns_cLP2PUdef
-    sns_cLD2PUdef: pint.Quantity = calc_eff_CN.sns_cLD2PUdef
-    sns_cSR2PUdef: pint.Quantity = calc_eff_CN.sns_cSR2PUdef
-    sns_PU2PUdef: pint.Quantity = calc_eff_CN.sns_PU2PUdef
-    sns_BNF2PUdef: pint.Quantity = calc_eff_CN.sns_BNF2PUdef
-    sns_nLP2PUdef: pint.Quantity = calc_eff_CN.sns_nLP2PUdef
-    sns_nLD2PUdef: pint.Quantity = calc_eff_CN.sns_nLD2PUdef
-    sns_nSR2PUdef: pint.Quantity = calc_eff_CN.sns_nSR2PUdef
-    eff_C_PU_max: pint.Quantity = calc_eff_CN.eff_C_PU_max
-    sns_PU2NPPrd: pint.Quantity = calc_eff_CN.sns_PU2NPPrd
-    eff_C_BNF_max: pint.Quantity = calc_eff_CN.eff_C_BNF_max
-    sns_BNF2NPPrd: pint.Quantity = calc_eff_CN.sns_BNF2NPPrd
+    sns_NPP2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_cLP2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_cLD2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_cSR2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_PU2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_BNF2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_nLP2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_nLD2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    sns_nSR2PUdef: pint.Quantity = Q(0, "yr/GtN")
+    eff_C_PU_max: pint.Quantity = Q(2, "1")
+    sns_PU2NPPrd: pint.Quantity = Q(2.5, "1")
+    eff_C_BNF_max: pint.Quantity = Q(2, "1")
+    sns_BNF2NPPrd: pint.Quantity = Q(2.5, "1")
 
-    sns_cLP2LUrgr: pint.Quantity = calc_eff_LU.sns_cLP2LUrgr
-    sns_cLD2LUrgr: pint.Quantity = calc_eff_LU.sns_cLD2LUrgr
-    sns_cSR2LUrgr: pint.Quantity = calc_eff_LU.sns_cSR2LUrgr
-    sns_nLP2LUrgr: pint.Quantity = calc_eff_LU.sns_nLP2LUrgr
-    sns_nLD2LUrgr: pint.Quantity = calc_eff_LU.sns_nLD2LUrgr
-    sns_nSR2LUrgr: pint.Quantity = calc_eff_LU.sns_nSR2LUrgr
+    sns_cLP2LUrgr: pint.Quantity = Q(0, "yr/GtC")
+    sns_cLD2LUrgr: pint.Quantity = Q(0, "yr/GtC")
+    sns_cSR2LUrgr: pint.Quantity = Q(0, "yr/GtC")
+    sns_nLP2LUrgr: pint.Quantity = Q(0, "yr/GtC")
+    sns_nLD2LUrgr: pint.Quantity = Q(0, "yr/GtC")
+    sns_nSR2LUrgr: pint.Quantity = Q(0, "yr/GtC")
 
-    NPP0: pint.Quantity = calc_npp_lpr.NPP0
-    LPR0: pint.Quantity = calc_npp_lpr.LPR0
+    NPP0: pint.Quantity = Q(50, "GtC/yr")
+    LPR0: pint.Quantity = Q(0, "GtC/yr")
 
-    frc_NPP2P: pint.Quantity = calc_c_cycle.frc_NPP2P
-    frc_NPP2L: pint.Quantity = calc_c_cycle.frc_NPP2L
-    frc_cLP2L: pint.Quantity = calc_c_cycle.frc_cLP2L
-    frc_cLD2S: pint.Quantity = calc_c_cycle.frc_cLD2S
-    frc_cLUgrs2P: pint.Quantity = calc_c_cycle.frc_cLUgrs2P
-    frc_cLUgrs2L: pint.Quantity = calc_c_cycle.frc_cLUgrs2L
+    frc_NPP2P: pint.Quantity = Q(0.55, "1")
+    frc_NPP2L: pint.Quantity = Q(0.35, "1")
+    frc_cLP2L: pint.Quantity = Q(0.7, "1")
+    frc_cLD2S: pint.Quantity = Q(0.3, "1")
+    frc_cLUgrs2P: pint.Quantity = Q(0.6, "1")
+    frc_cLUgrs2L: pint.Quantity = Q(0.3, "1")
 
-    tau_CplsP: pint.Quantity = calc_c_turnover.tau_CplsP
-    tau_CplsL: pint.Quantity = calc_c_turnover.tau_CplsL
-    tau_CplsS: pint.Quantity = calc_c_turnover.tau_CplsS
+    tau_CplsP: pint.Quantity = Q(10, "yr")
+    tau_CplsL: pint.Quantity = Q(1, "yr")
+    tau_CplsS: pint.Quantity = Q(100, "yr")
 
-    CplsP0: pint.Quantity = mdl_c_cycle.CplsP0
-    CplsL0: pint.Quantity = mdl_c_cycle.CplsL0
-    CplsS0: pint.Quantity = mdl_c_cycle.CplsS0
+    CplsP0: pint.Quantity = Q(400, "GtC")
+    CplsL0: pint.Quantity = Q(50, "GtC")
+    CplsS0: pint.Quantity = Q(1550, "GtC")
 
-    PU0: pint.Quantity = calc_pu_bnf.PU0
-    BNF0: pint.Quantity = calc_pu_bnf.BNF0
-    NCratio_PUreq: pint.Quantity = calc_pu_bnf.NCratio_PUreq
-    NetMIN0: pint.Quantity = calc_pu_bnf.NetMIN0
-    sns_NetMIN2dT: pint.Quantity = calc_pu_bnf.sns_NetMIN2dT
-    NetMINlt0: pint.Quantity = calc_pu_bnf.NetMINlt0
-    sns_NetMINlt2AD: pint.Quantity = calc_pu_bnf.sns_NetMINlt2AD
+    PU0: pint.Quantity = Q(0.5, "GtN/yr")
+    BNF0: pint.Quantity = Q(0.1, "GtN/yr")
+    NCratio_PUreq: pint.Quantity = Q(0.02, "GtN/GtC")
+    NetMIN0: pint.Quantity = Q(0.5, "GtN/yr")
+    sns_NetMIN2dT: pint.Quantity = Q(0, "1/K")
+    NetMINlt0: pint.Quantity = Q(0.5, "GtN/yr")
+    sns_NetMINlt2AD: pint.Quantity = Q(0, "yr/GtN")
 
-    tau_NplsP: pint.Quantity = calc_n_turnover.tau_NplsP
-    tau_NplsL: pint.Quantity = calc_n_turnover.tau_NplsL
-    tau_NplsS: pint.Quantity = calc_n_turnover.tau_NplsS
-    tau_NplsM: pint.Quantity = calc_n_turnover.tau_NplsM
+    tau_NplsP: pint.Quantity = Q(10, "yr")
+    tau_NplsL: pint.Quantity = Q(1, "yr")
+    tau_NplsS: pint.Quantity = Q(100, "yr")
+    tau_NplsM: pint.Quantity = Q(1, "yr")
 
-    frc_BNF2P: pint.Quantity = calc_n_cycle.frc_BNF2P
-    frc_BNF2L: pint.Quantity = calc_n_cycle.frc_BNF2L
-    frc_PU2P: pint.Quantity = calc_n_cycle.frc_PU2P
-    frc_PU2L: pint.Quantity = calc_n_cycle.frc_PU2L
-    frc_nLP2L: pint.Quantity = calc_n_cycle.frc_nLP2L
-    frc_nLD2S: pint.Quantity = calc_n_cycle.frc_nLD2S
-    frc_nLSgas: pint.Quantity = calc_n_cycle.frc_nLSgas
-    frc_nLUgrs2P: pint.Quantity = calc_n_cycle.frc_nLUgrs2P
-    frc_nLUgrs2L: pint.Quantity = calc_n_cycle.frc_nLUgrs2L
+    frc_BNF2P: pint.Quantity = Q(0.55, "1")
+    frc_BNF2L: pint.Quantity = Q(0.35, "1")
+    frc_PU2P: pint.Quantity = Q(0.55, "1")
+    frc_PU2L: pint.Quantity = Q(0.35, "1")
+    frc_nLP2L: pint.Quantity = Q(0.7, "1")
+    frc_nLD2S: pint.Quantity = Q(0.3, "1")
+    frc_nLSgas: pint.Quantity = Q(1, "1")
+    frc_nLUgrs2P: pint.Quantity = Q(0.6, "1")
+    frc_nLUgrs2L: pint.Quantity = Q(0.3, "1")
 
-    NplsP0: pint.Quantity = mdl_n_cycle.NplsP0
-    NplsL0: pint.Quantity = mdl_n_cycle.NplsL0
-    NplsS0: pint.Quantity = mdl_n_cycle.NplsS0
-    NplsM0: pint.Quantity = mdl_n_cycle.NplsM0
+    NplsP0: pint.Quantity = Q(5, "GtN")
+    NplsL0: pint.Quantity = Q(1, "GtN")
+    NplsS0: pint.Quantity = Q(150, "GtN")
+    NplsM0: pint.Quantity = Q(1, "GtN")
 
-    time0: pint.Quantity = mdl_c_cycle.time0
+    time0: pint.Quantity = Q(1850, "yr")
     switch_N: pint.Quantity = Q(1, "1")
     switch_Cpls: list = field(default_factory=lambda: [1, 1, 1])
     switch_Npls: list = field(default_factory=lambda: [1, 1, 1, 1])
+
+    @classmethod
+    def from_dict(cls, params: dict) -> "CarbonNitrogenCycleModelConfig":
+        """Create a config from parameter overrides, using defaults for omissions."""
+        valid_fields = {item.name for item in fields(cls)}
+        unknown = set(params) - valid_fields
+        if unknown:
+            raise ValueError(f"Unknown parameter(s) in config: {sorted(unknown)}")
+        return cls(**params)
+
+    @classmethod
+    def from_parameter_csv(
+        cls,
+        csv_file,
+        model_name: str,
+    ) -> "CarbonNitrogenCycleModelConfig":
+        """Build a model config from a user-selected calibration table.
+
+        Parameters present in the selected CSV column override the standard
+        calculator defaults. Parameters absent from the table retain those defaults.
+
+        Both the CSV path and source model column name must be provided.
+        """
+        parameter_path = Path(csv_file)
+        csv_context = parameter_path.open("r", encoding="utf-8", newline="")
+        config_fields = {item.name for item in fields(cls)}
+
+        with csv_context:
+            reader = csv.DictReader(csv_context)
+            if not reader.fieldnames or model_name not in reader.fieldnames:
+                available = reader.fieldnames[2:] if reader.fieldnames else []
+                raise ValueError(
+                    f"Unknown model {model_name!r}. Available models: "
+                    f"{', '.join(available)}"
+                )
+
+            values = {}
+            for row in reader:
+                name = row["parameter"].strip()
+                if name not in config_fields:
+                    raise ValueError(
+                        f"Parameter {name!r} in {parameter_path.name} is not a "
+                        "field of CarbonNitrogenCycleModelConfig"
+                    )
+                raw_value = row[model_name].strip()
+                if not raw_value:
+                    continue
+                unit = row["unit"].strip()
+                if unit.lower() == "dimensionless":
+                    unit = "1"
+                try:
+                    values[name] = Q(float(raw_value), unit)
+                except (TypeError, ValueError, pint.errors.PintError) as exc:
+                    raise ValueError(
+                        f"Invalid value for parameter {name!r} and model "
+                        f"{model_name!r}: {raw_value!r} {unit}"
+                    ) from exc
+
+        # Resolve table values against config defaults before deriving pool switches.
+        config = cls.from_dict(values)
+        carbon_active = config.CplsP0.m != 0
+        config.switch_Cpls = [1, 1, 1] if carbon_active else [0, 0, 0]
+
+        # Freeze nitrogen pools when nitrogen is disabled or NplsP0 is absent/zero.
+        nitrogen_active = (
+            "NplsP0" in values and config.switch_N.m != 0 and config.NplsP0.m != 0
+        )
+        config.switch_Npls = [1, 1, 1, 1] if nitrogen_active else [0, 0, 0, 0]
+
+        return config

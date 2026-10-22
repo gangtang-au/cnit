@@ -3,7 +3,7 @@ from typing import Optional, Dict
 import pint
 
 
-@dataclass(slots=True)
+@dataclass
 class CarbonNitrogenCycleExperimentConfig:
     """
     Configuration for a Carbon-Nitrogen Cycle experiment.
@@ -22,6 +22,7 @@ class CarbonNitrogenCycleExperimentConfig:
         NemsLUmin_s: Nitrogen emissions from mineralization [TgN/yr].
         metadata: Optional dictionary for additional metadata.
     """
+
     name: str
     switch_N: pint.Quantity
     time_axis: pint.Quantity

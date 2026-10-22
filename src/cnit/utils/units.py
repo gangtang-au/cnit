@@ -13,7 +13,7 @@ Q = UNIT_REGISTRY.Quantity
 
 
 def check_units(
-        required_dimension: str,
+    required_dimension: str,
 ) -> Callable[[Any, attr.Attribute, pint.Quantity], None]:
     """
     Check units of class attribute
@@ -31,7 +31,7 @@ def check_units(
     """
 
     def check_unit_internal(
-            self: Any, attribute: attr.Attribute, value: pint.Quantity
+        self: Any, attribute: attr.Attribute, value: pint.Quantity
     ) -> None:
         """
         Check units of attribute
