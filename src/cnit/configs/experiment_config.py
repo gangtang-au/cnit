@@ -47,7 +47,7 @@ class CarbonNitrogenCycleExperimentConfig:
     NemsLUmin_s: pint.Quantity = field(validator=check_units("GtN/yr"))
     metadata: Optional[Dict[str, object]] = field(default=None)
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Check time-axis regularity and forcing-series lengths.
 
         Field validators check unit compatibility before this method runs.

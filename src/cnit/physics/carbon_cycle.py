@@ -22,9 +22,9 @@ availability, and land use change.
 1. **Three-Pool Structure**: The model tracks carbon in plant, litter, and soil organic
    matter pools, representing the major terrestrial carbon reservoirs.
 
-2. **Annual Timestep with Cascading**: The model operates on annual timesteps but accounts
-   for rapid sub-annual cycling through empirical allocation fractions that represent carbon
-   cascading through multiple pools within a year.
+2. **Allocation Fractions with Cascading**: Empirical allocation fractions represent
+   carbon transfers through multiple pools within each model timestep. Annual timesteps
+   are used in the default examples; evenly spaced subannual time axes are also supported.
 
 3. **Environmental Modifiers**: All process rates are modified by dimensionless effect factors
    representing:
@@ -40,7 +40,8 @@ availability, and land use change.
    (flux = pool size / turnover time), modified by environmental effects.
 
 5. **Flux Partitioning**: Input fluxes (NPP, land use) are partitioned among pools using
-   empirical fractions that capture both direct allocation and rapid within-year cycling.
+   empirical fractions that capture both direct allocation and rapid cycling over their
+   model timestep.
 
 6. **Carbon-Nitrogen Coupling**:  Nitrogen availability affects carbon cycle processes through
    limitation effects on NPP and decomposition rates (calculated via nitrogen cycle effects).
@@ -342,7 +343,7 @@ class CarbonCycleCalculator:
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of carbon through different pathways in the
     terrestrial biosphere.  These fractions account for the cascade of carbon through
-    multiple pools within the annual timestep, capturing both immediate allocation
+    multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
 
@@ -353,8 +354,8 @@ class CarbonCycleCalculator:
     """Fraction of net primary production allocated to plant pool [dimensionless].
 
     Represents the portion of newly fixed carbon remaining in plant biomass at the
-    end of the annual timestep, primarily in long-lived tissues (wood, structural
-    tissues, storage organs) that do not turn over within the year.
+    end of a model timestep, primarily in long-lived tissues (wood, structural
+    tissues, storage organs) that do not turn over within the model timestep.
     """
 
     frc_NPP2L: pint.Quantity = field(
@@ -363,11 +364,11 @@ class CarbonCycleCalculator:
     )
     """Fraction of net primary production allocated to litter pool [dimensionless].
 
-    Represents newly fixed carbon that enters the litter pool within the annual
+    Represents newly fixed carbon that enters the litter pool within the model
     timestep through rapid plant-to-litter turnover (e.g., fine root turnover, leaf
     senescence). The remainder (1 - frc_NPP2P - frc_NPP2L) goes to the soil pool,
     representing carbon that cycles through both plant and litter pools and enters
-    soil within the annual timestep.
+    soil within the model timestep.
     """
 
     frc_cLP2L: pint.Quantity = field(
@@ -377,9 +378,9 @@ class CarbonCycleCalculator:
     """Fraction of litter production carbon retained in litter pool [dimensionless].
 
     Represents carbon in plant materials that remain in the litter pool at the end
-    of the annual timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
+    of a model timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
-    the soil pool within the annual timestep, bypassing extended residence in the
+    the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
     """
 
@@ -430,7 +431,8 @@ class CarbonCycleCalculator:
         on inputs (NPP), autotrophic respiration (LPR), internal transfers (cLP, cLD),
         heterotrophic respiration (cSR), and land use changes (cLUgrs). Each input
         flux is partitioned among pools according to the fractional allocation parameters,
-        which account for carbon cascading through multiple pools within the annual timestep.
+        which represent rapid carbon cascading through multiple pools within the model
+        parameterization.
 
         Parameters
         ----------
@@ -488,20 +490,19 @@ class CarbonCycleCalculator:
         where:
 
         - :math:`f_{NPP2S} = 1 - f_{NPP2P} - f_{NPP2L}` represents NPP carbon
-          cascading through plant→litter→soil within the annual timestep
+          cascading through plant→litter→soil within the model timestep
         - :math:`f_{cLP2S} = 1 - f_{cLP2L}` represents rapid litter decomposition
-          directly entering soil within the annual timestep
+          directly entering soil within the model timestep
         - :math:`f_{cLUgrs2S} = 1 - f_{cLUgrs2P} - f_{cLUgrs2L}` (remainder from soil)
 
-        **Important Note on Annual Timestep:**
+        **Allocation Fractions and Time Resolution:**
 
-        All allocation fractions account for the cascade of carbon through multiple
-        pools within the annual timestep. For example, :math:`f_{NPP2S}` does not
-        represent direct allocation from atmosphere to soil, but rather carbon that
-        is fixed by plants, then enters litter through turnover, and subsequently
-        enters soil through decomposition—all within a single year.  This approach
-        effectively captures rapid cycling processes without explicitly modeling
-        sub-annual dynamics.
+        All allocation fractions account for the rapid cascade of carbon through
+        multiple pools over the model timestep. For example,
+        :math:`f_{NPP2S}` does not represent direct allocation from atmosphere to
+        soil, but rather carbon that is fixed by plants, then enters litter through
+        turnover, and subsequently enters soil through decomposition over that model
+        timestep.
         """
         # Calculate NPP fractions to each pool
         CflxNPP2P = CflxNPP * self.frc_NPP2P
@@ -724,8 +725,9 @@ class CarbonCycleModelResult:
     time_axis: pint.Quantity
     """Time points for simulation [yr].
 
-    Array of discrete time points at which the model state is evaluated,
-    typically representing annual timesteps.
+    Array of evenly spaced time points at which the model state is evaluated.
+    Annual timesteps are used in the default examples; subannual time axes are also
+    supported.
     """
 
     CflxNPP_s: pint.Quantity
@@ -917,9 +919,9 @@ class CarbonCycleModel:
     - Land use change emissions
     - Environmental modifiers (temperature, nitrogen availability, land use effects)
 
-    The model uses annual timesteps and accounts for rapid carbon cycling through
-    empirical allocation fractions that represent carbon cascading through multiple
-    pools within a year.
+    The model uses annual timesteps in its default examples and also accepts evenly spaced
+    subannual time axes. Empirical allocation fractions represent carbon transfers through
+    multiple pools within each model timestep.
 
     Unit-aware forcing and effect series are converted to numeric interpolators once
     at the solver boundary, allowing adaptive evaluation without repeated unit work.

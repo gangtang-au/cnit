@@ -41,7 +41,9 @@ documentation.
 * Four nitrogen pools (plant, litter, soil, mineral) and three carbon pools
 * CO₂ fertilization, temperature sensitivity, and land use change effects
 * Nitrogen limitation on carbon uptake
-* Annual timestep with sub-annual process representation
+* Annual timesteps with subannual process representation through within-year flux and
+  pool-turnover allocation fractions. Evenly spaced subannual timesteps are also
+  supported, with allocation fractions applying within each timestep.
 * Separation of deforestation/afforestation for land use emissions
 * Computationally efficient for integrated assessment modeling
 * MAGICC integration ready

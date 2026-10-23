@@ -67,10 +67,18 @@ executed as part of the regular tests to catch example drift.  The documentation
 build renders the notebooks with execution disabled, so notebook outputs should
 be saved in the notebook files.
 
-The model-results regression test compares outputs against the local ``main``
-branch by default.  It currently uses calibrated CMIP6 models and forcing as
-test cases.  Set ``CNIT_BASELINE_REF`` to another available Git ref when
-needed, for example ``CNIT_BASELINE_REF=origin/main make test``.
+The model-results regression test compares the default model configuration with
+the local ``main`` branch using the ``1pctCO2`` and ``hist_ssp585`` forcing
+experiments.  It also runs a calibrated ACCESS-ESM1-5 configuration and reports
+maximum absolute and relative differences for selected carbon and nitrogen
+diagnostics.  To show those diagnostic values locally, run:
+
+..  code-block::  bash
+
+   CNIT_BASELINE_REF=origin/main python -m pytest tests/test_model_results_regression.py -q -s
+
+Set ``CNIT_BASELINE_REF`` to another available Git ref when comparing against a
+different baseline.
 
 The repository-level ``notebooks/`` directory contains the notebook sources
 used by the documentation build, which stages them in a temporary Sphinx

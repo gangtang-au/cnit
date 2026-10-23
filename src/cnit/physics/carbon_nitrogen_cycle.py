@@ -58,11 +58,12 @@ class CarbonNitrogenCycleModel:
         * Temperature effects on all processes
         * Land use change impacts (deforestation, afforestation, regrowth)
 
-    The model operates on annual timesteps and solves the carbon and nitrogen cycles
-    iteratively to capture their bidirectional coupling. A key feature is the explicit
-    calculation of nitrogen deficit (difference between nitrogen required and available
-    for plant uptake), which creates feedback loops regulating both carbon and nitrogen
-    cycling.
+    The model uses annual timesteps in its default examples and also accepts evenly spaced
+    subannual time axes. It solves the carbon and nitrogen cycles iteratively to capture
+    their bidirectional coupling. A key feature is the explicit calculation of nitrogen
+    deficit (difference between nitrogen required and available for plant uptake), which
+    creates feedback loops regulating both carbon and nitrogen cycling. Allocation
+    fractions describe pool turnover transfers within each model timestep.
 
     **Model Architecture:**
 
@@ -103,7 +104,7 @@ class CarbonNitrogenCycleModel:
     The model can be initialized in two ways:
 
     - :meth:`from_dict`: Build from a parameter dictionary
-    - :meth:`from_config`: Build from a :class:`CarbonNitrogenCycleModelConfig` dataclass
+    - :meth:`from_config`: Build from a :class:`CarbonNitrogenCycleModelConfig` instance
 
     Both methods automatically distribute parameters to the appropriate sub-components.
     """
@@ -237,7 +238,7 @@ class CarbonNitrogenCycleModel:
         cls, config: CarbonNitrogenCycleModelConfig
     ) -> "CarbonNitrogenCycleModel":
         """
-        Build a fully configured CarbonNitrogenCycleModel from a config dataclass.
+        Build a fully configured CarbonNitrogenCycleModel from a config instance.
 
         Each calculator and sub-model is constructed with its values from the
         supplied config.
@@ -245,7 +246,7 @@ class CarbonNitrogenCycleModel:
         Parameters
         ----------
         config
-            Configuration dataclass containing all model parameters.
+            Configuration instance containing all model parameters.
 
         Returns
         -------
@@ -255,7 +256,7 @@ class CarbonNitrogenCycleModel:
         See Also
         --------
         from_dict : Build model from parameter overrides
-        CarbonNitrogenCycleModelConfig : Configuration dataclass definition
+        CarbonNitrogenCycleModelConfig : Configuration class definition
         """
         calc_lu = LanduseCalculator(
             frc_rgr=config.frc_rgr,

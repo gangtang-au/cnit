@@ -2,12 +2,12 @@
 
 import json
 import os
-from dataclasses import fields
 from pathlib import Path
 import subprocess
 import sys
 import tarfile
 
+from attrs import fields
 import numpy as np
 import pytest
 
@@ -38,7 +38,7 @@ ACCESS_DIAGNOSTICS = (
 def _serialize_config(config):
     """Convert configured quantities to JSON values for the runner process."""
     values = {}
-    for config_field in fields(config):
+    for config_field in fields(type(config)):
         value = getattr(config, config_field.name)
         if hasattr(value, "units") and hasattr(value, "magnitude"):
             values[config_field.name] = {

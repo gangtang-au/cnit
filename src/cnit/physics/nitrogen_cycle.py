@@ -44,16 +44,13 @@ deposition, fertilizer application, and land use change.
    deficit drives compensatory responses in plant uptake efficiency and biological fixation.
 
 4. **Flux-Based Mineralization**: Net mineralization is parameterized as a flux-based process
-   rather than relying on explicit mineral pool dynamics.  This approach is necessary for
-   annual timestep integration, as the mineral nitrogen pool turnover time (days to weeks)
-   is much shorter than the annual timestep.  The flux-based approach captures essential
-   nitrogen limitation dynamics without modeling sub-annual mineral pool fluctuations.
+   rather than relying on explicit mineral pool dynamics. This captures essential nitrogen
+   limitation dynamics without modeling short-term mineral pool fluctuations; the mineral
+   nitrogen pool turnover time is days to weeks.
 
-5. **Annual Timestep with Cascading**: The model operates on annual timesteps but accounts
-   for rapid sub-annual cycling through empirical allocation fractions that represent nitrogen
-   cascading through multiple pools within a year (e.g., nitrogen taken up by plants, then
-   entering litter through turnover, then entering soil through decomposition—all within
-   one year).
+5. **Allocation Fractions with Cascading**: Empirical allocation fractions represent
+   nitrogen transfers through multiple pools within each model timestep. Annual timesteps
+   are used in the default examples; evenly spaced subannual time axes are also supported.
 
 6. **Environmental Modifiers**: All process rates are modified by dimensionless effect factors
    representing:
@@ -422,19 +419,20 @@ class NitrogenPUBNFCalculator:
 
         The parameterization of PUavail effectively approximates mineral nitrogen
         availability for plant uptake without explicitly relying on the current
-        mineral nitrogen pool size. This flux-based approximation is necessary for
-        representing nitrogen deficit at an annual timestep without modeling sub-annual
-        dynamics of mineral nitrogen processes.
+        mineral nitrogen pool size. This flux-based approximation represents nitrogen
+        deficit from mineral supply and demand without explicitly modeling short-term
+        mineral nitrogen pool dynamics.
 
         In complex carbon-nitrogen models, nitrogen availability is typically based on
         the current mineral nitrogen pool size (mass unit), and nitrogen requirement is
         computed from integrated fluxes in a given timestep (mass unit) (Thornton et al.,
         2007; Wiltshire et al., 2021; Zaehle et al., 2014). Competition from microbial
         immobilization is also considered in some complex models. However, in a model
-        with an annual timestep like CNit, such a pool-based system would be inherently
-        unstable:  the mineral nitrogen pool size would be orders of magnitude smaller
-        than the annual nitrogen demand, since the turnover time of the mineral nitrogen
-        pool is substantially shorter than the annual timestep.
+        when integrated over annual or longer intervals, such a pool-based system can be
+        unstable: the mineral nitrogen pool size is orders of magnitude smaller than
+        annual nitrogen demand because its turnover time is substantially shorter than a
+        year. CNit may use subannual integration intervals, but does not resolve these
+        short-term mineral-pool fluctuations.
 
         While the full ecosystem mineral nitrogen budget is usually balanced over long
         timescales (annual in CNit), short-term imbalances are the key that
@@ -780,7 +778,7 @@ class NitrogenCycleCalculator:
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of nitrogen through different pathways in the
     terrestrial biosphere.  These fractions account for the cascade of nitrogen through
-    multiple pools within the annual timestep, capturing both immediate allocation
+    multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
 
@@ -802,11 +800,11 @@ class NitrogenCycleCalculator:
     )
     """Fraction of biological nitrogen fixation allocated to litter pool [dimensionless].
 
-    Represents newly fixed nitrogen that enters the litter pool within the annual
+    Represents newly fixed nitrogen that enters the litter pool within the model
     timestep through rapid plant-to-litter turnover (e.g., fine root turnover, leaf
     senescence of N-fixing plants). The remainder (1 - frc_BNF2P - frc_BNF2L) goes
     to the soil pool, representing nitrogen that cycles through both plant and litter
-    pools and enters soil within the annual timestep.
+    pools and enters soil within the model timestep.
     """
 
     # Plant Uptake (PU) fractions
@@ -816,9 +814,9 @@ class NitrogenCycleCalculator:
     )
     """Fraction of plant nitrogen uptake allocated to plant pool [dimensionless].
 
-    Represents nitrogen remaining in plant biomass at the end of the annual timestep,
+    Represents nitrogen remaining in plant biomass at the end of a model timestep,
     primarily in long-lived tissues (wood, structural tissues, storage organs) that
-    do not turn over within the year.
+    do not turn over within the model timestep.
     """
 
     frc_PU2L: pint.Quantity = field(
@@ -828,10 +826,10 @@ class NitrogenCycleCalculator:
     """Fraction of plant nitrogen uptake allocated to litter pool [dimensionless].
 
     Represents nitrogen that cycles from mineral pool to plant and then to litter
-    within the annual timestep through rapid turnover of short-lived tissues (fine
+    within the model timestep through rapid turnover of short-lived tissues (fine
     roots, senescing leaves, reproductive structures). The remainder (1 - frc_PU2P -
     frc_PU2L) goes to the soil pool, representing nitrogen that cascades through
-    plant, litter, and into soil within the annual timestep.
+    plant, litter, and into soil within the model timestep.
     """
 
     # Litter fractions
@@ -842,9 +840,9 @@ class NitrogenCycleCalculator:
     """Fraction of litter production nitrogen retained in litter pool [dimensionless].
 
     Represents nitrogen in plant materials that remain in the litter pool at the end
-    of the annual timestep as recognizable plant structures. The remainder (1 - frc_nLP2L)
+    of a model timestep as recognizable plant structures. The remainder (1 - frc_nLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
-    the soil pool within the annual timestep, bypassing extended residence in the
+    the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
     """
 
@@ -896,7 +894,7 @@ class NitrogenCycleCalculator:
         on inputs (BNF, PU), internal transfers (nLP, nLD), outputs (nSR), and land
         use changes (nLUgrs). Each input flux is partitioned among pools according
         to the fractional allocation parameters, which account for nitrogen cascading
-        through multiple pools within the annual timestep.
+        through multiple pools within the model timestep.
 
         Parameters
         ----------
@@ -954,22 +952,21 @@ class NitrogenCycleCalculator:
         where:
 
         - :math:`f_{BNF2S} = 1 - f_{BNF2P} - f_{BNF2L}` represents BNF nitrogen
-          cascading through plant→litter→soil within the annual timestep
+          cascading through plant→litter→soil within the model timestep
         - :math:`f_{PU2S} = 1 - f_{PU2P} - f_{PU2L}` represents uptake nitrogen
-          cascading through plant→litter→soil within the annual timestep
+          cascading through plant→litter→soil within the model timestep
         - :math:`f_{nLP2S} = 1 - f_{nLP2L}` represents rapid litter decomposition
-          directly entering soil within the annual timestep
+          directly entering soil within the model timestep
         - :math:`f_{nLUgrs2S} = 1 - f_{nLUgrs2P} - f_{nLUgrs2L}` (remainder from soil)
 
-        **Important Note on Annual Timestep:**
+        **Allocation Fractions and Time Resolution:**
 
-        All allocation fractions account for the cascade of nitrogen through multiple
-        pools within the annual timestep. For example, :math:`f_{PU2S}` does not
+        All allocation fractions account for the rapid cascade of nitrogen through
+        multiple pools over the model timestep. For example,
+        :math:`f_{PU2S}` does not
         represent direct allocation from mineral to soil, but rather nitrogen that
         is taken up by plants, then enters litter through turnover, and subsequently
-        enters soil through decomposition—all within a single year.  This approach
-        effectively captures rapid cycling processes without explicitly modeling
-        sub-annual dynamics.
+        enters soil through decomposition over that model timestep.
         """
         # Calculate plant uptake partitioning
         NflxPU2P = NflxPU * self.frc_PU2P
@@ -1328,8 +1325,9 @@ class NitrogenCycleModelResult:
     time_axis: pint.Quantity
     """Time points for simulation [yr].
 
-    Array of discrete time points at which the model state is evaluated,
-    typically representing annual timesteps.
+    Array of evenly spaced time points at which the model state is evaluated.
+    Annual timesteps are used in the default examples; subannual time axes are also
+    supported.
     """
 
     NflxPU_s: pint.Quantity
@@ -1568,9 +1566,9 @@ class NitrogenCycleModel:
     - Land use changes: Gross deforestation and direct mineral losses
     - Environmental modifiers (temperature, nitrogen availability, land use effects)
 
-    The model uses annual timesteps and accounts for rapid nitrogen cycling through
-    empirical allocation fractions that represent nitrogen cascading through multiple
-    pools within a year.
+    The model uses annual timesteps in its default examples and also accepts evenly spaced
+    subannual time axes. Empirical allocation fractions represent nitrogen transfers
+    through multiple pools within each model timestep.
 
     The nitrogen cycle is solved in two stages:
     (1) organic nitrogen pools (plant, litter, soil) are solved first, then

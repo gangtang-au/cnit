@@ -40,6 +40,62 @@ def test_single_deforestation_pulse_recovers_configured_land_carbon_fraction():
     np.testing.assert_allclose(calculated_gross, gross_emissions)
 
 
+def test_subannual_gross_flux_spreads_fractional_regrowth_and_decay_periods():
+    calculator = LanduseCalculator(
+        frc_rgr=Q(0.8, "1"),
+        tau_rgr=Q(1.25, "yr"),
+        method_cLU=Q(1, "1"),
+    )
+    time_axis = Q(np.arange(5) * 0.5, "yr")
+    gross_emissions = Q([2.0, -2.0, 0.0, 0.0, 0.0], "GtC/yr")
+
+    fluxes = calculator.calculate_CflxLU_series(
+        CemsLUnet_s=Q(np.zeros(5), "GtC/yr"),
+        CemsLUgrs_s=gross_emissions,
+        time_axis=time_axis,
+    )
+
+    # Each rate applies for half a year. The pulses begin one interval after the
+    # input events and end partway through their final intervals.
+    np.testing.assert_allclose(
+        fluxes["CflxLUrgr"].to("GtC/yr").m,
+        [0.0, 0.64, 0.64, 0.32, 0.0],
+    )
+    np.testing.assert_allclose(
+        fluxes["CflxLUafst_decay"].to("GtC/yr").m,
+        [0.0, 0.0, 0.16, 0.16, 0.08],
+    )
+    np.testing.assert_allclose(
+        fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1],
+        0.8,
+    )
+    np.testing.assert_allclose(
+        fluxes["cumsum_CflxLUafst_decay"].to("GtC").m[-1],
+        0.2,
+    )
+
+
+def test_subannual_net_flux_reconstructs_gross_flux_with_regrowth():
+    calculator = LanduseCalculator(
+        frc_rgr=Q(0.8, "1"),
+        tau_rgr=Q(1.25, "yr"),
+        method_cLU=Q(0, "1"),
+    )
+    time_axis = Q(np.arange(4) * 0.5, "yr")
+    net_emissions = Q([2.0, 0.0, 0.0, 0.0], "GtC/yr")
+
+    fluxes = calculator.calculate_CflxLU_series(
+        CemsLUnet_s=net_emissions,
+        CemsLUgrs_s=Q(np.zeros(4), "GtC/yr"),
+        time_axis=time_axis,
+    )
+
+    gross = fluxes["CflxLUgrs"].to("GtC/yr").m
+    regrowth = fluxes["CflxLUrgr"].to("GtC/yr").m
+    np.testing.assert_allclose(gross, net_emissions.m + regrowth)
+    assert np.all(np.isfinite(gross))
+
+
 def test_model_land_carbon_stock_approaches_gross_land_use_adjusted_equilibrium():
     cfg_dict = dict(
         frc_rgr=Q(0.8, "1"),

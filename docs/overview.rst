@@ -31,8 +31,12 @@ CNit represents the terrestrial biosphere as interacting carbon and nitrogen poo
 connected by process-based fluxes. The model tracks both elements through their coupled
 cycles, with explicit representation of nitrogen constraints on carbon uptake.
 
-The model operates on annual timesteps, while capturing sub-annual processes through
-empirically-derived allocation fractions that represent rapid cycling within each year.
+CNit supports annual and evenly spaced subannual time axes; the default examples use
+annual timesteps. In the annual case, flux-allocation and pool-turnover fractions
+represent transfers within the year. If a subannual time axis is used, the same fractions
+apply within each model timestep. Each forcing value is treated as a rate held constant
+over its following interval, so an interval's flux amount is the rate multiplied by the
+interval duration.
 
 Model Structure
 ---------------
@@ -79,7 +83,7 @@ Carbon Processes
    - Land use effect
 
 **Litter Production Respiration (LPR)**
-   Heterotrophic respiration associated with plant tissue fast turnover within one year.
+   Heterotrophic respiration associated with plant tissue fast turnover within one model timestep.
 
 **Carbon Turnover**
    - Litter production (cLP): Plant → Litter transfer
@@ -137,13 +141,20 @@ The key feature of CNit is bidirectional coupling between C and N cycles:
 Key Model Features
 ------------------
 
-Annual Timestep with Allocation Fractions
+Time Resolution and Allocation Fractions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The model uses annual timesteps for computational efficiency. Sub-annual processes are
-represented through allocation fractions that capture carbon and nitrogen cascading
-through multiple pools within one year (e.g., carbon fixed by plants that enters litter
-through turnover and then enters soil through decomposition within the same year).
+CNit supports annual and evenly spaced subannual time axes; the default examples use
+annual timesteps. Flux-allocation and pool-turnover fractions apply within each model
+timestep, representing within-year transfers in the annual case.
+Forcing rates are held constant over each interval, and cumulative fluxes account for the
+interval duration. Land-use recovery and decay are scheduled in elapsed years, including
+when a pulse ends partway through an interval.
+
+For example, if NPP is a constant 50 GtC/yr during a one-year timestep and
+``frc_NPP2P = 0.6``, then 60% of the NPP flux, or 30 GtC, is allocated to the plant pool
+over that year. This is the NPP contribution to the pool; other incoming and outgoing
+fluxes also affect its final size.
 
 Explicit Deforestation-Afforestation Separation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,7 +225,8 @@ CNit is Designed For:
 
 ✅ **Global-scale simulations** - Parameterized for global terrestrial biosphere
 
-✅ **Century-timescale projections** - Annual timesteps suitable for multi-century simulations
+✅ **Century-timescale projections** - Annual timesteps in the default examples; evenly
+   spaced subannual time axes are also accepted
 
 ✅ **Integrated assessment modeling** - Computational efficiency enables large ensemble studies
 
@@ -228,8 +240,6 @@ Use Caution When:
 ~~~~~~~~~~~~~~~~~
 
 ⚠️ **Individual site simulations** - Not parameterized for site-specific characteristics
-
-⚠️ **Sub-annual dynamics needed** - Annual timestep cannot resolve seasonal cycles
 
 ⚠️ **Spatial heterogeneity critical** - Pools are well-mixed, no spatial structure
 
@@ -245,9 +255,10 @@ Key assumptions in CNit:
 1. **Well-mixed pools** - No spatial heterogeneity or depth structure within pools.   All
    carbon and nitrogen in each pool is assumed to be uniformly mixed at the global scale.
 
-2. **Annual timestep** - Sub-annual dynamics (seasonal cycles, daily variations) are not
-   resolved.  Rapid within-year processes are represented through allocation fractions that
-   capture cascading through multiple pools within one year.
+2. **Time resolution** - Annual timesteps are used in the default examples; evenly spaced
+   subannual time axes are also accepted. Allocation fractions partition incoming fluxes
+   and describe turnover transfers among pools within each timestep. Forcing rates are
+   treated as constant over their corresponding intervals.
 
 3. **First-order kinetics with environmental modifiers** - All turnover processes follow:
 

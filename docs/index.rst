@@ -22,7 +22,10 @@ use change), and nitrogen limitation on carbon uptake.
 * Four nitrogen pools (plant, litter, soil, mineral) and three carbon pools
 * Environmental modifiers:  CO₂, temperature, land use, nitrogen availability
 * Separation of deforestation and afforestation for CDR scenarios
-* Annual timestep with sub-annual process representation
+* Annual timesteps use flux-allocation and pool-turnover fractions to represent
+  within-year transfers
+* Evenly spaced subannual timesteps are also supported; allocation fractions apply
+  within each timestep
 * Computationally efficient for integrated assessment modeling
 
 Quick Navigation
