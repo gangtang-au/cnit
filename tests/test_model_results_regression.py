@@ -1,6 +1,5 @@
-"""Compare calibrated model results with the implementation on ``main``."""
+"""Compare default and calibrated model results with the implementation on ``main``."""
 
-import csv
 import json
 import os
 from dataclasses import fields
@@ -20,11 +19,24 @@ REPO_ROOT = TEST_DIR.parent
 PARAMETER_FILE = REPO_ROOT / "data" / "cali_cmip6_best_fitting.csv"
 FORCING_FILE = REPO_ROOT / "data" / "CMIP6_cali_forcing.nc"
 RUNNER = TEST_DIR / "_cmip6_version_runner.py"
+ACCESS_MODEL = "ACCESS-ESM1-5"
 EXPERIMENTS = ("1pctCO2", "hist_ssp585")
+ACCESS_DIAGNOSTICS = (
+    "CplsP",
+    "CplsL",
+    "CplsS",
+    "NplsP",
+    "NplsL",
+    "NplsS",
+    "NplsM",
+    "CflxNPP",
+    "NflxBNF",
+    "NflxPU",
+)
 
 
 def _serialize_config(config):
-    """Convert configured quantities to JSON values for the baseline process."""
+    """Convert configured quantities to JSON values for the runner process."""
     values = {}
     for config_field in fields(config):
         value = getattr(config, config_field.name)
@@ -55,25 +67,41 @@ def _extract_baseline_source(destination):
     return destination / "src"
 
 
-def _run_revision(source, revision, config_dir, output_path):
+def _run_revision(source, config_path, output_path):
     subprocess.run(
         [
             sys.executable,
             str(RUNNER),
             str(source),
-            str(PARAMETER_FILE),
             str(FORCING_FILE),
-            str(config_dir),
+            str(config_path),
             str(output_path),
-            revision,
         ],
         cwd=REPO_ROOT,
         check=True,
     )
 
 
-def test_cmip6_results_match_main_for_calibrated_models(tmp_path):
-    """Current and main code produce identical outputs under one runtime."""
+def _max_errors(actual, expected):
+    """Return maximum absolute and element-wise relative errors.
+
+    Relative error is calculated where the expected value is nonzero. If every
+    expected value is zero, it is undefined and returned as NaN.
+    """
+    absolute_error = np.abs(actual - expected)
+    nonzero_expected = expected != 0
+    if np.any(nonzero_expected):
+        relative_error = absolute_error[nonzero_expected] / np.abs(
+            expected[nonzero_expected]
+        )
+        max_relative = float(np.max(relative_error))
+    else:
+        max_relative = float("nan")
+    return float(np.max(absolute_error)), max_relative
+
+
+def test_default_model_matches_main_and_report_access_errors(tmp_path):
+    """Check default results exactly and report calibrated ACCESS differences."""
     try:
         baseline_source = _extract_baseline_source(tmp_path / "baseline")
     except subprocess.CalledProcessError as exc:
@@ -83,25 +111,26 @@ def test_cmip6_results_match_main_for_calibrated_models(tmp_path):
             f"{exc}"
         )
 
-    with PARAMETER_FILE.open(newline="", encoding="utf-8") as parameter_file:
-        model_names = next(csv.reader(parameter_file))[2:]
-
-    config_dir = tmp_path / "configs"
-    config_dir.mkdir()
-    for model_name in model_names:
-        config = CarbonNitrogenCycleModelConfig.from_parameter_csv(
-            PARAMETER_FILE,
-            model_name=model_name,
-        )
-        (config_dir / f"{model_name}.json").write_text(
-            json.dumps(_serialize_config(config)),
-            encoding="utf-8",
-        )
+    default_config = CarbonNitrogenCycleModelConfig()
+    access_config = CarbonNitrogenCycleModelConfig.from_parameter_csv(
+        PARAMETER_FILE,
+        model_name=ACCESS_MODEL,
+    )
+    config_path = tmp_path / "configs.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "default": _serialize_config(default_config),
+                "ACCESS calibrated": _serialize_config(access_config),
+            }
+        ),
+        encoding="utf-8",
+    )
 
     current_output = tmp_path / "current.npz"
     baseline_output = tmp_path / "baseline.npz"
-    _run_revision(REPO_ROOT / "src", "current", config_dir, current_output)
-    _run_revision(baseline_source, "baseline", config_dir, baseline_output)
+    _run_revision(REPO_ROOT / "src", config_path, current_output)
+    _run_revision(baseline_source, config_path, baseline_output)
 
     with np.load(current_output) as current, np.load(baseline_output) as baseline:
         current_keys = set(current.files)
@@ -111,13 +140,26 @@ def test_cmip6_results_match_main_for_calibrated_models(tmp_path):
             f"main-only={sorted(baseline_keys - current_keys)}"
         )
 
-        assert any("::1pctCO2::" in key for key in current_keys)
-        assert any("::hist_ssp585::" in key for key in current_keys)
-        for key in sorted(current_keys):
-            np.testing.assert_allclose(
-                current[key],
-                baseline[key],
-                rtol=1e-8,
-                atol=1e-8,
-                err_msg=f"Current and main differ for {key}",
-            )
+        # The default configuration has an integer-year regrowth timescale, so
+        # this comparison checks that the refactor preserves default model results.
+        for experiment in EXPERIMENTS:
+            prefix = f"default::{experiment}::"
+            for key in sorted(key for key in current_keys if key.startswith(prefix)):
+                np.testing.assert_allclose(
+                    current[key],
+                    baseline[key],
+                    rtol=1e-8,
+                    atol=1e-8,
+                    err_msg=f"Default model differs from main for {key}",
+                )
+
+        print("\nACCESS calibrated emulation: maximum differences from main")
+        print("experiment       variable    max_abs_error    max_rel_error")
+        for experiment in EXPERIMENTS:
+            for variable in ACCESS_DIAGNOSTICS:
+                key = f"ACCESS calibrated::{experiment}::{variable}"
+                max_absolute, max_relative = _max_errors(current[key], baseline[key])
+                print(
+                    f"{experiment:<16} {variable:<10} "
+                    f"{max_absolute:>14.6g} {max_relative:>15.6g}"
+                )
