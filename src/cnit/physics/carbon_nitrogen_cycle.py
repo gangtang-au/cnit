@@ -465,8 +465,9 @@ class CarbonNitrogenCycleModel:
         Parameters
         ----------
         time_axis
-            Time points for simulation [yr]. Must start at or after initialization
-            time (time0) specified in model components.
+            Evenly spaced time points for simulation [yr]. Must start at or after
+            initialization time (time0) specified in model components. All forcing
+            series must have one value per time point.
         dT_s
             Time series of temperature anomaly relative to preindustrial [K].
         CO2_s
@@ -564,6 +565,7 @@ class CarbonNitrogenCycleModel:
         CflxLU_s = self.calc_lu.calculate_CflxLU_series(
             CemsLUnet_s=CemsLUnet_s,
             CemsLUgrs_s=CemsLUgrs_s,
+            time_axis=time_axis,
         )
         CflxLUrgr_s = CflxLU_s["CflxLUrgr"]
         CflxLUgrs_s = CflxLU_s["CflxLUgrs"]
@@ -633,6 +635,7 @@ class CarbonNitrogenCycleModel:
                 NemsLUnet_s=NemsLUnet_s,
                 NemsLUgrs_s=NemsLUgrs_s,
                 NemsLUmin_s=NemsLUmin_s,
+                time_axis=time_axis,
             )
             NflxLUgrs_s = NflxLU_s["NflxLUgrs"]
             NflxLUmin_s = NflxLU_s["NflxLUmin"]

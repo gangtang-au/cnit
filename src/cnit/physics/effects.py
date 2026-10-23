@@ -221,7 +221,7 @@ class EffectLanduseCalculator:
         where :math:`\\varphi` is the regrowth fraction (`frc_rgr`) and :math:`C_{Land0}`
         is the initial equilibrium land carbon (`CplsPLS0`).
 
-        **Physical interpretation**: Only the non-regrowing fraction : math:`(1-\\varphi)`
+        **Physical interpretation**: Only the non-regrowing fraction :math:`(1-\\varphi)`
         represents permanent loss of productive land.  If :math:`\\varphi = 0. 9`, then 90%
         of deforested area eventually recovers, so only 10% contributes to long-term NPP
         reduction.
@@ -282,7 +282,7 @@ class EffectLanduseCalculator:
 
         **Rationale for the 0.8φ tuning factor:**
 
-        The factor : math:`0.8\\varphi` prevents problematic behavior at extreme regrowth
+        The factor :math:`0.8\\varphi` prevents problematic behavior at extreme regrowth
         fractions:
 
         - **Problem at high φ** (e.g., :math:`\\varphi = 1`):
@@ -296,7 +296,7 @@ class EffectLanduseCalculator:
 
           * At :math:`\\varphi = 1`: weights are (0.9, 0.1) rather than (0.5, 0.5)
           * Minimum 10% contribution from instantaneous effect: :math:`(1 - 0.8 \\times 1) / 2 = 0.1`
-          * Maximum 90% from equilibrium:  :math:`(1 + 0.8 \\times 1) / 2 = 0.9`
+          * Maximum 90% from equilibrium: :math:`(1 + 0.8 \\times 1) / 2 = 0.9`
           * This preserves physically meaningful balance across the full regrowth range
             (0 ≤ φ ≤ 1)
 

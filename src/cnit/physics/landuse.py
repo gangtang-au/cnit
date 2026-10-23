@@ -50,47 +50,43 @@ where:
 
 **Regrowth Dynamics:**
 
-For a deforestation event at time t, regrowth occurs as a constant flux over the
-regrowth period:
+For an interval with positive gross land use flux rate :math:`F_i` and duration
+:math:`\\Delta t_i`, the deforestation amount is :math:`D_i = F_i \\Delta t_i`.
+Regrowth from that amount starts at the following interval and occurs at a constant
+rate over the configured elapsed-time period:
 
 ..  math::
 
-    LUrgr(T) = \\frac{\\varphi \\times LUdfst(t)}{\\tau_{rgr}},
-    \\quad \\forall T \\in [t+1, t+\\tau_{rgr}]
+    LUrgr(T) = \\frac{\\varphi \\times D_i}{\\tau_{rgr}},
+    \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{rgr})
 
 where :math:`\\varphi` is the fraction that can regrow and :math:`\\tau_{rgr}` is
 the regrowth timescale.
 
-Total regrowth at time t is the sum of contributions from all past deforestation
-events still undergoing recovery:
+The contribution reported for an interval is the time-average rate over the overlap
+between that interval and each active regrowth period. Afforestation decay is treated
+the same way, using the corresponding afforestation amount and decay fraction.
 
-.. math::
+At any time, total regrowth is the sum of contributions from all past deforestation
+events whose elapsed-time recovery periods are active:
 
-    LUrgr(t) = \\begin{cases}
-        \\sum_{T = \\max(0, t - \\tau_{rgr})}^{t-1} \\frac{\\varphi \\times LUdfst(T)}{\\tau_{rgr}}
-        & \\text{if } t \\geq 1 \\\\
-        0 & \\text{if } t < 1
-    \\end{cases}
+..  math::
+
+    LUrgr(t) = \\sum_i \\frac{\\varphi D_i}{\\tau_{rgr}}
+    \\mathbb{1}_{[t_{i+1}, t_{i+1}+\\tau_{rgr})}(t)
 
 **Afforestation Decay:**
 
-Similarly, for afforestation at time t, a fraction of sequestered carbon decays over
-time:
+Similarly, a fraction of each interval's afforestation amount decays at a constant
+rate over the configured elapsed-time period, beginning at the next interval boundary.
 
-.. math::
+..  math::
 
-    LUafst\_decay(T) = \\frac{\\phi \\times LUafst(t)}{\\tau_{afst\_decay}},
-    \\quad \\forall T \\in [t+1, t+\\tau_{afst\_decay}]
+    LUafst\_decay(T) = \\frac{\\phi A_i}{\\tau_{afst\_decay}},
+    \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{afst\_decay})
 
-Total decay at time t sums all contributions from past afforestation events:
-
-.. math::
-
-    LUafst\_decay(t) = \\begin{cases}
-        \\sum_{T = \\max(0, t - \\tau_{afst\_decay})}^{t-1} \\frac{\\phi \\times LUafst(T)}{\\tau_{afst\_decay}}
-        & \\text{if } t \\geq 1 \\\\
-        0 & \\text{if } t < 1
-    \\end{cases}
+For each output interval, the reported decay rate is the time-average over the overlap
+with all active decay periods.
 
 where :math:`\\phi` is the afforestation decay fraction (default :math:`\\phi = 1 - \\varphi`) and
 :math:`\\tau_{afst\_decay}` is the decay timescale (default: :math:`\\tau_{afst\_decay} = \\tau_{rgr}`).
@@ -108,22 +104,21 @@ decay effects forward in time:
 1. Initialize first timestep with zero regrowth
 2. For each timestep:
 
-   a. Calculate gross flux:  :math:`LUgrs(t) = LUnet(t) + LUrgr(t)`
+   a. Calculate gross flux: :math:`LUgrs(t) = LUnet(t) + LUrgr(t)`
    b. If :math:`LUgrs(t) > 0`: Deforestation event
 
       - Set :math:`LUdfst(t) = LUgrs(t)`
-      - Add regrowth contribution to future timesteps:
-        :math:`LUrgr(T) += \\frac{\\varphi \\times LUdfst(t)}{\\tau_{rgr}}`
-        for :math:`T \\in [t+1, t+\\tau_{rgr}]`
+      - Schedule regrowth at a constant rate over the next ``tau_rgr`` elapsed years,
+        based on the deforestation amount in the current interval.
 
    c. If :math:`LUgrs(t) < 0`: Afforestation event
 
       - Set :math:`LUafst(t) = -LUgrs(t)`
-      - Add decay contribution to future timesteps:
-        :math:`LUafst\_decay(T) += \\frac{\\phi \\times LUafst(t)}{\\tau_{afst\_decay}}`
-        for :math:`T \\in [t+1, t+\\tau_{afst\_decay}]`
+      - Schedule afforestation decay at a constant rate over the elapsed-time decay
+        period, based on the afforestation amount in the current interval.
 
-3. Regrowth and decay contributions accumulate for all affected future timesteps
+3. A loop adds each contribution to the future intervals it overlaps, stopping when
+   the event's elapsed-time period ends
 
 This method ensures that when net emissions are negative (indicating net sequestration
 beyond regrowth), the resulting negative gross flux is properly interpreted as
@@ -140,27 +135,25 @@ effects forward in time:
    a. If :math:`LUgrs(t) > 0`: Deforestation event
 
       - Set :math:`LUdfst(t) = LUgrs(t)`
-      - Add regrowth contribution to future timesteps:
-        :math:`LUrgr(T) += \\frac{\\varphi \\times LUdfst(t)}{\\tau_{rgr}}`
-        for :math:`T \\in [t+1, t+\\tau_{rgr}]`
+      - Schedule regrowth at a constant rate over the next ``tau_rgr`` elapsed years,
+        based on the deforestation amount in the current interval.
 
    b. If :math:`LUgrs(t) < 0`: Afforestation event
 
       - Set :math:`LUafst(t) = -LUgrs(t)`
-      - Add decay contribution to future timesteps:
-        :math:`LUafst\_decay(T) += \\frac{\\phi \\times LUafst(t)}{\\tau_{afst\_decay}}`
-        for :math:`T \\in [t+1, t+\\tau_{afst\_decay}]`
+      - Schedule afforestation decay at a constant rate over the elapsed-time decay
+        period, based on the afforestation amount in the current interval.
 
-2. Calculate net flux:  :math:`LUnet(t) = LUgrs(t) - LUrgr(t)`
+2. Calculate net flux: :math:`LUnet(t) = LUgrs(t) - LUrgr(t)`
 
 This method is more straightforward when gross emissions are directly observed from
 data sources like forest harvest statistics.
 
 **Important Notes:**
 
-- :math:`LUafst\_decay` is not part of the net land use flux equations.     It provides
+- :math:`LUafst\_decay` is not part of the net land use flux equations. It provides
   a reference for afforestation-related decay independent of environmental changes,
-  analogous to :   math:`LUrgr`.
+  analogous to :math:`LUrgr`.
 - :math:`LUrgr` is explicitly part of NPP and is further modified by CO₂
   fertilization and climate change.
 - Decay of afforested carbon is implicitly included in vegetation turnover and is
@@ -203,7 +196,7 @@ See Also
 :py:meth:`cnit.physics.effects.EffectLanduseCalculator`: Environmental effects from land use changes
 """
 
-from typing import Dict
+from typing import Dict, Optional
 from attrs import define, field
 import numpy as np
 import pint
@@ -220,9 +213,12 @@ class LanduseCalculator:
     and decay components. The separation of deforestation and afforestation is essential
     for scenarios involving carbon dioxide removal (CDR) and net-zero targets.
 
-    The calculator operates on annual time series and produces both instantaneous fluxes
-    and cumulative quantities useful for tracking land use history and calculating
-    environmental effects.
+    The calculator operates on evenly spaced time series aligned with ``time_axis``.
+    Each input rate is held constant over its following interval, and regrowth and
+    afforestation decay are scheduled in elapsed years. If no time axis is supplied,
+    samples are treated as annual. Experiment configs validate input units, series
+    lengths, and time-axis regularity before model execution. Direct calls to this
+    calculator assume those inputs are valid and aligned.
     """
 
     frc_rgr: pint.Quantity = field(
@@ -277,6 +273,7 @@ class LanduseCalculator:
         self,
         CemsLUnet_s: pint.Quantity,
         CemsLUgrs_s: pint.Quantity,
+        time_axis: Optional[pint.Quantity] = None,
     ) -> Dict[str, pint.Quantity]:
         """
         Calculate carbon flux time series from land use change forcing.
@@ -294,6 +291,15 @@ class LanduseCalculator:
         CemsLUgrs_s
             Gross land use carbon emission time series [GtC/yr].  Can be positive
             (deforestation) or negative (afforestation). Used when method_cLU=1.
+        time_axis
+            Time coordinates aligned with the input series [yr]. They must be
+            one-dimensional, strictly increasing, evenly spaced, and have the same
+            length as the flux series. Each coordinate marks the start of the
+            corresponding flux interval. Thus, the last value is also applied over
+            one interval after the final coordinate. These conditions are checked by
+            the experiment config when used through the model. Direct callers must
+            supply an axis satisfying these requirements. If omitted, each value
+            represents a one-year interval.
 
         Returns
         -------
@@ -321,7 +327,7 @@ class LanduseCalculator:
 
         Net emissions relate to gross emissions and regrowth:
 
-        ..  math::
+        .. math::
 
             LUnet(t) = LUgrs(t) - LUrgr(t)
 
@@ -341,28 +347,20 @@ class LanduseCalculator:
 
         **Regrowth Calculation:**
 
-        Regrowth following deforestation at time t:
-
-        .. math::
-
-            LUrgr(T) = \\frac{\\varphi \\times LUdfst(t)}{\\tau_{rgr}},
-            \\quad T \\in [t+1, t+\\tau_{rgr}]
-
-        Total regrowth is sum of all active regrowth contributions:
-
-        .. math::
-
-            LUrgr(t) = \\sum_{T=\\max(0, t-\\tau_{rgr})}^{t-1}
-            \\frac{\\varphi \\times LUdfst(T)}{\\tau_{rgr}}
+        Each positive gross flux rate is multiplied by the interval duration to get
+        the amount of deforestation during that interval. The fraction ``frc_rgr``
+        of this amount is returned at a constant rate over ``tau_rgr`` elapsed years.
+        Regrowth starts at the beginning of the next interval. If the recovery period
+        ends partway through an output interval, the reported rate for that interval
+        is averaged over the overlap. Recovery beyond the end of the supplied series
+        is outside the returned result.
 
         **Afforestation Decay:**
 
-        Decay following afforestation at time t:
-
-        .. math::
-
-            LUafst\_decay(T) = \\frac{\\phi \\times LUafst(t)}{\\tau_{afst\_decay}},
-            \\quad T \\in [t+1, t+\\tau_{afst\_decay}]
+        For each negative gross flux rate, the absolute interval amount is multiplied
+        by ``1 - frc_rgr``. This decay amount is spread uniformly over ``tau_rgr``
+        elapsed years, starting at the next interval boundary, with partial intervals
+        reported as time-averaged rates.
 
         where by default :math:`\\phi = 1 - \\varphi` and :math:`\\tau_{afst\_decay} =
         \\tau_{rgr}`.
@@ -381,6 +379,13 @@ class LanduseCalculator:
         to calculate land use effects on ecosystem productivity (see
         :class:`EffectLanduseCalculator`).
 
+        **Time Resolution:**
+
+        The interval width is the difference between adjacent time coordinates. For
+        example, coordinates spaced by ``0.5 yr`` represent half-year flux intervals,
+        and each input rate contributes an amount equal to its rate multiplied by
+        ``0.5 yr``. The final coordinate starts the final represented interval.
+
         See Also
         --------
         calculate_NflxLU_series: Analogous nitrogen flux calculation
@@ -394,6 +399,7 @@ class LanduseCalculator:
             method_calc=self.method_cLU,
             unit="GtC/yr",
             prefix="Cflx",
+            time_axis=time_axis,
         )
 
     def calculate_NflxLU_series(
@@ -401,6 +407,7 @@ class LanduseCalculator:
         NemsLUnet_s: pint.Quantity,
         NemsLUgrs_s: pint.Quantity,
         NemsLUmin_s: pint.Quantity,
+        time_axis: Optional[pint.Quantity] = None,
     ) -> Dict[str, pint.Quantity]:
         """
         Calculate nitrogen flux time series from land use change forcing.
@@ -422,6 +429,15 @@ class LanduseCalculator:
             Direct land use nitrogen emission from mineral pool time series [GtN/yr].
             Represents gaseous losses (NH₃, NOₓ, N₂O) during land conversion,
             primarily from agricultural activities.
+        time_axis
+            Time coordinates aligned with the input series [yr]. They must be
+            one-dimensional, strictly increasing, evenly spaced, and have the same
+            length as the flux series. Each coordinate marks the start of the
+            corresponding flux interval. Thus, the last value is also applied over
+            one interval after the final coordinate. These conditions are checked by
+            the experiment config when used through the model. Direct callers must
+            supply an axis satisfying these requirements. If omitted, each value
+            represents a one-year interval.
 
         Returns
         -------
@@ -466,6 +482,9 @@ class LanduseCalculator:
            Organic nitrogen land use fluxes (LUgrs) are coupled to carbon fluxes through
            ecosystem C:N ratios, but mineral emissions (LUmin) are independent.
 
+        ``NemsLUmin_s`` is a direct mineral-pool loss flux. It is converted to GtN/yr
+        and returned as ``NflxLUmin``.
+
         **Typical Nitrogen Method:**
 
         Method 1 is typically used for nitrogen because gross deforestation data
@@ -477,13 +496,17 @@ class LanduseCalculator:
         calculate_CflxLU_series: Analogous carbon flux calculation
         :py:meth:`cnit.physics.nitrogen_cycle.NitrogenCycleModel.run`: How these fluxes are used in nitrogen cycle
         """
-        return self._calculate_flux_series(
+        fluxes = self._calculate_flux_series(
             net_flux=NemsLUnet_s,
             gross_flux=NemsLUgrs_s,
             method_calc=self.method_nLU,
             unit="GtN/yr",
             prefix="Nflx",
-        ) | {"NflxLUmin": NemsLUmin_s}
+            time_axis=time_axis,
+        )
+
+        # This direct mineral-pool loss needs unit conversion, not land-use processing.
+        return fluxes | {"NflxLUmin": NemsLUmin_s.to("GtN/yr")}
 
     def _calculate_flux_series(
         self,
@@ -492,13 +515,15 @@ class LanduseCalculator:
         method_calc: pint.Quantity,
         unit: str,
         prefix: str,
+        time_axis: Optional[pint.Quantity],
     ) -> Dict[str, pint.Quantity]:
         """
         Core flux calculation engine used by both carbon and nitrogen methods.
 
-        This internal method handles the common flux calculation logic, including
-        regrowth propagation, afforestation decay, and cumulative tracking.   It
-        operates on dimensionless arrays and adds units at the end.
+        This method is shared by the carbon and organic-nitrogen calculations. It
+        converts the unit-aware flux inputs to numeric arrays once, performs the
+        interval calculations using NumPy, and attaches units to the returned
+        quantities. Rates are treated as constant over equal-width intervals.
 
         Parameters
         ----------
@@ -512,57 +537,79 @@ class LanduseCalculator:
             Unit string for flux quantities (e.g., "GtC/yr" or "GtN/yr").
         prefix
             Prefix for output dictionary keys ("Cflx" or "Nflx").
+        time_axis
+            Time coordinates aligned with each flux value [yr]. Their spacing sets
+            the duration represented by each rate. If ``None``, values are treated
+            as annual. Otherwise, callers must provide an axis matching the flux
+            length that is finite, strictly increasing, and evenly spaced. The model
+            experiment config checks these conditions; this internal method assumes
+            they are satisfied. Each coordinate starts an interval, including the
+            final coordinate.
 
         Returns
         -------
         Dict[str, pint.Quantity]
             Dictionary with named flux series (see public methods for details).
 
-        Raises
-        ------
         ValueError
-            If method_calc is not 0 or 1.
+            If ``frc_rgr`` or ``tau_rgr`` is invalid, or if a nonzero input uses a
+            method other than 0 or 1.
 
         Notes
         -----
-        This method implements the core algorithms described in the public methods.
-        It uses in-place array operations for efficiency when processing long time
-        series.
+        Method 0 derives gross flux sequentially from net flux. At each interval,
+        current gross flux is net flux plus regrowth already scheduled for that
+        interval. Positive gross flux schedules future regrowth; negative gross flux
+        schedules future afforestation decay.
 
-        The method handles edge cases:
-        - Zero fluxes: Returns arrays of zeros
-        - Boundary effects: Properly handles regrowth/decay at start and end of series
-        - Numerical precision: Uses float64 for accumulation calculations
+        Method 1 takes gross flux as given and calculates net flux as gross flux minus
+        regrowth. For either method, a pulse is applied only within the simulated
+        horizon; any part extending beyond the final interval is not included in the
+        returned fluxes or cumulative quantities.
+
+        Cumulative outputs are discrete integrals of their corresponding rates:
+        each rate is multiplied by the interval duration before summation. When both
+        input series are exactly zero, all component outputs are zero.
 
         **Parameter Relationships:**
 
         - frc_rgr: Regrowth fraction (varphi)
         - frc_afst_decay:  Afforestation decay fraction (phi = 1 - varphi)
-        - tau_rgr_int: Regrowth timescale (tau_rgr)
-        - tau_afst_decay_int: Afforestation decay timescale (tau_afst_decay = tau_rgr)
+        - tau_rgr: Regrowth and afforestation decay timescale in elapsed years
         """
 
-        frc_rgr = self.frc_rgr.m
-        tau_rgr_int = int(self.tau_rgr.m)
-        frc_afst_decay = 1 - frc_rgr
-        tau_afst_decay_int = tau_rgr_int
+        net_flux_a = self._to_numeric_series(net_flux, unit)
+        gross_flux_a = self._to_numeric_series(gross_flux, unit)
 
-        length_input = len(net_flux.m)
+        if time_axis is None:
+            time_step_yr = 1.0
+        else:
+            time_values = np.asarray(time_axis.to("yr").m, dtype=float)
+            time_step_yr = float(np.diff(time_values)[0])
+
+        frc_rgr = float(self.frc_rgr.to("1").m)
+        tau_rgr = float(self.tau_rgr.to("yr").m)
+        if not 0 <= frc_rgr <= 1:
+            raise ValueError("frc_rgr must be between 0 and 1.")
+        if not np.isfinite(tau_rgr) or tau_rgr <= 0:
+            raise ValueError("tau_rgr must be a positive finite duration in years.")
+        frc_afst_decay = 1 - frc_rgr
+
+        length_input = net_flux_a.size
 
         # Handle zero flux case
-        if np.allclose(net_flux, 0) and np.allclose(gross_flux, 0):
+        if not np.any(net_flux_a) and not np.any(gross_flux_a):
             gross_flux_a = regrowth_flux_a = deforest_flux_a = afforest_flux_a = (
                 afforest_decay_flux_a
             ) = np.zeros(length_input, dtype=float)
         else:
-            net_flux_a = net_flux.astype(float).m
-            gross_flux_a = gross_flux.astype(float).m
             regrowth_flux_a = np.zeros(length_input, dtype=float)
             deforest_flux_a = np.zeros(length_input, dtype=float)
             afforest_flux_a = np.zeros(length_input, dtype=float)
             afforest_decay_flux_a = np.zeros(length_input, dtype=float)
 
-            if method_calc.m == 0:
+            method_value = method_calc.to("1").m
+            if method_value == 0:
                 # Method 0: Use net flux as input (e.g., AFOLU emissions)
                 self._calculate_from_net_flux(
                     net_flux_a,
@@ -571,12 +618,12 @@ class LanduseCalculator:
                     deforest_flux_a,
                     afforest_flux_a,
                     afforest_decay_flux_a,
-                    tau_rgr_int,
+                    time_step_yr,
                     frc_rgr,
-                    tau_afst_decay_int,
+                    tau_rgr,
                     frc_afst_decay,
                 )
-            elif method_calc.m == 1:
+            elif method_value == 1:
                 # Method 1: Use gross flux as input (e.g., fCharvest emissions)
                 # When using gross flux directly, we need to copy the input values first
                 self._calculate_from_gross_flux(
@@ -586,18 +633,21 @@ class LanduseCalculator:
                     deforest_flux_a,
                     afforest_flux_a,
                     afforest_decay_flux_a,
-                    tau_rgr_int,
+                    time_step_yr,
                     frc_rgr,
-                    tau_afst_decay_int,
+                    tau_rgr,
                     frc_afst_decay,
                 )
             else:
                 raise ValueError(
-                    f"Invalid method_calc value: {method_calc.m}. Must be 0 or 1."
+                    f"Invalid method_calc value: {method_value}. Must be 0 or 1."
                 )
 
-        # Calculate cumulative quantities
+        # Integrate each piecewise-constant flux rate over its interval.
         non_time_unit = unit.replace("/yr", "")
+
+        def cumulative_amount(values):
+            return np.cumsum(values * time_step_yr)
 
         return {
             f"{prefix}LUgrs": Q(gross_flux_a, unit),
@@ -605,13 +655,39 @@ class LanduseCalculator:
             f"{prefix}LUdfst": Q(deforest_flux_a, unit),
             f"{prefix}LUafst": Q(afforest_flux_a, unit),
             f"{prefix}LUafst_decay": Q(afforest_decay_flux_a, unit),
-            f"cumsum_{prefix}LUrgr": Q(np.cumsum(regrowth_flux_a), non_time_unit),
-            f"cumsum_{prefix}LUdfst": Q(np.cumsum(deforest_flux_a), non_time_unit),
-            f"cumsum_{prefix}LUafst": Q(np.cumsum(afforest_flux_a), non_time_unit),
+            f"cumsum_{prefix}LUrgr": Q(cumulative_amount(regrowth_flux_a), non_time_unit),
+            f"cumsum_{prefix}LUdfst": Q(cumulative_amount(deforest_flux_a), non_time_unit),
+            f"cumsum_{prefix}LUafst": Q(cumulative_amount(afforest_flux_a), non_time_unit),
             f"cumsum_{prefix}LUafst_decay": Q(
-                np.cumsum(afforest_decay_flux_a), non_time_unit
+                cumulative_amount(afforest_decay_flux_a), non_time_unit
             ),
         }
+
+    @staticmethod
+    def _to_numeric_series(
+        values: pint.Quantity,
+        unit: str,
+    ) -> np.ndarray:
+        """Convert a prevalidated flux series to a copied numeric array.
+
+        Experiment configs validate forcing units and series lengths before model
+        execution. This helper assumes those preconditions and only converts the
+        values to the calculation unit. The copy ensures in-place calculations
+        cannot alter caller inputs.
+
+        Parameters
+        ----------
+        values
+            Pint quantity containing one flux value per time interval.
+        unit
+            Unit to convert values to before dropping their units, such as
+            ``"GtC/yr"`` or ``"GtN/yr"``.
+        Returns
+        -------
+        numpy.ndarray
+            Copy of the converted flux magnitudes, with units removed.
+        """
+        return np.asarray(values.to(unit).m, dtype=float).copy()
 
     def _calculate_from_net_flux(
         self,
@@ -621,64 +697,48 @@ class LanduseCalculator:
         deforest_flux_values: np.ndarray,
         afforest_flux_values: np.ndarray,
         afforest_decay_flux_values: np.ndarray,
-        tau_rgr_int: int,
+        time_step: float,
         frc_rgr: float,
-        tau_afst_decay_int: int,
+        tau_rgr: float,
         frc_afst_decay: float,
     ) -> None:
+        """Derive gross flux from net input and schedule future recovery pulses.
+
+        At each interval, ``gross = net + regrowth`` already scheduled for that
+        interval. Positive gross flux is deforestation: its interval amount is
+        ``gross * time_step``, and the ``frc_rgr`` fraction is spread uniformly over
+        the next ``tau_rgr`` years. Negative gross flux is afforestation: its
+        magnitude determines the amount whose ``frc_afst_decay`` fraction decays
+        over the same period. The current interval's event starts affecting the
+        following interval.
+
+        All flux arrays are numeric and modified in place. A pulse is truncated at
+        the end of the simulation array.
         """
-        Calculate flux values when using net flux as input.
-        Updates the gross_flux_values array and regrowth_flux_values array in-place.
+        for i, net_flux in enumerate(net_flux_values):
+            gross_flux = net_flux + regrowth_flux_values[i]
+            gross_flux_values[i] = gross_flux
 
-        Parameters
-        ----------
-        net_flux_values : array-like
-            Array of net flux values.
-        gross_flux_values : array-like
-            Array to store gross flux values (modified in-place).
-        regrowth_flux_values : array-like
-            Array to store regrowth flux values (modified in-place).
-        length : int
-            Length of the time series.
-        tau_rgr_int : int
-            Integer regrowth time constant.
-        frc_rgr : float
-            Fraction that can regrow.
-        """
-
-        length_input = len(net_flux_values)
-        # Initialize first time step regrowth_flux_value
-        regrowth_flux_values[0] = 0
-
-        # Process the rest of the time steps
-        for i in range(0, length_input - 1):
-            # Current gross flux equals net flux plus regrowth
-            gross_flux_values[i] = net_flux_values[i] + regrowth_flux_values[i]
-
-            # Calculate regrowth contribution for future time steps
-            # Regrowth occurs over the next tau_rgr_int steps only when the gross
-            # flux is positive
-            if gross_flux_values[i] > 0:
-                deforest_flux_values[i] = gross_flux_values[i]
-                regrowth_per_step = gross_flux_values[i] * frc_rgr / tau_rgr_int
-                regrowth_flux_values[
-                    i + 1 : min(i + 1 + tau_rgr_int, length_input)
-                ] += regrowth_per_step
-            else:
-                afforest_flux_values[i] = -gross_flux_values[i]
-                afforest_decay_per_step = (
-                    afforest_flux_values[i] * frc_afst_decay / tau_afst_decay_int
+            if gross_flux > 0:
+                deforest_flux_values[i] = gross_flux
+                deforestation_amount = gross_flux * time_step
+                self._add_future_pulse(
+                    regrowth_flux_values,
+                    start_index=i + 1,
+                    amount=deforestation_amount * frc_rgr,
+                    duration=tau_rgr,
+                    time_step=time_step,
                 )
-                afforest_decay_flux_values[
-                    i + 1 : min(i + 1 + tau_afst_decay_int, length_input)
-                ] += afforest_decay_per_step
-
-        # Final step
-        gross_flux_values[-1] = net_flux_values[-1] + regrowth_flux_values[-1]
-        if gross_flux_values[-1] > 0:
-            deforest_flux_values[-1] = gross_flux_values[-1]
-        else:
-            afforest_flux_values[-1] = -gross_flux_values[-1]
+            else:
+                afforest_flux_values[i] = -gross_flux
+                afforestation_amount = afforest_flux_values[i] * time_step
+                self._add_future_pulse(
+                    afforest_decay_flux_values,
+                    start_index=i + 1,
+                    amount=afforestation_amount * frc_afst_decay,
+                    duration=tau_rgr,
+                    time_step=time_step,
+                )
 
     def _calculate_from_gross_flux(
         self,
@@ -688,45 +748,99 @@ class LanduseCalculator:
         deforest_flux_values: np.ndarray,
         afforest_flux_values: np.ndarray,
         afforest_decay_flux_values: np.ndarray,
-        tau_rgr_int: int,
+        time_step: float,
         frc_rgr: float,
-        tau_afst_decay_int: int,
+        tau_rgr: float,
         frc_afst_decay: float,
     ) -> None:
+        """Use gross input to derive net flux and schedule future pulses.
+
+        Positive gross flux is deforestation; negative gross flux is afforestation.
+        Their interval amounts are multiplied by ``time_step`` before applying the
+        regrowth or decay fraction. Each resulting amount is spread over ``tau_rgr``
+        years starting in the following interval. After all events are scheduled,
+        ``net_flux_values`` is updated in place to ``gross_flux_values`` minus
+        ``regrowth_flux_values``.
+
+        Inputs and outputs are numeric arrays in compatible rate units. The caller's
+        original quantities are not modified because the shared calculation method
+        works on copies.
         """
-        Calculate flux values when using gross flux as input.
-        Updates the regrowth_flux_values array in-place.
+        for i, gross_flux in enumerate(gross_flux_values):
+            if gross_flux > 0:
+                deforest_flux_values[i] = gross_flux
+                deforestation_amount = gross_flux * time_step
+                self._add_future_pulse(
+                    regrowth_flux_values,
+                    start_index=i + 1,
+                    amount=deforestation_amount * frc_rgr,
+                    duration=tau_rgr,
+                    time_step=time_step,
+                )
+            else:
+                afforest_flux_values[i] = -gross_flux
+                afforestation_amount = afforest_flux_values[i] * time_step
+                self._add_future_pulse(
+                    afforest_decay_flux_values,
+                    start_index=i + 1,
+                    amount=afforestation_amount * frc_afst_decay,
+                    duration=tau_rgr,
+                    time_step=time_step,
+                )
+
+        net_flux_values[:] = gross_flux_values - regrowth_flux_values
+
+    @staticmethod
+    def _add_future_pulse(
+        flux_values: np.ndarray,
+        start_index: int,
+        amount: float,
+        duration: float,
+        time_step: float,
+    ) -> None:
+        """Add a constant-rate recovery or decay pulse to future intervals.
+
+        The pulse begins at ``start_index`` and has total amount ``amount`` spread
+        uniformly over ``duration`` years. Its rate is ``amount / duration``. A
+        NumPy slice adds that rate to all complete intervals. If the duration ends
+        partway through an interval, that final interval receives the rate multiplied
+        by the fraction of the interval covered. This keeps the integrated amount
+        correct for both annual and subannual timesteps.
+
+        The output array stores interval-average rates. The function modifies it in
+        place and truncates the pulse if the available array ends before the pulse
+        does. ``time_step`` must be positive, and ``duration`` must be positive when
+        ``amount`` is nonzero; the caller validates the configured duration.
 
         Parameters
         ----------
-        gross_flux_values : array-like
-            Array of gross flux values.
-        regrowth_flux_values : array-like
-            Array to store regrowth flux values (modified in-place).
-        length : int
-            Length of the time series.
-        tau_rgr_int : int
-            Integer regrowth time constant.
-        frc_rgr : float
-            Fraction that can regrow.
+        flux_values
+            Numeric output array of interval-average rates to update.
+        start_index
+            Index of the first interval affected by the pulse.
+        amount
+            Total quantity represented by the pulse.
+        duration
+            Elapsed duration of the pulse in years.
+        time_step
+            Width of each model interval in years.
         """
-        length_input = len(gross_flux_values)
-        # Calculate regrowth for each time step
-        for i in range(length_input):
-            if gross_flux_values[i] > 0:
-                deforest_flux_values[i] = gross_flux_values[i]
-                regrowth_per_step = deforest_flux_values[i] * frc_rgr / tau_rgr_int
-                regrowth_flux_values[
-                    i + 1 : min(i + 1 + tau_rgr_int, length_input)
-                ] += regrowth_per_step
-            else:
-                afforest_flux_values[i] = -gross_flux_values[i]
-                afforest_decay_per_step = (
-                    afforest_flux_values[i] * frc_afst_decay / tau_afst_decay_int
-                )
-                afforest_decay_flux_values[
-                    i + 1 : min(i + 1 + tau_afst_decay_int, length_input)
-                ] += afforest_decay_per_step
+        if amount == 0 or start_index >= len(flux_values):
+            return
 
-        # Calculate net flux as gross flux minus regrowth
-        net_flux_values[:] = gross_flux_values - regrowth_flux_values
+        steps = duration / time_step
+        nearest_integer = round(steps)
+        if np.isclose(steps, nearest_integer, rtol=1e-12, atol=1e-12):
+            full_steps = int(nearest_integer)
+            partial_duration = 0.0
+        else:
+            full_steps = int(np.floor(steps))
+            partial_duration = duration - full_steps * time_step
+
+        rate = amount / duration
+        full_stop = min(start_index + full_steps, len(flux_values))
+        flux_values[start_index:full_stop] += rate
+
+        partial_index = start_index + full_steps
+        if partial_duration > 0 and partial_index < len(flux_values):
+            flux_values[partial_index] += rate * partial_duration / time_step

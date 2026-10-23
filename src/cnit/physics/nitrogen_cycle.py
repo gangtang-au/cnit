@@ -346,7 +346,7 @@ class NitrogenPUBNFCalculator:
 
             PUreq = NPPpot \\times NCratio
 
-        where : math:`NPPpot` is the potential NPP (calculated without nitrogen
+        where :math:`NPPpot` is the potential NPP (calculated without nitrogen
         limitation) and :math:`NCratio` is the required nitrogen-to-carbon ratio
         (``NCratio_PUreq``). This reflects the requirement for plants to maintain
         specific carbon-to-nitrogen stoichiometry during carbon assimilation.
@@ -617,7 +617,7 @@ class NitrogenTurnoverCalculator:
           respective turnover times
         - :math:`\\epsilon_{T}` represents temperature effects
         - :math:`\\epsilon_{N}` represents carbon-nitrogen coupling effects
-        - : math:`\\epsilon_{LU}` represents land use effects
+        - :math:`\\epsilon_{LU}` represents land use effects
 
         Each flux is calculated using first-order kinetics where the turnover rate
         equals pool size divided by turnover time, modified by environmental effects.
@@ -932,7 +932,7 @@ class NitrogenCycleCalculator:
 
         **Plant Pool:**
 
-        ..  math::
+        .. math::
 
             \\frac{dN_P}{dt} = BNF \\times f_{BNF2P} + PU \\times f_{PU2P} - nLP -
             nLUgrs \\times f_{nLUgrs2P}
@@ -1734,7 +1734,7 @@ class NitrogenCycleModel:
 
         1. **Stage 1 - Organic pools (plant, litter, soil):**
 
-        ..  math::
+        .. math::
 
             \\frac{dN_P}{dt} = BNF \\times f_{BNF2P} + PU \\times f_{PU2P} - nLP -
             nLUgrs \\times f_{nLUgrs2P}
