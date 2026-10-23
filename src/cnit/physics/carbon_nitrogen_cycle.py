@@ -71,7 +71,7 @@ class CarbonNitrogenCycleModel:
 
     - **Land Use Calculator** (:class:`LanduseCalculator`): Processes land use change
       emissions and regrowth fluxes for both carbon and nitrogen
-    - **Effect Calculators**:  Compute environmental modifiers
+    - **Effect Calculators**: Compute environmental modifiers
         * :class:`EffectCO2Calculator`: CO2 fertilization effects
         * :class:`EffectTemperatureCalculator`: Temperature effects on all processes
         * :class:`EffectCarbonNitrogenCouplingCalculator`: C-N coupling effects
@@ -502,12 +502,12 @@ class CarbonNitrogenCycleModel:
 
             **Carbon Cycle Variables:**
 
-            - Pool sizes:  CplsP, CplsL, CplsS, CplsPLS
+            - Pool sizes: CplsP, CplsL, CplsS, CplsPLS
             - Primary fluxes: CflxNPP, CflxNPPpot, CflxLPR, CflxLPRpot
             - Turnover fluxes: CflxLP, CflxLD, CflxSR
             - Partitioned fluxes: CflxNPP2P/L/S, CflxLP2L/S, CflxLD2S/A, CflxLUgrs2P/L/S
             - Derived fluxes: CflxRH, CflxNetPLS
-            - Land use:  CflxLUgrs, CflxLUrgr, cumulative land use changes
+            - Land use: CflxLUgrs, CflxLUrgr, cumulative land use changes
 
             **Nitrogen Cycle Variables** (if switch_N=1):
 
@@ -516,7 +516,7 @@ class CarbonNitrogenCycleModel:
             - Turnover fluxes: NflxLP, NflxLD, NflxSR, NflxLS
             - Partitioned fluxes: NflxPU2P/L/S, NflxBNF2P/L/S, NflxLP2L/S,
               NflxLD2S/M, NflxLUgrs2P/L/S
-            - Derived fluxes:  NflxNetMIN, NflxNetPLSM
+            - Derived fluxes: NflxNetMIN, NflxNetPLSM
             - Nitrogen budget: NflxPUreq, NflxPUavail, NflxPUavail_netMIN, NflxPUdef
             - Land use: NflxLUgrs, NflxLUmin
 
@@ -554,8 +554,8 @@ class CarbonNitrogenCycleModel:
 
         The behavior can be controlled through switches:
         - switch_N = 0: Carbon-only mode (no nitrogen limitation)
-        - switch_Cpls = [0,0,0]:  Freeze all carbon pools
-        - switch_Npls = [0,0,0,0]:  Freeze all nitrogen pools
+        - switch_Cpls = [0,0,0]: Freeze all carbon pools
+        - switch_Npls = [0,0,0,0]: Freeze all nitrogen pools
 
         See Also
         --------
@@ -740,7 +740,7 @@ class CarbonNitrogenCycleModel:
 
             **Carbon Fluxes:**
 
-            - CflxNPP:  Actual (nitrogen-limited) net primary production [GtC/yr]
+            - CflxNPP: Actual (nitrogen-limited) net primary production [GtC/yr]
             - CflxLPR: Actual (nitrogen-limited) litter production respiration [GtC/yr]
             - CflxNPPpot: Potential (non-nitrogen-limited) NPP [GtC/yr]
             - CflxLPRpot: Potential (non-nitrogen-limited) LPR [GtC/yr]
@@ -752,7 +752,7 @@ class CarbonNitrogenCycleModel:
 
             **Nitrogen Budget:**
 
-            - NflxPUreq:  Nitrogen required for plant uptake [GtN/yr]
+            - NflxPUreq: Nitrogen required for plant uptake [GtN/yr]
             - NflxPUavail: Nitrogen available for plant uptake [GtN/yr]
             - NflxPUavail_netMIN: N available from net mineralization [GtN/yr]
             - NflxPUdef: Nitrogen deficit for plant uptake [GtN/yr]
@@ -951,7 +951,7 @@ class CarbonNitrogenCycleModel:
             **Carbon Equilibrium:**
 
             - CflxLP_inverse, CflxLD_inverse, CflxSR_inverse: Turnover fluxes
-            - CflxLP2L_inverse, CflxLP2S_inverse:  Litter production partitioning
+            - CflxLP2L_inverse, CflxLP2S_inverse: Litter production partitioning
             - CflxLD2S_inverse, CflxLD2A_inverse: Litter decomposition partitioning
             - tau_CplsP_inverse, tau_CplsL_inverse, tau_CplsS_inverse: Turnover times
 
@@ -1289,8 +1289,8 @@ class CarbonNitrogenCycleModel:
             **Turnover Fluxes:**
 
             - CflxLP_inverse: Litter production [GtC/yr]
-            - CflxLD_inverse:  Litter decomposition [GtC/yr]
-            - CflxSR_inverse:  Soil respiration [GtC/yr]
+            - CflxLD_inverse: Litter decomposition [GtC/yr]
+            - CflxSR_inverse: Soil respiration [GtC/yr]
 
             **Partitioned Fluxes:**
 
@@ -1300,7 +1300,7 @@ class CarbonNitrogenCycleModel:
             **Equilibrium Turnover Times:**
 
             - tau_CplsP_inverse: Plant pool turnover time [yr]
-            - tau_CplsL_inverse:  Litter pool turnover time [yr]
+            - tau_CplsL_inverse: Litter pool turnover time [yr]
             - tau_CplsS_inverse: Soil pool turnover time [yr]
 
         Notes
@@ -1475,7 +1475,7 @@ class CarbonNitrogenCycleModel:
             - NflxLP_inverse, NflxLD_inverse, NflxSR_inverse, NflxLS_inverse
 
             **Partitioned Fluxes:**
-            - NflxLP2L_inverse, NflxLP2S_inverse:  LP allocation
+            - NflxLP2L_inverse, NflxLP2S_inverse: LP allocation
             - NflxLD2S_inverse, NflxLD2M_inverse: LD allocation
 
             **Equilibrium Turnover Times:**

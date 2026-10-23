@@ -26,7 +26,7 @@ Development Setup
 The commands below use Conda and the repository's ``environment.yml``.  From the
 repository root, run:
 
-..  code-block::  bash
+.. code-block:: bash
 
    git clone https://github.com/gangtang-au/cnit.git
    cd cnit
@@ -48,7 +48,7 @@ Development checks
 
 Run the checks relevant to your change before opening a pull request:
 
-..  code-block::  bash
+.. code-block:: bash
 
    make test
    make lint
@@ -73,7 +73,7 @@ experiments.  It also runs a calibrated ACCESS-ESM1-5 configuration and reports
 maximum absolute and relative differences for selected carbon and nitrogen
 diagnostics.  To show those diagnostic values locally, run:
 
-..  code-block::  bash
+.. code-block:: bash
 
    CNIT_BASELINE_REF=origin/main python -m pytest tests/test_model_results_regression.py -q -s
 

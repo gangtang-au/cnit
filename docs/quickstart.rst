@@ -18,7 +18,7 @@ For Users
 
 If you just want to use CNit:
 
-..  code-block:: bash
+.. code-block:: bash
 
    pip install cnit
 
@@ -35,7 +35,7 @@ To set up a development environment for this project, follow these steps:
 
 2. **Activate your environment**:
 
-   .. code-block::  bash
+   .. code-block:: bash
 
       conda activate cnit
 
@@ -55,14 +55,14 @@ To set up a development environment for this project, follow these steps:
    This will install all required dependencies (including notebook, docs, and testing tools)
    and install the package in editable mode.
 
-..  note::
+.. note::
 
    The Makefile will check that you are not in the ``base`` environment and will refuse
    to run if you are.
 
 **TL;DR for developers:**
 
-..  code-block:: bash
+.. code-block:: bash
 
    conda create --name cnit python=3.9
    conda activate cnit

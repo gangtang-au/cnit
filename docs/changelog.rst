@@ -63,7 +63,7 @@ Source code for earlier CNit versions is archived in these Zenodo releases:
   *Model Source Code for the MAGICC Coupled Carbon–Nitrogen Cycle Model – CNit*.
   Zenodo. https://doi.org/10.5281/zenodo.15569386
 
-..  note::
+.. note::
 
    Version numbering follows `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_
    (MAJOR.MINOR.PATCH):

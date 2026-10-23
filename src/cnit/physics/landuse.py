@@ -218,7 +218,8 @@ class LanduseCalculator:
     afforestation decay are scheduled in elapsed years. If no time axis is supplied,
     samples are treated as annual. Experiment configs validate input units, series
     lengths, and time-axis regularity before model execution. Direct calls to this
-    calculator assume those inputs are valid and aligned.
+    calculator assume those inputs are valid and aligned. Direct callers must also
+    provide ``0 <= frc_rgr <= 1`` and a positive ``tau_rgr``.
     """
 
     frc_rgr: pint.Quantity = field(
@@ -316,7 +317,7 @@ class LanduseCalculator:
 
             **Cumulative Quantities [GtC]:**
 
-            - cumsum_CflxLUrgr:   Cumulative regrowth carbon
+            - cumsum_CflxLUrgr: Cumulative regrowth carbon
             - cumsum_CflxLUdfst: Cumulative deforestation carbon
             - cumsum_CflxLUafst: Cumulative afforestation carbon
             - cumsum_CflxLUafst_decay: Cumulative decay from afforestation
@@ -445,19 +446,19 @@ class LanduseCalculator:
 
             **Instantaneous Fluxes [GtN/yr]:**
 
-            - NflxLUgrs:  Gross land use flux from organic pools
-            - NflxLUrgr:  Regrowth flux following deforestation
-            - NflxLUdfst:    Deforestation flux (from organic pools)
-            - NflxLUafst:  Afforestation flux (to organic pools)
-            - NflxLUafst_decay:    Decay flux following afforestation
-            - NflxLUmin:   Direct emission from mineral pool
+            - NflxLUgrs: Gross land use flux from organic pools
+            - NflxLUrgr: Regrowth flux following deforestation
+            - NflxLUdfst: Deforestation flux (from organic pools)
+            - NflxLUafst: Afforestation flux (to organic pools)
+            - NflxLUafst_decay: Decay flux following afforestation
+            - NflxLUmin: Direct emission from mineral pool
 
             **Cumulative Quantities [GtN]:**
 
             - cumsum_NflxLUrgr: Cumulative regrowth nitrogen
             - cumsum_NflxLUdfst: Cumulative deforestation nitrogen
-            - cumsum_NflxLUafst:    Cumulative afforestation nitrogen
-            - cumsum_NflxLUafst_decay:   Cumulative decay from afforestation
+            - cumsum_NflxLUafst: Cumulative afforestation nitrogen
+            - cumsum_NflxLUafst_decay: Cumulative decay from afforestation
 
         Notes
         -----
@@ -552,8 +553,7 @@ class LanduseCalculator:
             Dictionary with named flux series (see public methods for details).
 
         ValueError
-            If ``frc_rgr`` or ``tau_rgr`` is invalid, or if a nonzero input uses a
-            method other than 0 or 1.
+            If a nonzero input uses a method other than 0 or 1.
 
         Notes
         -----
@@ -574,7 +574,7 @@ class LanduseCalculator:
         **Parameter Relationships:**
 
         - frc_rgr: Regrowth fraction (varphi)
-        - frc_afst_decay:  Afforestation decay fraction (phi = 1 - varphi)
+        - frc_afst_decay: Afforestation decay fraction (phi = 1 - varphi)
         - tau_rgr: Regrowth and afforestation decay timescale in elapsed years
         """
 
@@ -587,12 +587,10 @@ class LanduseCalculator:
             time_values = np.asarray(time_axis.to("yr").m, dtype=float)
             time_step_yr = float(np.diff(time_values)[0])
 
+        # Physical ranges for these parameters are checked by the model config.
+        # This calculation path only converts them to the units used below.
         frc_rgr = float(self.frc_rgr.to("1").m)
         tau_rgr = float(self.tau_rgr.to("yr").m)
-        if not 0 <= frc_rgr <= 1:
-            raise ValueError("frc_rgr must be between 0 and 1.")
-        if not np.isfinite(tau_rgr) or tau_rgr <= 0:
-            raise ValueError("tau_rgr must be a positive finite duration in years.")
         frc_afst_decay = 1 - frc_rgr
 
         length_input = net_flux_a.size

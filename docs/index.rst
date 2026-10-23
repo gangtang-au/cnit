@@ -94,7 +94,7 @@ includes detailed scientific descriptions, equations, and implementation details
 Development
 -----------
 
-..  toctree::
+.. toctree::
    :maxdepth: 2
 
    changelog

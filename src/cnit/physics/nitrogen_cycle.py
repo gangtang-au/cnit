@@ -70,7 +70,7 @@ deposition, fertilizer application, and land use change.
 
 8. **Nitrogen Losses**: The model represents nitrogen losses through:
 
-   - Gaseous emissions:  Denitrification (N₂, N₂O, NO) and ammonia volatilization
+   - Gaseous emissions: Denitrification (N₂, N₂O, NO) and ammonia volatilization
    - Leaching: Nitrate leaching and dissolved organic nitrogen export
    - Land use change: Direct losses during deforestation and land conversion
 
@@ -331,7 +331,7 @@ class NitrogenPUBNFCalculator:
             - NflxPUreq: Required nitrogen for plant uptake [GtN/yr]
             - NflxPUavail: Total available nitrogen for plant uptake [GtN/yr]
             - NflxPUavail_netMIN: Available nitrogen from net mineralization [GtN/yr]
-            - NflxPUdef:  Nitrogen deficit (positive means demand exceeds supply) [GtN/yr]
+            - NflxPUdef: Nitrogen deficit (positive means demand exceeds supply) [GtN/yr]
 
         Notes
         -----
@@ -381,7 +381,7 @@ class NitrogenPUBNFCalculator:
            the mineral nitrogen pool (from the long-term past) and becomes available
            for plant uptake in the current timestep. Scaled by:
 
-           - :math:`NPPpot/NPP0` ratio:  Higher NPP produces more organic matter
+           - :math:`NPPpot/NPP0` ratio: Higher NPP produces more organic matter
              substrate for decomposition/mineralization, controlling the baseline
              rate for long-term net mineralization
            - Exponential response to AD: Incorporates that net mineralization
@@ -773,7 +773,7 @@ class NitrogenCycleCalculator:
       and soil respiration (nSR)
     - Mineralization: Release of mineral nitrogen from organic matter decomposition
     - Losses: Gaseous emissions and leaching (nLS)
-    - Land use changes:  Gross deforestation (nLUgrs) and direct mineral loss (nLUmin)
+    - Land use changes: Gross deforestation (nLUgrs) and direct mineral loss (nLUmin)
 
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of nitrogen through different pathways in the
@@ -1195,12 +1195,12 @@ class NitrogenCycleCalculator:
         -------
             Dictionary containing all nitrogen fluxes and their partitioned components:
 
-            - Primary fluxes:  NflxPU, NflxBNF, NflxLP, NflxLD, NflxSR, NflxLS,
+            - Primary fluxes: NflxPU, NflxBNF, NflxLP, NflxLD, NflxSR, NflxLS,
               NflxAD, NflxFT, NflxLUgrs, NflxLUmin
             - PU partitioning: NflxPU2P, NflxPU2L, NflxPU2S
             - BNF partitioning: NflxBNF2P, NflxBNF2L, NflxBNF2S
             - LP partitioning: NflxLP2L, NflxLP2S
-            - LD partitioning:  NflxLD2S, NflxLD2M
+            - LD partitioning: NflxLD2S, NflxLD2M
             - LUgrs partitioning: NflxLUgrs2P, NflxLUgrs2L, NflxLUgrs2S
             - Derived flux: NflxNetMIN (total net mineralization = nLD2M + nSR)
 
@@ -1290,7 +1290,7 @@ class NitrogenCycleModelResult:
     - Plant uptake (PU): Transfer from mineral to organic pools
     - Organic matter turnover (nLP, nLD, nSR)
     - Mineral nitrogen losses (nLS): Gaseous emissions and leaching
-    - Land use changes:  Gross deforestation (nLUgrs) and mineral losses (nLUmin)
+    - Land use changes: Gross deforestation (nLUgrs) and mineral losses (nLUmin)
     - Environmental modifiers: temperature, nitrogen, and land use effects
 
     Forcing and effect attributes are series aligned with ``time_axis``.
@@ -1303,7 +1303,7 @@ class NitrogenCycleModelResult:
 
     - 'NplsP': Plant nitrogen pool
     - 'NplsL': Litter nitrogen pool
-    - 'NplsS':  Soil nitrogen pool
+    - 'NplsS': Soil nitrogen pool
     - 'NplsM': Mineral nitrogen pool
     """
 
@@ -1433,10 +1433,10 @@ class NitrogenCycleModelResult:
         This method computes all diagnostic fluxes and derived quantities from the
         model state variables and returns a complete xarray Dataset containing:
 
-        - State variables:  Nitrogen pools (NplsP, NplsL, NplsS, NplsM)
+        - State variables: Nitrogen pools (NplsP, NplsL, NplsS, NplsM)
         - Turnover fluxes: Calculated from pools and environmental effects (nLP, nLD, nSR, nLS)
         - All partitioned fluxes: PU, BNF, and land use change distributed among pools
-        - Derived quantities:  Total organic nitrogen (NplsPLS), total terrestrial nitrogen
+        - Derived quantities: Total organic nitrogen (NplsPLS), total terrestrial nitrogen
           (NplsPLSM), net terrestrial nitrogen flux (NflxNetPLSM)
         - Net mineralization: Total nitrogen release from organic matter (NflxNetMIN)
 
@@ -1455,11 +1455,11 @@ class NitrogenCycleModelResult:
             **Primary Fluxes:**
 
             - NflxPU: Plant nitrogen uptake [GtN/yr]
-            - NflxBNF:  Biological nitrogen fixation [GtN/yr]
+            - NflxBNF: Biological nitrogen fixation [GtN/yr]
             - NflxAD: Atmospheric deposition [GtN/yr]
             - NflxFT: Fertilizer application [GtN/yr]
-            - NflxLP:  Litter production [GtN/yr]
-            - NflxLD:  Litter decomposition [GtN/yr]
+            - NflxLP: Litter production [GtN/yr]
+            - NflxLD: Litter decomposition [GtN/yr]
             - NflxSR: Soil respiration (soil turnover) [GtN/yr]
             - NflxLS: Mineral nitrogen losses [GtN/yr]
             - NflxLUgrs: Gross land use emissions [GtN/yr]
@@ -1467,9 +1467,9 @@ class NitrogenCycleModelResult:
 
             **Partitioned Fluxes:**
 
-            - NflxPU2P, NflxPU2L, NflxPU2S:  Plant uptake allocation to each pool
+            - NflxPU2P, NflxPU2L, NflxPU2S: Plant uptake allocation to each pool
             - NflxBNF2P, NflxBNF2L, NflxBNF2S: BNF allocation to each pool
-            - NflxLP2L, NflxLP2S:  Litter production allocation
+            - NflxLP2L, NflxLP2S: Litter production allocation
             - NflxLD2S, NflxLD2M: Litter decomposition to soil and mineral
             - NflxLUgrs2P, NflxLUgrs2L, NflxLUgrs2S: Land use emissions from each pool
 
@@ -1557,7 +1557,7 @@ class NitrogenCycleModel:
     using scipy.integrate.solve_ivp. The model tracks nitrogen transfers between pools
     through processes including:
 
-    - External inputs:  Biological nitrogen fixation (BNF), atmospheric deposition (AD),
+    - External inputs: Biological nitrogen fixation (BNF), atmospheric deposition (AD),
       and fertilizer application (FT)
     - Plant uptake (PU): Transfer from mineral to organic pools
     - Organic matter turnover (litter production, litter decomposition, soil respiration)
@@ -1768,7 +1768,7 @@ class NitrogenCycleModel:
         Both stages use scipy.integrate.solve_ivp with:
 
         - Adaptive time stepping (solver selects appropriate substeps)
-        - Absolute tolerance:  1e-6 GtN
+        - Absolute tolerance: 1e-6 GtN
         - Relative tolerance: 1e-3
         - Default solver method (typically RK45)
         - Stage 2 uses max_step=2 yr for stability due to fast mineral pool turnover

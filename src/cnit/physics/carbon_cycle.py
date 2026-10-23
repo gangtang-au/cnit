@@ -244,7 +244,7 @@ class CarbonTurnoverCalculator:
         -------
             Dictionary with keys:
 
-            - CflxLP:  Carbon flux from litter production [GtC/yr]
+            - CflxLP: Carbon flux from litter production [GtC/yr]
             - CflxLD: Carbon flux from litter decomposition [GtC/yr]
             - CflxSR: Carbon flux from soil respiration [GtC/yr]
 
@@ -331,7 +331,7 @@ class CarbonCycleCalculator:
 
     Key processes include:
 
-    - Carbon fixation:  Net primary production (NPP) converting atmospheric CO₂
+    - Carbon fixation: Net primary production (NPP) converting atmospheric CO₂
       to organic carbon
     - Autotrophic respiration: Litter production respiration (LPR) releasing CO₂
       from plant metabolism
@@ -705,7 +705,7 @@ class CarbonCycleModelResult:
 
     - 'CplsP': Plant carbon pool
     - 'CplsL': Litter carbon pool
-    - 'CplsS':  Soil carbon pool
+    - 'CplsS': Soil carbon pool
     """
 
     calc_c_turnover: CarbonTurnoverCalculator
@@ -809,11 +809,11 @@ class CarbonCycleModelResult:
         This method computes all diagnostic fluxes and derived quantities from the
         model state variables and returns a complete xarray Dataset containing:
 
-        - State variables:  Carbon pools (CplsP, CplsL, CplsS)
-        - Turnover fluxes:  Calculated from pools and environmental effects (cLP, cLD, cSR)
+        - State variables: Carbon pools (CplsP, CplsL, CplsS)
+        - Turnover fluxes: Calculated from pools and environmental effects (cLP, cLD, cSR)
         - All partitioned fluxes: NPP, LPR, and land use change distributed among pools
         - Derived quantities: Total terrestrial carbon (CplsPLS), net terrestrial flux (CflxNetPLS)
-        - Heterotrophic respiration:  Total CO₂ release from decomposition (CflxRH)
+        - Heterotrophic respiration: Total CO₂ release from decomposition (CflxRH)
 
         Returns
         -------
@@ -829,16 +829,16 @@ class CarbonCycleModelResult:
             **Primary Fluxes:**
 
             - CflxNPP: Net primary production [GtC/yr]
-            - CflxLPR:  Litter production respiration [GtC/yr]
+            - CflxLPR: Litter production respiration [GtC/yr]
             - CflxLP: Litter production [GtC/yr]
             - CflxLD: Litter decomposition [GtC/yr]
             - CflxSR: Soil respiration [GtC/yr]
-            - CflxLUgrs:  Gross land use emissions [GtC/yr]
+            - CflxLUgrs: Gross land use emissions [GtC/yr]
 
             **Partitioned Fluxes:**
 
             - CflxNPP2P, CflxNPP2L, CflxNPP2S: NPP allocation to each pool
-            - CflxLP2L, CflxLP2S:  Litter production allocation
+            - CflxLP2L, CflxLP2S: Litter production allocation
             - CflxLD2S, CflxLD2A: Litter decomposition to soil and atmosphere
             - CflxLUgrs2P, CflxLUgrs2L, CflxLUgrs2S: Land use emissions from each pool
 
@@ -993,7 +993,7 @@ class CarbonCycleModel:
     pool dynamics. Useful for diagnostic purposes or simplified model configurations.
     Setting a switch to 0 freezes that pool at its initial value.
 
-    - switch_Cpls[0]:  Plant pool switch
+    - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
     - switch_Cpls[2]: Soil pool switch
     """
@@ -1075,7 +1075,7 @@ class CarbonCycleModel:
         The solver uses scipy.integrate.solve_ivp with:
 
         - Adaptive time stepping (solver selects appropriate substeps)
-        - Absolute tolerance:  1e-6 GtC
+        - Absolute tolerance: 1e-6 GtC
         - Relative tolerance: 1e-3
         - Default solver method (typically RK45)
 

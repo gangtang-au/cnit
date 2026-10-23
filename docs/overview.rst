@@ -22,7 +22,7 @@ CNit answers questions about terrestrial biogeochemistry in the climate system:
 Conceptual Framework
 --------------------
 
-..   image:: _static/CNit_v2.png
+.. image:: _static/CNit_v2.png
    :alt: CNit conceptual diagram
    :align: center
    :width: 600px
@@ -126,7 +126,7 @@ The key feature of CNit is bidirectional coupling between C and N cycles:
 **Nitrogen Limitation of Carbon Uptake**
    Nitrogen availability constrains NPP.  The model calculates nitrogen deficit:
 
-   ..  math::
+   .. math::
 
       PUdef = PUreq - PUavail
 
@@ -245,6 +245,10 @@ Use Caution When:
 
 ⚠️ **Extreme events matter** - Fires, storms, pests not explicitly represented
 
+⚠️ **Subannual dynamics** - CNit supports subannual time steps, but representing
+   subannual dynamics requires calibration at the corresponding time scale. The
+   calibration files provided with CNit are currently based on an annual time scale.
+
 ⚠️ **Other nutrients limit** - Only carbon and nitrogen are modeled
 
 Model Assumptions
@@ -252,7 +256,7 @@ Model Assumptions
 
 Key assumptions in CNit:
 
-1. **Well-mixed pools** - No spatial heterogeneity or depth structure within pools.   All
+1. **Well-mixed pools** - No spatial heterogeneity or depth structure within pools. All
    carbon and nitrogen in each pool is assumed to be uniformly mixed at the global scale.
 
 2. **Time resolution** - Annual timesteps are used in the default examples; evenly spaced
@@ -262,7 +266,7 @@ Key assumptions in CNit:
 
 3. **First-order kinetics with environmental modifiers** - All turnover processes follow:
 
-   ..  math::
+   .. math::
 
       Flux = \frac{Pool\ Size}{\tau} \times \prod Environmental\ Effects
 
@@ -280,7 +284,7 @@ Key assumptions in CNit:
 
 6. **Fixed stoichiometric parameters** - Carbon-to-nitrogen ratios for plant uptake
    requirements (C:N ratios) are fixed parameters rather than dynamically varying with
-   environmental conditions.   However, through carbon-nitrogen coupling, the model allows
+   environmental conditions. However, through carbon-nitrogen coupling, the model allows
    for emergent variability in ecosystem C:N ratios as nitrogen availability constrains
    carbon uptake and decomposition rates vary with substrate stoichiometry.
 
