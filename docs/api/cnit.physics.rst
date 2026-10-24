@@ -52,9 +52,11 @@ Classes and functions for modeling nitrogen cycling.
 Coupled Carbon-Nitrogen Cycle
 -----------------------------
 
-Simulates the coupled carbon-nitrogen cycle processes.
+The coupled model combines the carbon and nitrogen cycle components. Use
+``CNitModel`` with ``CNitModelConfig`` and provide scenario forcings through
+``CNitExpConfig``. See :doc:`../configuration` for the parameters and experiment
+inputs.
 
-.. automodule:: cnit.physics.carbon_nitrogen_cycle
-   :members:
-   :undoc-members:
+.. autoclass:: cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel
+   :exclude-members: from_config, run_experiments
    :show-inheritance:

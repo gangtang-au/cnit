@@ -106,6 +106,7 @@ class CarbonNitrogenCycleModelConfig:
     sns_nSR2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
     )
+
     eff_C_PU_max: pint.Quantity = field(default=Q(2, "1"), validator=check_units("1"))
     sns_PU2NPPrd: pint.Quantity = field(default=Q(2.5, "1"), validator=check_units("1"))
     eff_C_BNF_max: pint.Quantity = field(default=Q(2, "1"), validator=check_units("1"))

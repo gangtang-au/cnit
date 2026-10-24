@@ -18,15 +18,15 @@ times, and initial pool sizes when it is created.
 
 .. code-block:: python
 
-   from cnit import CarbonNitrogenCycleModel, CarbonNitrogenCycleModelConfig, Q
+   from cnit import CNitModel, CNitModelConfig, Q
 
-   config = CarbonNitrogenCycleModelConfig.from_dict(
+   config = CNitModelConfig.from_dict(
        {
            "NPP0": Q(50, "GtC/yr"),
            "tau_CplsP": Q(10, "yr"),
        }
    )
-   model = CarbonNitrogenCycleModel.from_config(config)
+   model = CNitModel.from_config(config)
 
 Land-use parameters
 ~~~~~~~~~~~~~~~~~~~
@@ -617,13 +617,13 @@ from the table keep their defaults.
 
 .. code-block:: python
 
-   from cnit import CarbonNitrogenCycleModel, CarbonNitrogenCycleModelConfig
+   from cnit import CNitModel, CNitModelConfig
 
-   config = CarbonNitrogenCycleModelConfig.from_parameter_csv(
+   config = CNitModelConfig.from_parameter_csv(
        "data/cali_cmip6_best_fitting.csv",
        model_name="ACCESS-ESM1-5",
    )
-   model = CarbonNitrogenCycleModel.from_config(config)
+   model = CNitModel.from_config(config)
 
 
 Experiment Inputs
@@ -698,16 +698,16 @@ Use an experiment with ``run_experiments``:
    import numpy as np
 
    from cnit import (
-       CarbonNitrogenCycleExperimentConfig,
-       CarbonNitrogenCycleModel,
-       CarbonNitrogenCycleModelConfig,
+       CNitExpConfig,
+       CNitModel,
+       CNitModelConfig,
        Q,
    )
 
-   model = CarbonNitrogenCycleModel.from_config(CarbonNitrogenCycleModelConfig())
+   model = CNitModel.from_config(CNitModelConfig())
    time_axis = Q(np.arange(1850, 1853), "yr")
    n = time_axis.size
-   experiment = CarbonNitrogenCycleExperimentConfig(
+   experiment = CNitExpConfig(
        name="baseline",
        switch_N=Q(1, "1"),
        time_axis=time_axis,
@@ -726,9 +726,15 @@ Use an experiment with ``run_experiments``:
 Configuration API
 -----------------
 
-.. autoclass:: cnit.configs.model_config.CarbonNitrogenCycleModelConfig
-   :members: from_dict, from_parameter_csv
+``CNitModel``
+   The main coupled model. Create it from a configuration with
+   ``CNitModel.from_config``. Use ``run`` for one experiment or ``run_experiments``
+   to run several experiments.
 
-.. autoclass:: cnit.configs.experiment_config.CarbonNitrogenCycleExperimentConfig
-   :members: to_input_dict
-   :no-index:
+``CNitModelConfig``
+   Stores model parameters and initial pool sizes. Use ``from_dict`` to override
+   selected parameters or ``from_parameter_csv`` to load a calibration.
+
+``CNitExpConfig``
+   Stores one experiment's time axis and forcing series. Use ``to_input_dict`` to
+   obtain the inputs for ``CNitModel.run``.

@@ -208,8 +208,8 @@ data sources like forest harvest statistics.
 
 See Also
 --------
-:py:meth:`cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel`: Main model using these land use fluxes
-:py:meth:`cnit.physics.effects.EffectLanduseCalculator`: Environmental effects from land use changes
+:py:class:`~cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel`: Main model using these land use fluxes
+:py:class:`~cnit.physics.effects.EffectLanduseCalculator`: Environmental effects from land use changes
 """
 
 from typing import Dict, Optional
@@ -411,7 +411,7 @@ class LanduseCalculator:
         See Also
         --------
         calculate_NflxLU_series: Analogous nitrogen flux calculation
-        :py:meth:`cnit.physics.effects.EffectLanduseCalculator`: Land use effects calculation using these fluxes
+        :py:class:`~cnit.physics.effects.EffectLanduseCalculator`: Land use effects calculation using these fluxes
         :py:meth:`cnit.physics.carbon_cycle.CarbonCycleModel.run`: How these fluxes are used in carbon cycle
         """
 

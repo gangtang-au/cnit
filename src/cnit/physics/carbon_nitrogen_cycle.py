@@ -104,7 +104,7 @@ class CarbonNitrogenCycleModel:
     The model can be initialized in two ways:
 
     - :meth:`from_dict`: Build from a parameter dictionary
-    - :meth:`from_config`: Build from a :class:`CarbonNitrogenCycleModelConfig` instance
+    - :meth:`from_config`: Build from a ``CNitModelConfig`` instance
 
     Both methods automatically distribute parameters to the appropriate sub-components.
     """
