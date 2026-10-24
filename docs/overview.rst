@@ -6,7 +6,7 @@ What is CNit?
 
 CNit (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
 terrestrial biogeochemistry model that simulates the coupled dynamics of carbon and
-nitrogen cycles.  It is designed as the land component of MAGICC (Model for the Assessment
+nitrogen cycles. It is designed as the land component of MAGICC (Model for the Assessment
 of Greenhouse Gas Induced Climate Change), providing a computationally efficient
 representation of terrestrial carbon-nitrogen feedbacks for integrated assessment and
 climate projection studies.
@@ -75,7 +75,7 @@ Carbon Processes
 ~~~~~~~~~~~~~~~~
 
 **Net Primary Production (NPP)**
-   Carbon fixation by plants through photosynthesis.  Modified by:
+   Carbon fixation by plants through photosynthesis. Modified by:
 
    - CO₂ fertilization effect
    - Temperature effect
@@ -124,14 +124,14 @@ Carbon-Nitrogen Coupling
 The key feature of CNit is bidirectional coupling between C and N cycles:
 
 **Nitrogen Limitation of Carbon Uptake**
-   Nitrogen availability constrains NPP.  The model calculates nitrogen deficit:
+   Nitrogen availability constrains NPP. The model calculates nitrogen deficit:
 
    .. math::
 
       PUdef = PUreq - PUavail
 
    where PUreq is based on potential NPP and stoichiometric requirements, and PUavail
-   comes from mineralization and external inputs.  This deficit applies an exponential
+   comes from mineralization and external inputs. This deficit applies an exponential
    limitation effect on actual NPP.
 
 **Carbon-Driven Nitrogen Demand**
@@ -276,7 +276,7 @@ Key assumptions in CNit:
    modifiers (temperature, nitrogen, land use).
 
 4. **Constant baseline turnover times** - Turnover times (τ) are fixed parameters that do
-   not vary with environmental conditions or ecosystem state.  Environmental responses are
+   not vary with environmental conditions or ecosystem state. Environmental responses are
    captured through effect modifiers rather than dynamically changing turnover times.
 
 5. **Prescribed land use emissions** - Land use change is represented through prescribed

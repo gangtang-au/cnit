@@ -54,7 +54,7 @@ class CarbonNitrogenCycleModel:
         * Nitrogen deficit feedbacks
     - Environmental responses:
 
-        * CO2 fertilization effects on NPP
+        * CO₂ fertilization effects on NPP
         * Temperature effects on all processes
         * Land use change impacts (deforestation, afforestation, regrowth)
 
@@ -72,7 +72,7 @@ class CarbonNitrogenCycleModel:
     - **Land Use Calculator** (:class:`LanduseCalculator`): Processes land use change
       emissions and regrowth fluxes for both carbon and nitrogen
     - **Effect Calculators**: Compute environmental modifiers
-        * :class:`EffectCO2Calculator`: CO2 fertilization effects
+        * :class:`EffectCO2Calculator`: CO₂ fertilization effects
         * :class:`EffectTemperatureCalculator`: Temperature effects on all processes
         * :class:`EffectCarbonNitrogenCouplingCalculator`: C-N coupling effects
         * :class:`EffectLanduseCalculator`: Land use effects on turnover rates
@@ -111,23 +111,23 @@ class CarbonNitrogenCycleModel:
 
     # Calculators
     calc_lu: LanduseCalculator
-    """Calculator for land use fluxes. 
-    
+    """Calculator for land use fluxes.
+
     Processes land use change emissions (gross deforestation, net emissions) and
     regrowth for both carbon and nitrogen cycles.  Tracks cumulative land use changes
-    for calculating land use effects on productivity. 
+    for calculating land use effects on productivity.
     """
 
     calc_eff_CO2: EffectCO2Calculator
-    """Calculator for CO2 fertilization effects. 
-    
-    Computes the enhancement of NPP due to elevated atmospheric CO2 concentration
-    through increased photosynthetic efficiency and water use efficiency. 
+    """Calculator for CO₂ fertilization effects.
+
+    Computes the enhancement of NPP due to elevated atmospheric CO₂ concentration
+    through increased photosynthetic efficiency and water use efficiency.
     """
 
     calc_eff_dT: EffectTemperatureCalculator
-    """Calculator for temperature effects. 
-    
+    """Calculator for temperature effects.
+
     Computes temperature modifiers for all carbon and nitrogen processes including
     NPP, LPR, decomposition, mineralization, plant uptake, biological fixation, and
     gaseous losses.
@@ -135,38 +135,38 @@ class CarbonNitrogenCycleModel:
 
     calc_eff_CN: EffectCarbonNitrogenCouplingCalculator
     """Calculator for carbon-nitrogen coupling effects.
-    
+
     Computes nitrogen limitation effects on carbon processes (NPP, decomposition)
     and carbon availability effects on nitrogen processes (plant uptake, fixation)
     based on nitrogen deficit and NPP changes.
     """
 
     calc_eff_LU: EffectLanduseCalculator
-    """Calculator for land use effects. 
-    
+    """Calculator for land use effects.
+
     Computes land use change effects on process rates (turnover, decomposition)
-    based on land use history (regrowth, deforestation, afforestation). 
+    based on land use history (regrowth, deforestation, afforestation).
     """
 
     calc_npp_lpr: CarbonNPPLPRCalculator
     """Calculator for net primary production (NPP) and litter production respiration (LPR).
-    
+
     Computes carbon fixation by plants (NPP) and associated autotrophic respiration
-    (LPR) with environmental modifiers (CO2, temperature, nitrogen, land use).
+    (LPR) with environmental modifiers (CO₂, temperature, nitrogen, land use).
     """
 
     calc_pu_bnf: NitrogenPUBNFCalculator
     """Calculator for plant nitrogen uptake (PU) and biological nitrogen fixation (BNF).
-    
+
     Computes nitrogen inputs to organic pools through plant uptake from mineral pool
     and biological fixation from atmosphere, with environmental modifiers and nitrogen
-    deficit feedbacks. 
+    deficit feedbacks.
     """
 
     # Model components
     mdl_c_cycle: CarbonCycleModel
     """Carbon cycle model component.
-    
+
     Solves the carbon pool dynamics (plant, litter, soil) using ODE integration.
     Receives nitrogen limitation effects from nitrogen cycle and provides NPP for
     nitrogen demand calculation.
@@ -174,7 +174,7 @@ class CarbonNitrogenCycleModel:
 
     mdl_n_cycle: NitrogenCycleModel
     """Nitrogen cycle model component.
-    
+
     Solves the nitrogen pool dynamics (plant, litter, soil, mineral) using two-stage
     ODE integration. Receives carbon-driven nitrogen demand and provides nitrogen
     limitation effects to carbon cycle.
@@ -184,12 +184,12 @@ class CarbonNitrogenCycleModel:
     switch_N: pint.Quantity = field(
         default=Q(1, "1"),
     )
-    """Switch to enable/disable nitrogen cycle [dimensionless]. 
-    
-    Controls whether nitrogen limitation effects are applied to carbon cycle: 
+    """Switch to enable/disable nitrogen cycle [dimensionless].
+
+    Controls whether nitrogen limitation effects are applied to carbon cycle:
     - 1: Full carbon-nitrogen coupling (default)
     - 0: Carbon cycle only (no nitrogen limitation)
-    
+
     When set to 0, the model runs as a carbon-only model with no nitrogen feedbacks.
     """
 
@@ -472,7 +472,7 @@ class CarbonNitrogenCycleModel:
         dT_s
             Time series of temperature anomaly relative to preindustrial [K].
         CO2_s
-            Time series of atmospheric CO2 concentration [ppm].
+            Time series of atmospheric CO₂ concentration [ppm].
         CemsLUnet_s
             Time series of net land use carbon emissions [GtC/yr].  Includes both
             gross emissions and regrowth.
@@ -718,7 +718,7 @@ class CarbonNitrogenCycleModel:
         dT
             Temperature anomaly [K]. Used for temperature effects on all processes.
         CO2
-            Atmospheric CO2 concentration [ppm]. Used for CO2 fertilization effect.
+            Atmospheric CO₂ concentration [ppm]. Used for CO₂ fertilization effect.
         CflxLUrgr
             Land use regrowth carbon flux [GtC/yr]. Adds to baseline NPP.
         cumsum_CflxLUrgr
@@ -927,7 +927,7 @@ class CarbonNitrogenCycleModel:
         dT_s
             Time series of temperature anomaly [K].  Only first value used.
         CO2_s
-            Time series of atmospheric CO2 concentration [ppm]. Only first value used.
+            Time series of atmospheric CO₂ concentration [ppm]. Only first value used.
         CemsLUnet_s
             Time series of net land use carbon emissions [GtC/yr]. Only first value used.
         CemsLUgrs_s
@@ -1112,7 +1112,7 @@ class CarbonNitrogenCycleModel:
 
         **Environmental Effects:**
 
-        All environmental effects are calculated at the specified conditions (dT, CO2, etc.)
+        All environmental effects are calculated at the specified conditions (dT, CO₂, etc.)
         and applied to determine equilibrium turnover rates.
 
         See Also

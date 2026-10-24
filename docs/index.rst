@@ -20,7 +20,7 @@ use change), and nitrogen limitation on carbon uptake.
 
 * Explicit carbon-nitrogen coupling with nitrogen limitation feedbacks
 * Four nitrogen pools (plant, litter, soil, mineral) and three carbon pools
-* Environmental modifiers:  CO₂, temperature, land use, nitrogen availability
+* Environmental modifiers: CO₂, temperature, land use, nitrogen availability
 * Separation of deforestation and afforestation for CDR scenarios
 * Annual timesteps use flux-allocation and pool-turnover fractions to represent
   within-year transfers
@@ -83,7 +83,7 @@ Learn how to use CNit effectively with examples and best practices.
 API Reference
 -------------
 
-Complete documentation of all classes, methods, and modules.  The API documentation
+Complete documentation of all classes, methods, and modules. The API documentation
 includes detailed scientific descriptions, equations, and implementation details.
 
 .. toctree::
@@ -107,10 +107,10 @@ CNit is developed and maintained by **Gang Tang**.
 
 **Questions or feedback?**
 
-* Open an issue:  `GitHub Issues <https://github.com/gangtang-au/cnit/issues>`_
+* Open an issue: `GitHub Issues <https://github.com/gangtang-au/cnit/issues>`_
 * Email: gang.tang.au@gmail.com
 
-Interested in contributing or collaboration?  Please get in touch!
+Interested in contributing or collaboration? Please get in touch!
 
 License & Citation
 ------------------

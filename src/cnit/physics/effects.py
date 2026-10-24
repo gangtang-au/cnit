@@ -2,7 +2,7 @@
 Effect Factor Calculators for the CNit Model.
 
 This module defines the calculators responsible for computing the
-dimensionless "effect factors" (e.g., from temperature change, CO2, land use)
+dimensionless "effect factors" (e.g., from temperature change, CO₂, land use)
 that modify the rates of core carbon and nitrogen cycle processes.
 
 The effect factors represent multiplicative modifiers applied to baseline process
@@ -10,7 +10,7 @@ rates to account for environmental changes and feedbacks. Each calculator class
 handles a specific category of effects:
 
 - :class:`EffectLanduseCalculator`: Land use change effects (deforestation, afforestation, regrowth)
-- :class:`EffectCO2Calculator`: Atmospheric CO2 fertilization effects
+- :class:`EffectCO2Calculator`: Atmospheric CO₂ fertilization effects
 - :class:`EffectTemperatureCalculator`: Temperature-dependent process modifications
 - :class:`EffectCarbonNitrogenCouplingCalculator`: Carbon-nitrogen cycle feedback effects
 
@@ -555,30 +555,30 @@ class EffectLanduseCalculator:
 @define
 class EffectCO2Calculator:
     """
-    Calculator of CO2 fertilization effects on Net Primary Production (NPP).
+    Calculator of CO₂ fertilization effects on Net Primary Production (NPP).
 
-    Implements multiple formulations of the CO2 fertilization effect, including
+    Implements multiple formulations of the CO₂ fertilization effect, including
     logarithmic, rectangular hyperbolic (Gifford), and sigmoid forms. The calculator
     can blend between these formulations based on the ``method_CO2_NPP`` parameter
-    to represent different assumptions about CO2 response saturation behavior.
+    to represent different assumptions about CO₂ response saturation behavior.
 
-    The CO2 effect represents how elevated atmospheric CO2 concentrations enhance
+    The CO₂ effect represents how elevated atmospheric CO₂ concentrations enhance
     photosynthetic rates and water use efficiency in vegetation, leading to increased
     NPP. Different formulations capture different assumptions about saturation behavior
-    at high CO2 levels and the shape of the CO2 response curve.
+    at high CO₂ levels and the shape of the CO₂ response curve.
 
     Notes
     -----
-    **Physical Basis of CO2 Fertilization**
+    **Physical Basis of CO₂ Fertilization**
 
-    Elevated CO2 enhances plant productivity through two main mechanisms:
+    Elevated CO₂ enhances plant productivity through two main mechanisms:
 
-    1. **Direct photosynthetic enhancement**: Higher CO2 increases the rate of
+    1. **Direct photosynthetic enhancement**: Higher CO₂ increases the rate of
        carbon fixation in the Calvin cycle (substrate availability)
     2. **Improved water use efficiency**: Plants can partially close stomata while
-       maintaining CO2 uptake, reducing water loss
+       maintaining CO₂ uptake, reducing water loss
 
-    The strength of CO2 fertilization varies by:
+    The strength of CO₂ fertilization varies by:
 
     - Plant functional type (C3 vs. C4 photosynthesis)
     - Nutrient availability (progressive nitrogen limitation)
@@ -587,16 +587,16 @@ class EffectCO2Calculator:
 
     **Choice of Formulation**
 
-    Different formulations represent different hypotheses about CO2 response:
+    Different formulations represent different hypotheses about CO₂ response:
 
     - **Logarithmic**: No saturation, effect continues growing indefinitely.
-      Simple and commonly used, but may overestimate effects at very high CO2.
+      Simple and commonly used, but may overestimate effects at very high CO₂.
 
     - **Rectangular hyperbolic**: Moderate saturation following Michaelis-Menten
       kinetics. Based on photosynthesis theory (Gifford 1980).
 
     - **Sigmoid**: Strong saturation with explicit maximum effect. Most conservative
-      at high CO2, captures potential acclimation or nutrient limitation feedbacks.
+      at high CO₂, captures potential acclimation or nutrient limitation feedbacks.
 
     **Calibration Strategy**
 
@@ -626,7 +626,7 @@ class EffectCO2Calculator:
         validator=check_units("1"),
     )
     """
-    Maximum CO2 effect factor for the sigmoid form [dimensionless].
+    Maximum CO₂ effect factor for the sigmoid form [dimensionless].
     """
 
     CO2ref: pint.Quantity = field(
@@ -642,7 +642,7 @@ class EffectCO2Calculator:
         validator=check_units("ppm"),
     )
     """
-    Atmospheric |CO2| concentration when NPP = 0 (for rectangular hyperbolic effect, 
+    Atmospheric |CO2| concentration when NPP = 0 (for rectangular hyperbolic effect,
     default 31 ppm) [ppm].
     """
 
@@ -651,7 +651,7 @@ class EffectCO2Calculator:
         validator=check_units("1"),
     )
     """
-    |CO2| effect factor calculation method (value from 0 to 2), 
+    |CO2| effect factor calculation method (value from 0 to 2),
     otherwise eff_CO2 is set equal to 1.
     """
 
@@ -660,29 +660,29 @@ class EffectCO2Calculator:
         CO2: pint.Quantity,
     ) -> pint.Quantity:
         """
-        Calculate the CO2 fertilization effect factor for Net Primary Production (NPP).
+        Calculate the CO₂ fertilization effect factor for Net Primary Production (NPP).
 
-        Computes a multiplicative factor representing how elevated CO2 enhances NPP
+        Computes a multiplicative factor representing how elevated CO₂ enhances NPP
         relative to the reference concentration. The calculation can use pure or
         blended formulations depending on the ``method_CO2_NPP`` parameter.
 
         Parameters
         ----------
         CO2 : pint.Quantity
-            Current atmospheric CO2 concentration [ppm].
+            Current atmospheric CO₂ concentration [ppm].
 
         Returns
         -------
         pint.Quantity
-            CO2 effect factor on NPP [dimensionless].
+            CO₂ effect factor on NPP [dimensionless].
 
-            - Values > 1: CO2 fertilization (enhanced NPP)
-            - Values = 1: No effect (CO2 at reference level)
-            - Values < 1: Suppression (rare, only at very low CO2 below reference)
+            - Values > 1: CO₂ fertilization (enhanced NPP)
+            - Values = 1: No effect (CO₂ at reference level)
+            - Values < 1: Suppression (rare, only at very low CO₂ below reference)
 
         Notes
         -----
-        **Three CO2 Effect Formulations**
+        **Three CO₂ Effect Formulations**
 
         1. **Logarithmic Form** (simple, commonly used):
 
@@ -690,21 +690,21 @@ class EffectCO2Calculator:
 
               \\epsilon^{log}_{CO_2} = 1 + s^{log}_{CO_2} \\times \\ln(CO_2/CO_{2,ref})
 
-           where :math:`CO_2` is the current atmospheric CO2 concentration and
+           where :math:`CO_2` is the current atmospheric CO₂ concentration and
            :math:`CO_{2,ref}` is the reference concentration (typically pre-industrial).
 
            **Properties**:
 
            - Effect factor = 1 at :math:`CO_2 = CO_{2,ref}`
            - Logarithmic relationship implies diminishing but never-ceasing returns
-           - No explicit saturation at high CO2
+           - No explicit saturation at high CO₂
            - Commonly used in Earth system models (e.g., OSCAR, simple IAMs)
 
            **Interpretation of** :math:`s^{log}_{CO_2}` **(β parameter)**:
 
-           - :math:`s^{log}_{CO_2} = 0.4`: Doubling CO2 increases NPP by ~28%
+           - :math:`s^{log}_{CO_2} = 0.4`: Doubling CO₂ increases NPP by ~28%
              (:math:`1 + 0.4 \\times \\ln(2) \\approx 1.277`)
-           - :math:`s^{log}_{CO_2} = 0.6`: Doubling CO2 increases NPP by ~42%
+           - :math:`s^{log}_{CO_2} = 0.6`: Doubling CO₂ increases NPP by ~42%
            - Literature estimates typically range from 0.2 to 0.6
 
         2. **Rectangular Hyperbolic Form** (Gifford formulation, includes saturation):
@@ -713,7 +713,7 @@ class EffectCO2Calculator:
               \\epsilon^{rect}_{CO_2} = \\frac{1/(CO_{2,ref}-CO_{2,b}) + s^{rect}_{CO_2}}{
               1/(CO_2-CO_{2,b}) + s^{rect}_{CO_2}}
 
-           where :math:`CO_{2,b}` is the CO2 compensation point (NPP = 0, typically ~31 ppm).
+           where :math:`CO_{2,b}` is the CO₂ compensation point (NPP = 0, typically ~31 ppm).
 
            **Derivation of** :math:`s^{rect}_{CO_2}`:
 
@@ -736,7 +736,7 @@ class EffectCO2Calculator:
            **Properties**:
 
            - Based on Michaelis-Menten enzyme kinetics
-           - Exhibits saturation at high CO2 levels
+           - Exhibits saturation at high CO₂ levels
            - Approaches asymptote as :math:`CO_2 \\to \\infty`
            - More physiologically grounded than logarithmic form
            - Used in some process-based terrestrial biosphere models
@@ -751,11 +751,11 @@ class EffectCO2Calculator:
            **Properties**:
 
            - Transitions smoothly from 1 at :math:`CO_{2,ref}` to
-             :math:`\\epsilon^{sig}_{CO_2,max}` at high CO2
+             :math:`\\epsilon^{sig}_{CO_2,max}` at high CO₂
            - Steepness controlled by :math:`s^{sig}_{CO_2}`
            - Allows explicit specification of maximum possible enhancement
            - Can represent nutrient limitation or acclimation feedbacks
-           - Most conservative at very high CO2 concentrations
+           - Most conservative at very high CO₂ concentrations
 
         **Blending Between Formulations**
 
@@ -775,10 +775,10 @@ class EffectCO2Calculator:
 
         **Blending rationale**:
 
-        - Allows exploration of uncertainty in CO2 response shape
+        - Allows exploration of uncertainty in CO₂ response shape
         - Smooth transitions between formulations (no discontinuities)
         - Can be calibrated against observations or expert judgment
-        - Value outside [0,2] disables CO2 fertilization entirely
+        - Value outside [0,2] disables CO₂ fertilization entirely
         """
         # calculate the logarithmic form CO2 effect factors
         eff_CO2_log = 1 + self.sns_CO2_log * np.log(CO2 / self.CO2ref)
@@ -923,7 +923,7 @@ class EffectTemperatureCalculator:
         validator=check_units("1/K"),
     )
     """
-        Sensitivity of carbon soil respiration (soil organic matter decomposition) to 
+        Sensitivity of carbon soil respiration (soil organic matter decomposition) to
         temperature changes [K\ :sup:`-1`]
     """
 
@@ -1105,7 +1105,7 @@ class EffectTemperatureCalculator:
         - High: Q10 = 2.5 (:math:`s_{cSR2dT}` = 0.092 K⁻¹)
         - Very high: Q10 = 3.0 (:math:`s_{cSR2dT}` = 0.110 K⁻¹)
 
-        **Feedback loop**: Warming → Enhanced soil respiration → CO2 release →
+        **Feedback loop**: Warming → Enhanced soil respiration → CO₂ release →
         More warming. Magnitude depends critically on Q10.
 
         **Example**: For 3 K warming:
@@ -1211,7 +1211,7 @@ class EffectTemperatureCalculator:
         These temperature effects interact with C-N coupling effects:
 
         - Enhanced N uptake/fixation (temperature) may partially alleviate N
-          limitation of CO2-fertilized NPP
+          limitation of CO₂-fertilized NPP
         - However, if warming also increases NPP (temperature effect), N demand
           increases, potentially intensifying N limitation
         - Net effect on N limitation depends on the balance between enhanced
@@ -1269,7 +1269,7 @@ class EffectTemperatureCalculator:
         This is a **critical process** controlling N availability:
 
         - Warming → Enhanced mineralization → More plant-available N
-        - May alleviate progressive nitrogen limitation under CO2 fertilization
+        - May alleviate progressive nitrogen limitation under CO₂ fertilization
         - Often mirrors carbon soil respiration temperature sensitivity
 
         Typical sensitivities: :math:`s_{nSR2dT}` ~ 0.05-0.09 K⁻¹ (Q10 ~ 1.6-2.5).
@@ -1320,8 +1320,8 @@ class EffectCarbonNitrogenCouplingCalculator:
        availability (via NPP) enhances plant uptake and fixation
 
     These coupling effects are critical for predicting ecosystem responses to
-    CO2 fertilization and climate change, particularly the phenomenon of
-    "progressive nitrogen limitation" where CO2-stimulated growth is increasingly
+    CO₂ fertilization and climate change, particularly the phenomenon of
+    "progressive nitrogen limitation" where CO₂-stimulated growth is increasingly
     constrained by nitrogen availability.
 
     **Switch Parameter**

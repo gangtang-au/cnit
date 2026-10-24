@@ -2,10 +2,10 @@
   <img src="docs/_static/CNit_logo.png" alt="CNit logo" width="100">
 </p>
 
-**CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based 
-terrestrial biogeochemistry model that simulates coupled carbon and nitrogen cycles 
-in terrestrial ecosystems.  It is the land component of **MAGICC** (Model for the 
-Assessment of Greenhouse Gas Induced Climate Change). 
+**CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
+terrestrial biogeochemistry model that simulates coupled carbon and nitrogen cycles
+in terrestrial ecosystems. It is the land component of **MAGICC** (Model for the
+Assessment of Greenhouse Gas Induced Climate Change).
 
 ## Features
 
@@ -81,7 +81,7 @@ n_steps = len(time_axis)
 
 # Simple forcing (constant values for illustration)
 dT_s = Q(np.linspace(0, 2, n_steps), "K")  # 2°C warming
-CO2_s = Q(np.linspace(280, 560, n_steps), "ppm")  # CO2 doubling
+CO2_s = Q(np.linspace(280, 560, n_steps), "ppm")  # CO₂ doubling
 
 # Land use emissions (zero for simplicity)
 CemsLUnet_s = Q(np.zeros(n_steps), "GtC/yr")
@@ -121,7 +121,7 @@ print(f"NPP change: {npp[0]} → {npp[-1]} {npp_unit}")
 ```
 
 ## Documentation
-The full documentation for CNit is available at 
+The full documentation for CNit is available at
 [https://cnit.readthedocs.io](https://cnit.readthedocs.io).
 
 ## License

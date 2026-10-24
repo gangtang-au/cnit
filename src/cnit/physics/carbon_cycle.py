@@ -3,7 +3,7 @@ MAGICC Terrestrial Carbon Cycle Model Implementation
 
 This module provides the implementation of the carbon cycle component of MAGICC's
 coupled carbon-nitrogen cycle model (CNit). It simulates the dynamics of terrestrial
-carbon pools and their responses to climate change, CO2 fertilization, nitrogen
+carbon pools and their responses to climate change, CO₂ fertilization, nitrogen
 availability, and land use change.
 
 **Carbon Cycle Components:**
@@ -30,7 +30,7 @@ availability, and land use change.
    representing:
 
    - Temperature effects on decomposition and respiration
-   - CO2 fertilization effects on NPP
+   - CO₂ fertilization effects on NPP
    - Nitrogen availability effects (carbon-nitrogen coupling)
    - Land use change effects on turnover rates
 
@@ -113,7 +113,7 @@ class CarbonNPPLPRCalculator:
         Parameters
         ----------
         eff_CO2_NPP
-            CO2 effect on NPP [dimensionless]
+            CO₂ effect on NPP [dimensionless]
         eff_dT_NPP
             Temperature effect on NPP [dimensionless]
         eff_dT_LPR
@@ -138,10 +138,10 @@ class CarbonNPPLPRCalculator:
 
         .. math::
 
-            NPP = (NPP_0 + LUrgr) \\times \\epsilon_{T(NPP)} \\times \\epsilon_{CO2}
+            NPP = (NPP_0 + LUrgr) \\times \\epsilon_{T(NPP)} \\times \\epsilon_{CO_2}
             \\times \\epsilon_{N(NPP)} \\times \\epsilon_{LU(NPP)}
 
-            LPR = LPR0 \\times \\epsilon_{T(LPR)} \\times \\epsilon_{CO2} \\times
+            LPR = LPR0 \\times \\epsilon_{T(LPR)} \\times \\epsilon_{CO_2} \\times
             \\epsilon_{N(LPR)} \\times \\epsilon_{LU(NPP)}
         """
         return {

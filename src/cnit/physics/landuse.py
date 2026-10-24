@@ -73,8 +73,7 @@ events whose regrowth periods are active:
 **Afforestation Decay:**
 
 Similarly, a fraction of each interval's afforestation amount decays at a constant
-rate over its configured afforestation-decay timescale, beginning at the next interval
-boundary.
+rate over the afforestation-decay timescale, beginning at the next interval boundary.
 
 ..  math::
 
@@ -82,7 +81,7 @@ boundary.
     \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{afst\_decay})
 
 where :math:`\\phi` is the afforestation decay fraction (default
-:math:`\\phi = 1 - \\varphi`). By default,
+:math:`\\phi = 1 - \\varphi`). In the current calculator,
 :math:`\\tau_{afst\_decay} = \\tau_{rgr}`.
 
 **Implementation note:** The calculation rounds each configured duration to the
@@ -122,8 +121,11 @@ afforestation-decay effects forward in time:
       - Schedule afforestation decay over its rounded duration, based on the
         afforestation amount in the current interval.
 
-3. A loop adds each contribution to the future intervals in its regrowth or
-   afforestation-decay period.
+3. Record each contribution's rate change at its start and end intervals. During the
+   time loop, accumulate these changes to obtain the active regrowth and
+   afforestation-decay rates. This gives the same rates as adding each contribution to
+   every affected future interval, while avoiding repeated updates across those
+   intervals.
 
 This method ensures that when net emissions are negative (indicating net sequestration
 beyond regrowth), the resulting negative gross flux is properly interpreted as
@@ -242,8 +244,8 @@ class LanduseCalculator:
         default=Q(0.9, "1"),
         validator=check_units("1"),
     )
-    """Fraction of deforestation that can regrow [dimensionless].  
-    
+    """Fraction of deforestation that can regrow [dimensionless].
+
     Represents the portion of deforested area that can regrow naturally.
     The remaining fraction (1 - frc_rgr) represents permanent land conversion with no
     natural regrowth.
@@ -254,8 +256,8 @@ class LanduseCalculator:
         validator=check_units("yr"),
     )
     """Regrowth timescale [yr].
-    
-    Time period over which regrowth occurs following deforestation. 
+
+    Time period over which regrowth occurs following deforestation.
     Regrowth is distributed as a constant flux over this period.
     """
 
@@ -264,9 +266,9 @@ class LanduseCalculator:
         validator=check_units("1"),
     )
     """Carbon land use flux calculation method [dimensionless].
-    
-    Selects the input data type and calculation approach: 
-    
+
+    Selects the input data type and calculation approach:
+
     - 0: Use net emissions (CemsLUnet) as input, suitable for AFOLU emissions data
       where regrowth must be calculated from net emissions
     - 1: Use gross emissions (CemsLUgrs) as input, suitable for harvest/deforestation
@@ -278,9 +280,9 @@ class LanduseCalculator:
         validator=check_units("1"),
     )
     """Nitrogen land use flux calculation method [dimensionless].
-    
+
     Selects the input data type and calculation approach:
-    
+
     - 0: Use net emissions (NemsLUnet) as input (less commonly used)
     - 1: Use gross emissions (NemsLUgrs) as input, suitable for gross deforestation
       data (typical for nitrogen)
@@ -380,8 +382,8 @@ class LanduseCalculator:
         the same rounded ``tau_rgr`` duration as regrowth, starting at the next
         interval boundary.
 
-        where by default :math:`\\phi = 1 - \\varphi` and :math:`\\tau_{afst\_decay} =
-        \\tau_{rgr}`.
+        where :math:`\\phi = 1 - \\varphi` by default. The current calculator
+        sets :math:`\\tau_{afst\_decay} = \\tau_{rgr}`.
 
         **Method Selection:**
 
