@@ -49,8 +49,8 @@ Classes and functions for modeling nitrogen cycling.
    :show-inheritance:
 
 
-Coupled Carbon-Nitrogen Cycle (CNit)
-------------------------------------
+Coupled Carbon-Nitrogen Cycle
+-----------------------------
 
 Simulates the coupled carbon-nitrogen cycle processes.
 

@@ -1,4 +1,4 @@
-"""Run default and calibrated ACCESS CMIP6 cases against a CNit source tree."""
+"""Run default and calibrated CMIP6 cases against a CNit source tree."""
 
 import json
 from pathlib import Path
@@ -12,6 +12,7 @@ source_path = Path(sys.argv[1])
 forcing_path = Path(sys.argv[2])
 config_path = Path(sys.argv[3])
 output_path = Path(sys.argv[4])
+truncate_tau_rgr = len(sys.argv) > 5 and sys.argv[5] == "truncate_tau_rgr"
 sys.path.insert(0, str(source_path))
 
 from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModel  # noqa: E402
@@ -41,6 +42,8 @@ def _load_model(values):
         )
         for name, value in values.items()
     }
+    if truncate_tau_rgr:
+        params["tau_rgr"] = Q(int(params["tau_rgr"].to("yr").m), "yr")
     return CarbonNitrogenCycleModel.from_dict(params)
 
 
@@ -59,10 +62,11 @@ outputs = {}
 try:
     for config_name, config_values in model_configs.items():
         model = _load_model(config_values)
+        model_name = "ACCESS-ESM1-5" if config_name == "default" else config_name
         for experiment_name in EXPERIMENTS:
             experiment_forcing = _experiment_forcing(
                 forcing,
-                "ACCESS-ESM1-5",
+                model_name,
                 experiment_name,
             )
             valid_time = np.isfinite(experiment_forcing["CO2"].values)

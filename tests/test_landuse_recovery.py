@@ -40,10 +40,10 @@ def test_single_deforestation_pulse_recovers_configured_land_carbon_fraction():
     np.testing.assert_allclose(calculated_gross, gross_emissions)
 
 
-def test_subannual_gross_flux_spreads_fractional_regrowth_and_decay_periods():
+def test_subannual_gross_flux_rounds_regrowth_and_decay_to_nearest_step_count():
     calculator = LanduseCalculator(
         frc_rgr=Q(0.8, "1"),
-        tau_rgr=Q(1.25, "yr"),
+        tau_rgr=Q(1.4, "yr"),
         method_cLU=Q(1, "1"),
     )
     time_axis = Q(np.arange(5) * 0.5, "yr")
@@ -55,15 +55,15 @@ def test_subannual_gross_flux_spreads_fractional_regrowth_and_decay_periods():
         time_axis=time_axis,
     )
 
-    # Each rate applies for half a year. The pulses begin one interval after the
-    # input events and end partway through their final intervals.
+    # Each rate applies for half a year. A 1.4-year timescale becomes three steps
+    # (1.5 years), and each pulse begins one interval after its input event.
     np.testing.assert_allclose(
         fluxes["CflxLUrgr"].to("GtC/yr").m,
-        [0.0, 0.64, 0.64, 0.32, 0.0],
+        [0.0, 0.8 / 1.5, 0.8 / 1.5, 0.8 / 1.5, 0.0],
     )
     np.testing.assert_allclose(
         fluxes["CflxLUafst_decay"].to("GtC/yr").m,
-        [0.0, 0.0, 0.16, 0.16, 0.08],
+        [0.0, 0.0, 0.2 / 1.5, 0.2 / 1.5, 0.2 / 1.5],
     )
     np.testing.assert_allclose(
         fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1],

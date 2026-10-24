@@ -148,8 +148,9 @@ CNit supports annual and evenly spaced subannual time axes; the default examples
 annual timesteps. Flux-allocation and pool-turnover fractions apply within each model
 timestep, representing within-year transfers in the annual case.
 Forcing rates are held constant over each interval, and cumulative fluxes account for the
-interval duration. Land-use recovery and decay are scheduled in elapsed years, including
-when a pulse ends partway through an interval.
+interval duration. Land-use recovery and decay are scheduled over the configured
+``tau_rgr`` timescale. The duration is rounded to the nearest whole number of model
+steps, with a minimum of one step, and the full amount is spread across those steps.
 
 For example, if NPP is a constant 50 GtC/yr during a one-year timestep and
 ``frc_NPP2P = 0.6``, then 60% of the NPP flux, or 30 GtC, is allocated to the plant pool
