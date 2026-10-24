@@ -50,15 +50,21 @@ class CarbonNitrogenCycleModelConfig:
     method_cLU: pint.Quantity = field(default=Q(0, "1"), validator=check_units("1"))
     method_nLU: pint.Quantity = field(default=Q(1, "1"), validator=check_units("1"))
 
-    CO2ref: pint.Quantity = field(default=Q(284.875, "ppm"), validator=check_units("ppm"))
+    CO2ref: pint.Quantity = field(
+        default=Q(284.875, "ppm"), validator=check_units("ppm")
+    )
     CO2b: pint.Quantity = field(default=Q(31, "ppm"), validator=check_units("ppm"))
     sns_CO2_log: pint.Quantity = field(default=Q(1, "1"), validator=check_units("1"))
     sns_CO2_sig: pint.Quantity = field(default=Q(1, "1"), validator=check_units("1"))
-    eff_CO2_sig_max: pint.Quantity = field(default=Q(2, "1"), validator=check_units("1"))
+    eff_CO2_sig_max: pint.Quantity = field(
+        default=Q(2, "1"), validator=check_units("1")
+    )
     method_CO2_NPP: pint.Quantity = field(default=Q(0, "1"), validator=check_units("1"))
 
     sns_NPP2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
-    sns_NPP2dT_sig: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
+    sns_NPP2dT_sig: pint.Quantity = field(
+        default=Q(0, "1/K"), validator=check_units("1/K")
+    )
     method_dT_NPP: pint.Quantity = field(default=Q(0, "1"), validator=check_units("1"))
     sns_LPR2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
     sns_cLP2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
@@ -69,30 +75,66 @@ class CarbonNitrogenCycleModelConfig:
     sns_nLP2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
     sns_nLD2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
     sns_nSR2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
-    sns_nLSgas2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
+    sns_nLSgas2dT: pint.Quantity = field(
+        default=Q(0, "1/K"), validator=check_units("1/K")
+    )
 
-    sns_NPP2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_cLP2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_cLD2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_cSR2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_PU2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_BNF2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_nLP2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_nLD2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
-    sns_nSR2PUdef: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
+    sns_NPP2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_cLP2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_cLD2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_cSR2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_PU2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_BNF2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_nLP2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_nLD2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
+    sns_nSR2PUdef: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
     eff_C_PU_max: pint.Quantity = field(default=Q(2, "1"), validator=check_units("1"))
     sns_PU2NPPrd: pint.Quantity = field(default=Q(2.5, "1"), validator=check_units("1"))
     eff_C_BNF_max: pint.Quantity = field(default=Q(2, "1"), validator=check_units("1"))
-    sns_BNF2NPPrd: pint.Quantity = field(default=Q(2.5, "1"), validator=check_units("1"))
+    sns_BNF2NPPrd: pint.Quantity = field(
+        default=Q(2.5, "1"), validator=check_units("1")
+    )
 
-    sns_cLP2LUrgr: pint.Quantity = field(default=Q(0, "yr/GtC"), validator=check_units("yr/GtC"))
-    sns_cLD2LUrgr: pint.Quantity = field(default=Q(0, "yr/GtC"), validator=check_units("yr/GtC"))
-    sns_cSR2LUrgr: pint.Quantity = field(default=Q(0, "yr/GtC"), validator=check_units("yr/GtC"))
-    sns_nLP2LUrgr: pint.Quantity = field(default=Q(0, "yr/GtC"), validator=check_units("yr/GtC"))
-    sns_nLD2LUrgr: pint.Quantity = field(default=Q(0, "yr/GtC"), validator=check_units("yr/GtC"))
-    sns_nSR2LUrgr: pint.Quantity = field(default=Q(0, "yr/GtC"), validator=check_units("yr/GtC"))
+    sns_cLP2LUrgr: pint.Quantity = field(
+        default=Q(0, "yr/GtC"), validator=check_units("yr/GtC")
+    )
+    sns_cLD2LUrgr: pint.Quantity = field(
+        default=Q(0, "yr/GtC"), validator=check_units("yr/GtC")
+    )
+    sns_cSR2LUrgr: pint.Quantity = field(
+        default=Q(0, "yr/GtC"), validator=check_units("yr/GtC")
+    )
+    sns_nLP2LUrgr: pint.Quantity = field(
+        default=Q(0, "yr/GtC"), validator=check_units("yr/GtC")
+    )
+    sns_nLD2LUrgr: pint.Quantity = field(
+        default=Q(0, "yr/GtC"), validator=check_units("yr/GtC")
+    )
+    sns_nSR2LUrgr: pint.Quantity = field(
+        default=Q(0, "yr/GtC"), validator=check_units("yr/GtC")
+    )
 
-    NPP0: pint.Quantity = field(default=Q(50, "GtC/yr"), validator=check_units("GtC/yr"))
+    NPP0: pint.Quantity = field(
+        default=Q(50, "GtC/yr"), validator=check_units("GtC/yr")
+    )
     LPR0: pint.Quantity = field(default=Q(0, "GtC/yr"), validator=check_units("GtC/yr"))
 
     frc_NPP2P: pint.Quantity = field(default=Q(0.55, "1"), validator=check_units("1"))
@@ -110,13 +152,27 @@ class CarbonNitrogenCycleModelConfig:
     CplsL0: pint.Quantity = field(default=Q(50, "GtC"), validator=check_units("GtC"))
     CplsS0: pint.Quantity = field(default=Q(1550, "GtC"), validator=check_units("GtC"))
 
-    PU0: pint.Quantity = field(default=Q(0.5, "GtN/yr"), validator=check_units("GtN/yr"))
-    BNF0: pint.Quantity = field(default=Q(0.1, "GtN/yr"), validator=check_units("GtN/yr"))
-    NCratio_PUreq: pint.Quantity = field(default=Q(0.02, "GtN/GtC"), validator=check_units("GtN/GtC"))
-    NetMIN0: pint.Quantity = field(default=Q(0.5, "GtN/yr"), validator=check_units("GtN/yr"))
-    sns_NetMIN2dT: pint.Quantity = field(default=Q(0, "1/K"), validator=check_units("1/K"))
-    NetMINlt0: pint.Quantity = field(default=Q(0.5, "GtN/yr"), validator=check_units("GtN/yr"))
-    sns_NetMINlt2AD: pint.Quantity = field(default=Q(0, "yr/GtN"), validator=check_units("yr/GtN"))
+    PU0: pint.Quantity = field(
+        default=Q(0.5, "GtN/yr"), validator=check_units("GtN/yr")
+    )
+    BNF0: pint.Quantity = field(
+        default=Q(0.1, "GtN/yr"), validator=check_units("GtN/yr")
+    )
+    NCratio_PUreq: pint.Quantity = field(
+        default=Q(0.02, "GtN/GtC"), validator=check_units("GtN/GtC")
+    )
+    NetMIN0: pint.Quantity = field(
+        default=Q(0.5, "GtN/yr"), validator=check_units("GtN/yr")
+    )
+    sns_NetMIN2dT: pint.Quantity = field(
+        default=Q(0, "1/K"), validator=check_units("1/K")
+    )
+    NetMINlt0: pint.Quantity = field(
+        default=Q(0.5, "GtN/yr"), validator=check_units("GtN/yr")
+    )
+    sns_NetMINlt2AD: pint.Quantity = field(
+        default=Q(0, "yr/GtN"), validator=check_units("yr/GtN")
+    )
 
     tau_NplsP: pint.Quantity = field(default=Q(10, "yr"), validator=check_units("yr"))
     tau_NplsL: pint.Quantity = field(default=Q(1, "yr"), validator=check_units("yr"))

@@ -86,18 +86,16 @@ class CarbonNPPLPRCalculator:
         default=Q(50, "GtC/yr"),
         validator=check_units("GtC/yr"),
     )
-    """
-        Base net primary production (NPP) rate under reference conditions, before
-        environmental effects [GtC/yr].
+    """Base net primary production (NPP) rate under reference conditions, before
+    environmental effects [GtC/yr].
     """
 
     LPR0: pint.Quantity = field(
         default=Q(0, "GtC/yr"),
         validator=check_units("GtC/yr"),
     )
-    """
-        Base litter production respiration (LPR) rate under reference conditions,
-        before environmental effects [GtC/yr].
+    """Base litter production respiration (LPR) rate under reference conditions,
+    before environmental effects [GtC/yr].
     """
 
     def calculate(

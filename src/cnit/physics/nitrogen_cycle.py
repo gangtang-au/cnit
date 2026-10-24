@@ -530,7 +530,8 @@ class NitrogenTurnoverCalculator:
     )
     """Fraction of mineral nitrogen loss occurring as gaseous loss [dimensionless].
     Partitions total mineral nitrogen loss between gaseous pathways (denitrification,
-    volatilization) and leaching.  Values range from 0 (all leaching) to 1 (all gaseous).
+    volatilization) and leaching. Values range from 0 (all leaching) to 1 (all
+    gaseous).
     Only gaseous losses are temperature-sensitive in this formulation.
     """
 
@@ -797,7 +798,8 @@ class NitrogenCycleCalculator:
         default=Q(0.35, "1"),
         validator=check_units("1"),
     )
-    """Fraction of biological nitrogen fixation allocated to litter pool [dimensionless].
+    """Fraction of biological nitrogen fixation allocated to litter pool
+    [dimensionless].
 
     Represents newly fixed nitrogen that enters the litter pool within the model
     timestep through rapid plant-to-litter turnover (e.g., fine root turnover, leaf
@@ -849,11 +851,13 @@ class NitrogenCycleCalculator:
         default=Q(0.3, "1"),
         validator=check_units("1"),
     )
-    """Fraction of litter decomposition nitrogen transferred to soil pool [dimensionless].
+    """Fraction of litter decomposition nitrogen transferred to soil pool
+    [dimensionless].
 
-    Represents nitrogen incorporated into stable soil organic matter during decomposition.
-    The remainder (1 - frc_nLD2S) is mineralized to the mineral pool (nLD2M), representing
-    nitrogen released as plant-available forms (NH₄⁺, NO₃⁻) during litter breakdown.
+    Represents nitrogen incorporated into stable soil organic matter during
+    decomposition. The remainder (1 - frc_nLD2S) is mineralized to the mineral pool
+    (nLD2M), representing nitrogen released as plant-available forms (NH₄⁺, 
+    NO₃⁻) during litter breakdown.
     """
 
     # Grazing fractions

@@ -149,7 +149,8 @@ class CarbonNitrogenCycleModel:
     """
 
     calc_npp_lpr: CarbonNPPLPRCalculator
-    """Calculator for net primary production (NPP) and litter production respiration (LPR).
+    """Calculator for net primary production (NPP) and litter production
+    respiration (LPR).
 
     Computes carbon fixation by plants (NPP) and associated autotrophic respiration
     (LPR) with environmental modifiers (CO₂, temperature, nitrogen, land use).

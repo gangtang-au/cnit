@@ -609,40 +609,37 @@ class EffectCO2Calculator:
         default=Q(1, "1"),
         validator=check_units("1"),
     )
-    """
-    Sensitivity of NPP to atmospheric |CO2| concentration changes (logarithmic form) [dimensionless].
+    """Sensitivity of NPP to atmospheric |CO2| concentration changes
+    (logarithmic form) [dimensionless].
     """
 
     sns_CO2_sig: pint.Quantity = field(
         default=Q(1, "1"),
         validator=check_units("1"),
     )
-    """
-    Sensitivity of NPP to atmospheric |CO2| concentration changes (sigmoid form) [dimensionless].
+    """Sensitivity of NPP to atmospheric |CO2| concentration changes
+    (sigmoid form) [dimensionless].
     """
 
     eff_CO2_sig_max: pint.Quantity = field(
         default=Q(2, "1"),
         validator=check_units("1"),
     )
-    """
-    Maximum CO₂ effect factor for the sigmoid form [dimensionless].
+    """Maximum CO₂ effect factor for the sigmoid form [dimensionless].
     """
 
     CO2ref: pint.Quantity = field(
         default=Q(284.875, "ppm"),
         validator=check_units("ppm"),
     )
-    """
-    Atmospheric |CO2| concentration at pre-industrial level [ppm].
+    """Atmospheric |CO2| concentration at pre-industrial level [ppm].
     """
 
     CO2b: pint.Quantity = field(
         default=Q(31, "ppm"),
         validator=check_units("ppm"),
     )
-    """
-    Atmospheric |CO2| concentration when NPP = 0 (for rectangular hyperbolic effect,
+    """Atmospheric |CO2| concentration when NPP = 0 (for rectangular hyperbolic effect,
     default 31 ppm) [ppm].
     """
 
@@ -650,8 +647,7 @@ class EffectCO2Calculator:
         default=Q(0, "1"),
         validator=check_units("1"),
     )
-    """
-    |CO2| effect factor calculation method (value from 0 to 2),
+    """|CO2| effect factor calculation method (value from 0 to 2),
     otherwise eff_CO2 is set equal to 1.
     """
 
@@ -873,108 +869,97 @@ class EffectTemperatureCalculator:
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of NPP to temperature changes, exponential form [K\ :sup:`-1`]
+    """Sensitivity of NPP to temperature changes, exponential form [K\ :sup:`-1`]
     """
 
     sns_NPP2dT_sig: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of NPP to temperature changes, sigmoid form [K\ :sup:`-1`]
+    """Sensitivity of NPP to temperature changes, sigmoid form [K\ :sup:`-1`]
     """
 
     method_dT_NPP: pint.Quantity = field(
         default=Q(0, "1"),
         validator=check_units("1"),
     )
-    """
-        Blending parameter between exponential (0) and sigmoid (1) NPP responses
-        [dimensionless, 0-1] [dimensionless]
+    """Blending parameter between exponential (0) and sigmoid (1) NPP responses
+    [dimensionless, 0-1] [dimensionless]
     """
 
     sns_LPR2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of litter production respiration to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of litter production respiration to temperature changes
+    [K\ :sup:`-1`]
     """
 
     sns_cLP2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of carbon litter production to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of carbon litter production to temperature changes [K\ :sup:`-1`]
     """
 
     sns_cLD2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of carbon litter decomposition to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of carbon litter decomposition to temperature changes [K\ :sup:`-1`]
     """
 
     sns_cSR2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of carbon soil respiration (soil organic matter decomposition) to
-        temperature changes [K\ :sup:`-1`]
+    """Sensitivity of carbon soil respiration (soil organic matter decomposition) to
+    temperature changes [K\ :sup:`-1`]
     """
 
     sns_PU2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen plant uptake to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen plant uptake to temperature changes [K\ :sup:`-1`]
     """
 
     sns_BNF2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of biological nitrogen fixation to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of biological nitrogen fixation to temperature changes [K\ :sup:`-1`]
     """
 
     sns_nLP2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen litter production to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen litter production to temperature changes [K\ :sup:`-1`]
     """
 
     sns_nLD2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen litter decomposition to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen litter decomposition to temperature changes
+    [K\ :sup:`-1`]
     """
 
     sns_nSR2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen soil respiration (soil organic matter decomposition) to
-        temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen soil respiration (soil organic matter decomposition) to
+    temperature changes [K\ :sup:`-1`]
     """
 
     sns_nLSgas2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of mineral nitrogen gaseous loss to temperature changes [K\
-        :sup:`-1`]
+    """Sensitivity of mineral nitrogen gaseous loss to temperature changes [K\
+    :sup:`-1`]
     """
 
     def calculate_eff_dT_NPPLPR(
@@ -1336,32 +1321,31 @@ class EffectCarbonNitrogenCouplingCalculator:
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of net primary production to nitrogen plant uptake deficit [yr/GtN]
+    """Sensitivity of net primary production to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_cLP2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of litter production (carbon) to nitrogen plant uptake deficit [yr/GtN]
+    """Sensitivity of litter production (carbon) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_cLD2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of litter decomposition (carbon) to nitrogen plant uptake deficit [yr/GtN]
+    """Sensitivity of litter decomposition (carbon) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_cSR2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of soil respiration (carbon) to nitrogen plant uptake deficit [yr/GtN]
+    """Sensitivity of soil respiration (carbon) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_PU2PUdef: pint.Quantity = field(
@@ -1388,24 +1372,24 @@ class EffectCarbonNitrogenCouplingCalculator:
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of litter production (nitrogen) to nitrogen plant uptake deficit [yr/GtN]
+    """Sensitivity of litter production (nitrogen) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_nLD2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
+    """Sensitivity of litter decomposition (nitrogen) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
-        Sensitivity of litter decomposition (nitrogen) to nitrogen plant uptake deficit [yr/GtN]
-        """
 
     sns_nSR2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of soil respiration (nitrogen) to nitrogen plant uptake deficit [yr/GtN]
+    """Sensitivity of soil respiration (nitrogen) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     eff_C_PU_max: pint.Quantity = field(

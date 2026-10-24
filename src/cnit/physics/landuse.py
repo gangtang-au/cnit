@@ -603,10 +603,10 @@ class LanduseCalculator:
         gross_flux_a = self._to_numeric_series(gross_flux, unit)
 
         if time_axis is None:
-            time_step_yr = 1.0
+            time_step = 1.0
         else:
             time_values = np.asarray(time_axis.to("yr").m, dtype=float)
-            time_step_yr = float(np.diff(time_values)[0])
+            time_step = float(np.diff(time_values)[0])
 
         # Physical ranges for these parameters are checked by the model config.
         # This calculation path only converts them to the units used below.
@@ -637,7 +637,7 @@ class LanduseCalculator:
                     deforest_flux_a,
                     afforest_flux_a,
                     afforest_decay_flux_a,
-                    time_step_yr,
+                    time_step,
                     frc_rgr,
                     tau_rgr,
                     frc_afst_decay,
@@ -652,7 +652,7 @@ class LanduseCalculator:
                     deforest_flux_a,
                     afforest_flux_a,
                     afforest_decay_flux_a,
-                    time_step_yr,
+                    time_step,
                     frc_rgr,
                     tau_rgr,
                     frc_afst_decay,
@@ -663,10 +663,7 @@ class LanduseCalculator:
                 )
 
         # Integrate each piecewise-constant flux rate over its interval.
-        non_time_unit = unit.replace("/yr", "")
-
-        def cumulative_amount(values):
-            return np.cumsum(values * time_step_yr)
+        amount_unit = unit.replace("/yr", "")
 
         return {
             f"{prefix}LUgrs": Q(gross_flux_a, unit),
@@ -674,11 +671,17 @@ class LanduseCalculator:
             f"{prefix}LUdfst": Q(deforest_flux_a, unit),
             f"{prefix}LUafst": Q(afforest_flux_a, unit),
             f"{prefix}LUafst_decay": Q(afforest_decay_flux_a, unit),
-            f"cumsum_{prefix}LUrgr": Q(cumulative_amount(regrowth_flux_a), non_time_unit),
-            f"cumsum_{prefix}LUdfst": Q(cumulative_amount(deforest_flux_a), non_time_unit),
-            f"cumsum_{prefix}LUafst": Q(cumulative_amount(afforest_flux_a), non_time_unit),
+            f"cumsum_{prefix}LUrgr": Q(
+                np.cumsum(regrowth_flux_a * time_step), amount_unit
+            ),
+            f"cumsum_{prefix}LUdfst": Q(
+                np.cumsum(deforest_flux_a * time_step), amount_unit
+            ),
+            f"cumsum_{prefix}LUafst": Q(
+                np.cumsum(afforest_flux_a * time_step), amount_unit
+            ),
             f"cumsum_{prefix}LUafst_decay": Q(
-                cumulative_amount(afforest_decay_flux_a), non_time_unit
+                np.cumsum(afforest_decay_flux_a * time_step), amount_unit
             ),
         }
 

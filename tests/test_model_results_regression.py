@@ -126,10 +126,9 @@ def _print_max_differences(current, baseline, config_names, duration_label):
 
                 nonzero_baseline = baseline_values != 0
                 if np.any(nonzero_baseline):
-                    relative_difference = (
-                        absolute_difference[nonzero_baseline]
-                        / np.abs(baseline_values[nonzero_baseline])
-                    )
+                    relative_difference = absolute_difference[
+                        nonzero_baseline
+                    ] / np.abs(baseline_values[nonzero_baseline])
                     max_rel = float(np.nanmax(relative_difference))
                     if max_rel > metric["max_rel"]:
                         metric["max_rel"] = max_rel
