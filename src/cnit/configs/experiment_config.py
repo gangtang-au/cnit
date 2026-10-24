@@ -9,28 +9,49 @@ from ..utils.units import check_units
 
 @define
 class CarbonNitrogenCycleExperimentConfig:
-    """
-    Configuration for a Carbon-Nitrogen Cycle experiment.
+    """Time axis and forcing series for one model experiment.
 
-    Field validators check that each input has compatible units. When the instance
-    is created, ``__attrs_post_init__`` checks that ``time_axis`` is finite,
-    strictly increasing, and evenly spaced, and that every forcing series has the
-    same number of values as the axis. It does not inspect forcing values or require
-    a particular array shape beyond matching sizes.
+    Use this class with
+    :meth:`~cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel.run_experiments`.
+    The model configuration stores parameters shared by the model; each experiment
+    config stores the time axis and forcing data for one scenario, along with its name
+    and nitrogen switch.
 
-    Attributes:
-        name: Name of the experiment.
-        time_axis: Time axis for the experiment [years].
-        dT_s: Temperature anomaly time series [K].
-        CO2_s: Atmospheric CO2 concentration time series [ppm].
-        CemsLUnet_s: Net carbon emissions from land use [GtC/yr].
-        CemsLUgrs_s: Gross carbon emissions from land use [GtC/yr].
-        NflxAD_s: Nitrogen flux from atmospheric deposition [GtN/yr].
-        NflxFT_s: Nitrogen flux from fertilizer [GtN/yr].
-        NemsLUnet_s: Net nitrogen emissions from land use [GtN/yr].
-        NemsLUgrs_s: Gross nitrogen emissions from land use [GtN/yr].
-        NemsLUmin_s: Nitrogen emissions from mineralization [GtN/yr].
-        metadata: Optional dictionary for additional metadata.
+    Field validators check that inputs have compatible physical units. At construction,
+    the config also checks that ``time_axis`` has at least two finite, strictly
+    increasing, evenly spaced coordinates and that every forcing series has exactly
+    the same shape as the axis. It does not check forcing values for finiteness or
+    verify that unused net- and gross-land-use series are zero. The model's land-use
+    method settings determine which series are used.
+
+    Attributes
+    ----------
+    name
+        Label used to identify this scenario in the combined results dataset.
+    switch_N
+        Dimensionless switch for nitrogen limitation and the nitrogen cycle: one
+        enables coupling and zero disables it.
+    time_axis
+        Time coordinates in years. Samples are evenly spaced; each forcing value
+        represents the interval beginning at that coordinate. Annual spacing is used
+        by the supplied calibrations, and evenly spaced subannual axes are accepted.
+    dT_s
+        Temperature anomaly relative to the model reference temperature [K].
+    CO2_s
+        Atmospheric CO₂ concentration [ppm].
+    CemsLUnet_s, CemsLUgrs_s
+        Net and gross land-use carbon emission rates [GtC/yr]. The model's carbon
+        land-use method selects which series is read.
+    NflxAD_s, NflxFT_s
+        Nitrogen input rates from atmospheric deposition and fertilizer [GtN/yr].
+    NemsLUnet_s, NemsLUgrs_s
+        Net and gross land-use organic nitrogen emission rates [GtN/yr]. The model's
+        nitrogen land-use method selects which series is read.
+    NemsLUmin_s
+        Direct mineral nitrogen loss associated with land use [GtN/yr].
+    metadata
+        Optional user-provided metadata. It is stored on the config but is not passed
+        as a forcing input to the model.
     """
 
     name: str
@@ -85,6 +106,11 @@ class CarbonNitrogenCycleExperimentConfig:
                 )
 
     def to_input_dict(self):
+        """Return the model inputs stored in this experiment config.
+
+        The returned dictionary can be expanded into ``CarbonNitrogenCycleModel.run``.
+        The experiment ``name`` and ``metadata`` are not included.
+        """
         return dict(
             time_axis=self.time_axis,
             dT_s=self.dT_s,

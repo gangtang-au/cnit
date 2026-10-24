@@ -10,10 +10,39 @@ from ..utils.units import Q, check_units
 
 @define
 class CarbonNitrogenCycleModelConfig:
-    """Model parameters and initial pool settings.
+    """Parameters and initial pool values for a CNit model.
 
-    Field validators check parameter units. ``__attrs_post_init__`` checks fraction
-    ranges and sums, positive timescales, and non-negative initial pool sizes.
+    Pass this configuration to
+    :meth:`~cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel.from_config`,
+    or create it from overrides with :meth:`from_dict` or from a calibration table
+    with :meth:`from_parameter_csv`.
+
+    Quantity fields require units with the correct physical dimensionality. For
+    example, a turnover time must have time units and a pool size must have carbon- or
+    nitrogen-mass units. The supplied unit does not need to use the exact spelling
+    shown in the parameter descriptions, provided it is dimensionally compatible.
+
+    Parameters are grouped by process:
+
+    - Land use: ``frc_rgr``, ``tau_rgr``, ``method_cLU``, and ``method_nLU``.
+    - CO₂ response: ``CO2ref``, ``CO2b``, the ``sns_CO2_*`` sensitivities,
+      ``eff_CO2_sig_max``, and ``method_CO2_NPP``.
+    - Temperature response: ``sns_*2dT`` sensitivities and ``method_dT_NPP``.
+    - Nitrogen-deficit response: ``sns_*2PUdef`` sensitivities and the ``eff_*_max``
+      and ``sns_*2NPPrd`` parameters controlling carbon effects on nitrogen acquisition.
+    - Land-use response: ``sns_*2LUrgr`` sensitivities.
+    - Carbon and nitrogen fluxes: baseline rates, stoichiometry, and allocation
+      fractions beginning with ``NPP0``, ``LPR0``, ``PU0``, ``BNF0``, ``NetMIN`` or
+      ``frc_``.
+    - Pool dynamics: ``tau_Cpls*`` and ``tau_Npls*`` are turnover times; ``Cpls*0``
+      and ``Npls*0`` are initial pool sizes.
+    - Initialization and switches: ``time0``, ``switch_N``, ``switch_Cpls``, and
+      ``switch_Npls``.
+
+    Fractions are checked to lie between zero and one, and allocation pairs may not
+    sum to more than one. Turnover times must be positive and initial pool sizes must
+    be non-negative. The model equations and additional parameter meanings are
+    documented with their calculators in :mod:`cnit.physics`.
     """
 
     frc_rgr: pint.Quantity = field(default=Q(0.9, "1"), validator=check_units("1"))
@@ -184,7 +213,23 @@ class CarbonNitrogenCycleModelConfig:
 
     @classmethod
     def from_dict(cls, params: dict) -> "CarbonNitrogenCycleModelConfig":
-        """Create a config from parameter overrides, using defaults for omissions."""
+        """Create a config from parameter overrides.
+
+        Parameters omitted from ``params`` retain their default values. Quantity
+        values must include units, for example ``{"NPP0": Q(50, "GtC/yr")}``.
+        Unknown parameter names and values that fail the config validators raise an
+        error.
+
+        Parameters
+        ----------
+        params
+            Mapping from model parameter names to their values.
+
+        Returns
+        -------
+        CarbonNitrogenCycleModelConfig
+            Validated model configuration.
+        """
         valid_fields = {item.name for item in fields(cls)}
         unknown = set(params) - valid_fields
         if unknown:
@@ -199,10 +244,28 @@ class CarbonNitrogenCycleModelConfig:
     ) -> "CarbonNitrogenCycleModelConfig":
         """Build a model config from a user-selected calibration table.
 
-        Parameters present in the selected CSV column override the standard
-        calculator defaults. Parameters absent from the table retain those defaults.
+        Values in the selected model column override defaults. Blank cells and
+        parameters not listed in the table retain their defaults. The table must have
+        ``parameter`` and ``unit`` columns, with one column for each model selection.
+        Values are converted to quantities and validated when the config is created.
 
-        Both the CSV path and source model column name must be provided.
+        Parameters
+        ----------
+        csv_file
+            Path to the calibration CSV file.
+        model_name
+            Name of the model column to load, such as ``"ACCESS-ESM1-5"``.
+
+        Returns
+        -------
+        CarbonNitrogenCycleModelConfig
+            Validated model configuration with the selected calibration overrides.
+
+        Raises
+        ------
+        ValueError
+            If the model column is unavailable, a table parameter is not a config
+            field, or a value cannot be parsed or validated.
         """
         parameter_path = Path(csv_file)
         csv_context = parameter_path.open("r", encoding="utf-8", newline="")

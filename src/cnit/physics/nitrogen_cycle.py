@@ -128,17 +128,16 @@ class NitrogenPUBNFCalculator:
         default=Q(0.5, "GtN/yr"),
         validator=check_units("GtN/yr"),
     )
-    """Initial plant uptake rate, base rate of nitrogen uptake by plants
-    under reference conditions without any environmental effects [GtN/yr].
+    """Base plant uptake rate under reference conditions, before environmental
+    effects [GtN/yr].
     """
 
     BNF0: pint.Quantity = field(
         default=Q(0.1, "GtN/yr"),
         validator=check_units("GtN/yr"),
     )
-    """Initial biological nitrogen fixation rate, base rate of nitrogen
-    fixation by symbiotic and free-living organisms under reference conditions
-    without any environmental effects [GtN/yr].
+    """Base biological nitrogen fixation rate under reference conditions, before
+    environmental effects [GtN/yr].
     """
 
     # Stoichiometric Ratios
@@ -185,9 +184,9 @@ class NitrogenPUBNFCalculator:
         validator=check_units("yr/GtN"),
     )
     """Sensitivity of long-term net mineralization to nitrogen deposition [yr/GtN].
-    Controls how strongly long-term mineralization responds to cumulative nitrogen
-    deposition.  This represents priming effects where added nitrogen can stimulate
-    or suppress organic matter decomposition.
+    Controls how strongly the long-term mineralization rate responds to the
+    atmospheric nitrogen deposition rate. This represents priming effects where
+    added nitrogen can stimulate or suppress organic matter decomposition.
     """
 
     def calculate(
@@ -1605,7 +1604,7 @@ class NitrogenCycleModel:
     """Initial plant nitrogen pool size [GtN].
 
     Nitrogen contained in living plant biomass at the start of the simulation
-    (time0). Typical values range from 3-6 GtN for global simulations.
+    (time0).
     """
 
     NplsL0: pint.Quantity = field(
@@ -1615,7 +1614,7 @@ class NitrogenCycleModel:
     """Initial litter nitrogen pool size [GtN].
 
     Nitrogen contained in dead plant material (litter) at the start of the simulation
-    (time0). Typical values range from 0.5-2 GtN for global simulations.
+    (time0).
     """
 
     NplsS0: pint.Quantity = field(
@@ -1625,7 +1624,6 @@ class NitrogenCycleModel:
     """Initial soil nitrogen pool size [GtN].
 
     Nitrogen contained in soil organic matter at the start of the simulation (time0).
-    Typical values range from 95-140 GtN for global simulations.
     """
 
     NplsM0: pint.Quantity = field(
@@ -1635,8 +1633,7 @@ class NitrogenCycleModel:
     """Initial mineral nitrogen pool size [GtN].
 
     Plant-available inorganic nitrogen (primarily NH₄⁺ and NO₃⁻) at the start of
-    the simulation (time0). Typical values range from 0.01-0.1 GtN for global
-    simulations.  This pool has much faster turnover than organic pools.
+    the simulation (time0). This pool has much faster turnover than organic pools.
     """
 
     time0: pint.Quantity = field(
@@ -1645,9 +1642,9 @@ class NitrogenCycleModel:
     )
     """Initialization time [yr].
 
-    Time point at which the initial pool sizes (NplsP0, NplsL0, NplsS0, NplsM0) apply.
-    The simulation time_axis must start at or after this time.  Typically set to
-    the pre-industrial baseline year (1850).
+    Time point at which the initial pool sizes apply. The simulation time_axis must
+    start at or after this time. The default is the pre-industrial baseline year
+    (1850).
     """
 
     switch_Npls: list[int] = field(
@@ -1655,9 +1652,10 @@ class NitrogenCycleModel:
     )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 
-    Binary switches (1=enabled, 0=disabled) to selectively enable or disable
-    pool dynamics.  Useful for diagnostic purposes or simplified model configurations.
-    Setting a switch to 0 freezes that pool at its initial value.
+    For plant, litter, and soil pools, use 1 to enable or 0 to freeze the pool at its
+    initial value; other numeric values scale its derivative. For the mineral pool,
+    0 disables its dynamics and any non-zero value enables them. These switches are
+    useful for diagnostic purposes or simplified model configurations.
 
     - switch_Npls[0]: Plant pool switch
     - switch_Npls[1]: Litter pool switch

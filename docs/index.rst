@@ -78,6 +78,7 @@ Learn how to use CNit effectively with examples and best practices.
 .. toctree::
    :maxdepth: 2
 
+   configuration
    example
 
 API Reference

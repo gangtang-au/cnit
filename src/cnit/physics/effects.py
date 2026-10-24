@@ -14,8 +14,8 @@ handles a specific category of effects:
 - :class:`EffectTemperatureCalculator`: Temperature-dependent process modifications
 - :class:`EffectCarbonNitrogenCouplingCalculator`: Carbon-nitrogen cycle feedback effects
 
-All effect factors are dimensionless multipliers (typically near 1.0) that scale
-process rates up or down based on environmental conditions.
+All effect factors are dimensionless multipliers that scale process rates up or down
+based on environmental conditions.
 """
 
 from typing import Tuple
@@ -168,7 +168,7 @@ class EffectLanduseCalculator:
             [GtC]. Represents the baseline productive land carbon before land use changes.
         frc_rgr
             Regrowth fraction (varphi) [dimensionless]. Fraction of deforested area
-            assigned to natural regrowth (typical values 0.8-0.95).
+            assigned to natural regrowth.
         frc_afst_decay
             Afforestation decay fraction (phi) [dimensionless]. Fraction of afforested
             carbon that decays due to turnover (phi = 1 - varphi).
@@ -618,7 +618,7 @@ class EffectCO2Calculator:
         validator=check_units("1"),
     )
     """
-    Sensitivity of NPP to atmospheric |CO2| concentration changes (sigmoid form) [ppm].
+    Sensitivity of NPP to atmospheric |CO2| concentration changes (sigmoid form) [dimensionless].
     """
 
     eff_CO2_sig_max: pint.Quantity = field(
@@ -1337,7 +1337,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of net primary production to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of net primary production to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_cLP2PUdef: pint.Quantity = field(
@@ -1345,7 +1345,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of litter production (carbon) to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of litter production (carbon) to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_cLD2PUdef: pint.Quantity = field(
@@ -1353,7 +1353,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of litter decomposition (carbon) to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of litter decomposition (carbon) to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_cSR2PUdef: pint.Quantity = field(
@@ -1361,7 +1361,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of soil respiration (carbon) to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of soil respiration (carbon) to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_PU2PUdef: pint.Quantity = field(
@@ -1389,7 +1389,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of litter production (nitrogen) to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of litter production (nitrogen) to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_nLD2PUdef: pint.Quantity = field(
@@ -1397,7 +1397,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of litter decomposition (nitrogen) to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of litter decomposition (nitrogen) to nitrogen plant uptake deficit [yr/GtN]
         """
 
     sns_nSR2PUdef: pint.Quantity = field(
@@ -1405,7 +1405,7 @@ class EffectCarbonNitrogenCouplingCalculator:
         validator=check_units("yr/GtN"),
     )
     """
-        Sensitivity of sol respiration (nitrogen) to nitrogen plant uptake deficit [GtN/yr]
+        Sensitivity of soil respiration (nitrogen) to nitrogen plant uptake deficit [yr/GtN]
     """
 
     eff_C_PU_max: pint.Quantity = field(

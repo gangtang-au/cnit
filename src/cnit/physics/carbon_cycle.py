@@ -87,7 +87,8 @@ class CarbonNPPLPRCalculator:
         validator=check_units("GtC/yr"),
     )
     """
-        Initial net primary production (NPP), base NPP without any effects [GtC/yr]
+        Base net primary production (NPP) rate under reference conditions, before
+        environmental effects [GtC/yr].
     """
 
     LPR0: pint.Quantity = field(
@@ -95,7 +96,8 @@ class CarbonNPPLPRCalculator:
         validator=check_units("GtC/yr"),
     )
     """
-        Initial Litter production respiration (LPR), base LPR without any effects [GtC/yr]
+        Base litter production respiration (LPR) rate under reference conditions,
+        before environmental effects [GtC/yr].
     """
 
     def calculate(
@@ -950,7 +952,7 @@ class CarbonCycleModel:
     """Initial plant carbon pool size [GtC].
 
     Carbon contained in living plant biomass at the start of the simulation
-    (time0). Typical values range from 400-550 GtC for global simulations.
+    (time0).
     """
 
     CplsL0: pint.Quantity = field(
@@ -960,7 +962,7 @@ class CarbonCycleModel:
     """Initial litter carbon pool size [GtC].
 
     Carbon contained in dead plant material (litter) at the start of the simulation
-    (time0). Typical values range from 40-70 GtC for global simulations.
+    (time0).
     """
 
     CplsS0: pint.Quantity = field(
@@ -970,7 +972,6 @@ class CarbonCycleModel:
     """Initial soil carbon pool size [GtC].
 
     Carbon contained in soil organic matter at the start of the simulation (time0).
-    Typical values range from 1400-1700 GtC for global simulations.
     """
 
     time0: pint.Quantity = field(
@@ -979,9 +980,9 @@ class CarbonCycleModel:
     )
     """Initialization time [yr].
 
-    Time point at which the initial pool sizes (CplsP0, CplsL0, CplsS0) apply.
-    The simulation time_axis must start at or after this time. Typically set to
-    the pre-industrial baseline year (1850).
+    Time point at which the initial pool sizes apply. The simulation time_axis must
+    start at or after this time. The default is the pre-industrial baseline year
+    (1850).
     """
 
     switch_Cpls: list[int] = field(
@@ -989,9 +990,9 @@ class CarbonCycleModel:
     )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 
-    Binary switches (1=enabled, 0=disabled) to selectively enable or disable
-    pool dynamics. Useful for diagnostic purposes or simplified model configurations.
-    Setting a switch to 0 freezes that pool at its initial value.
+    Use 1 to enable or 0 to freeze a pool at its initial value. Other numeric values
+    scale that pool's derivative. These switches are useful for diagnostic purposes
+    or simplified model configurations.
 
     - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
