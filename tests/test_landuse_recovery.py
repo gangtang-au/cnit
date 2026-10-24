@@ -11,7 +11,7 @@ from cnit.physics.landuse import LanduseCalculator
 from cnit.utils.units import Q
 
 
-def test_single_deforestation_pulse_recovers_configured_land_carbon_fraction():
+def test_single_deforestation_event_produces_configured_regrowth_fraction():
     calculator = LanduseCalculator()
     # Gross-input mode represents one directly observed deforestation event.
     calculator.method_cLU = Q(1, "1")
@@ -31,16 +31,16 @@ def test_single_deforestation_pulse_recovers_configured_land_carbon_fraction():
         calculator.frc_rgr.to("1").m / calculator.tau_rgr.to("yr").m,
     )
 
-    recovered_carbon = fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1]
-    expected_recovery = calculator.frc_rgr.to("1").m * gross_emissions[0]
-    np.testing.assert_allclose(recovered_carbon, expected_recovery)
+    cumulative_regrowth = fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1]
+    expected_regrowth = calculator.frc_rgr.to("1").m * gross_emissions[0]
+    np.testing.assert_allclose(cumulative_regrowth, expected_regrowth)
 
     # Gross emissions retain only the one input pulse while regrowth proceeds.
     calculated_gross = fluxes["CflxLUgrs"].to("GtC/yr").m
     np.testing.assert_allclose(calculated_gross, gross_emissions)
 
 
-def test_subannual_gross_flux_rounds_regrowth_and_decay_to_nearest_step_count():
+def test_subannual_gross_flux_rounds_regrowth_and_afforestation_decay_duration():
     calculator = LanduseCalculator(
         frc_rgr=Q(0.8, "1"),
         tau_rgr=Q(1.4, "yr"),

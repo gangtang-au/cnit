@@ -42,9 +42,9 @@ class EffectLanduseCalculator:
 
     1. **Effects on NPP**: Adjustments to primary production based on cumulative land
        use changes, blending instantaneous and equilibrium perspectives to capture
-       both immediate impacts and long-term recovery dynamics
+       both immediate impacts and long-term land-use dynamics
     2. **Effects on Turnovers**: Short-term immediate effects on litter production,
-       decomposition, and soil respiration based on current regrowth flux
+       decomposition, and soil respiration based on the current regrowth flux
 
     Notes
     -----
@@ -56,7 +56,7 @@ class EffectLanduseCalculator:
     land use effects implemented here prevent this unrealistic full return by:
 
     - Adjusting NPP to reflect permanent changes in productive land area
-    - Modifying turnover rates during recovery periods to capture transient dynamics
+    - Modifying turnover rates during ecosystem recovery to capture transient dynamics
 
     **Dual Effect Framework**
 
@@ -69,7 +69,7 @@ class EffectLanduseCalculator:
 
     - **Turnover adjustment** (``calculate_eff_LU_cLPLDSR``, ``calculate_eff_LU_nLPLDSR``):
       Capture immediate, short-term perturbations to organic matter cycling during
-      recovery periods. These effects decay as regrowth completes, avoiding
+      ecosystem recovery. These effects fade as vegetation recovers, avoiding
       permanent equilibrium shifts.
 
     **Regrowth Flux as Proxy for Turnover Effects**
@@ -77,16 +77,16 @@ class EffectLanduseCalculator:
     The turnover effects use regrowth flux as a proxy for land use perturbation
     state because:
 
-    1. Regrowth reflects the recovering state of all past perturbations
+    1. Regrowth reflects ongoing land-use effects from past perturbations
     2. It captures lagging effects that extend into the future
     3. It embodies the principle "where there is regrowth, land use
        perturbation still takes effect"
-    4. It naturally decays to zero as recovery completes, ensuring no permanent
+    4. It naturally declines to zero as scheduled regrowth ends, ensuring no permanent
        change to equilibrium turnover rates
 
-    The regrowth flux provides a single, time-varying indicator of ongoing recovery
-    that can be used as a proxy to parameterize how disturbance alters cycling rates
-    during the transient recovery period.
+    The regrowth flux provides a single, time-varying indicator of the ongoing
+    ecosystem response to land-use change. It is used as a proxy for how disturbance
+    alters cycling rates while vegetation recovers.
     """
 
     sns_cLP2LUrgr: pint.Quantity = field(
@@ -153,7 +153,7 @@ class EffectLanduseCalculator:
         ----------
         cumsum_CflxLUrgr
             Cumulative regrowth carbon flux [GtC].  Total carbon accumulated through
-            natural recovery following past deforestation events.
+            natural regrowth following past deforestation events.
         cumsum_CflxLUdfst
             Cumulative deforestation carbon flux [GtC]. Total carbon lost through all
             deforestation events.
@@ -167,8 +167,8 @@ class EffectLanduseCalculator:
             Initial equilibrium total terrestrial carbon pool size (Plant + Litter + Soil)
             [GtC]. Represents the baseline productive land carbon before land use changes.
         frc_rgr
-            Regrowth fraction (varphi) [dimensionless]. Fraction of deforested area that
-            can undergo natural recovery (typical values 0.8-0.95).
+            Regrowth fraction (varphi) [dimensionless]. Fraction of deforested area
+            assigned to natural regrowth (typical values 0.8-0.95).
         frc_afst_decay
             Afforestation decay fraction (phi) [dimensionless]. Fraction of afforested
             carbon that decays due to turnover (phi = 1 - varphi).
@@ -267,8 +267,8 @@ class EffectLanduseCalculator:
         **Why** :math:`\\epsilon_{LUdfst}^{eqm}` **alone underestimates the effect:**
 
         - Assumes instantaneous adjustment to the post-regrowth equilibrium, ignoring the
-          actual lag in recovery.  During active regrowth, the realized NPP reduction is
-          larger than the long-term equilibrium would suggest.
+          actual lag in the NPP response. During active regrowth, the realized NPP
+          reduction is larger than the long-term equilibrium would suggest.
 
         **Combined Approach:  Weighted Blending**
 
@@ -423,13 +423,13 @@ class EffectLanduseCalculator:
         Computes exponential response factors for carbon litter production (cLP),
         litter decomposition (cLD), and soil respiration (cSR). These factors
         represent immediate, short-term effects of ongoing land use perturbations
-        on organic matter cycling rates during recovery periods.
+        on organic matter cycling rates during ecosystem recovery after land-use change.
 
         Parameters
         ----------
         CflxLUrgr : pint.Quantity
             Current regrowth carbon flux [GtC/yr]. Serves as a proxy for the
-            state of land use perturbation and ongoing recovery.
+            state of land-use disturbance and ongoing ecosystem recovery.
 
         Returns
         -------
@@ -447,7 +447,7 @@ class EffectLanduseCalculator:
         The NPP adjustment (``calculate_eff_LU_NPP``) prevents full equilibrium
         return in the long term, but it primarily controls the ultimate equilibrium
         state. These direct turnover effects are needed to capture the shorter-term
-        immediate effects of land use perturbation during active recovery periods.
+        immediate effects of land-use perturbation during ecosystem recovery.
 
         Without turnover effects, transient dynamics during recovery would be
         missing from the model, even though the long-term equilibrium is correctly
@@ -469,16 +469,16 @@ class EffectLanduseCalculator:
 
         Using regrowth flux to parameterize turnover effects is appropriate because:
 
-        1. **Reflects recovering state**: Regrowth magnitude indicates how much
-           past perturbation is still influencing the system
+        1. **Tracks ongoing recovery**: The regrowth flux indicates how strongly
+           past land-use perturbations are still affecting the system
         2. **Captures lagging effects**: Active regrowth means perturbation effects
-           extend into the future (ongoing recovery)
+           extend beyond the interval in which deforestation occurred
         3. **Embodies "where regrowth occurs, perturbation persists"**: The spatial
            and temporal extent of regrowth maps to perturbation influence
-        4. **Natural decay**: As regrowth completes, :math:`LUrgr \\to 0` and
+        4. **Natural decline**: As scheduled regrowth ends, :math:`LUrgr \\to 0` and
            effects vanish, preventing permanent equilibrium shifts
         5. **Single time-varying indicator**: Provides a convenient scalar measure
-           of system-wide recovery status
+           of the system's current land-use response
 
         **Interpretation of Sensitivities**
 
@@ -490,8 +490,8 @@ class EffectLanduseCalculator:
 
         **No Long-Term Equilibrium Change**
 
-        Because regrowth is not forever (recovery eventually completes), these
-        turnover effects naturally decay to 1.0 as :math:`LUrgr \\to 0`. This means:
+        As the regrowth flux declines to zero, these turnover effects return to 1.0.
+        This means:
 
         - Short-term perturbations to cycling rates are captured
         - Long-term equilibrium turnover rates remain unchanged
@@ -523,8 +523,8 @@ class EffectLanduseCalculator:
         Parameters
         ----------
         CflxLUrgr : pint.Quantity
-            Current regrowth carbon flux [GtC/yr]. Used as a proxy for ecosystem
-            recovery state affecting nitrogen cycling.
+            Current regrowth carbon flux [GtC/yr]. Used as a proxy for the ecosystem's
+            recovery after land-use change, which affects nitrogen cycling.
 
         Returns
         -------

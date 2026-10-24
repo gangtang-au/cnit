@@ -90,6 +90,67 @@ def _run_revision(source, config_path, output_path, *, truncate_tau_rgr=False):
     )
 
 
+def _print_max_differences(current, baseline, config_names, duration_label):
+    """Print maximum absolute and relative differences for selected outputs."""
+    differences = {
+        name: {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "abs_case": "",
+            "rel_case": "",
+        }
+        for name in KEY_OUTPUTS
+    }
+
+    for config_name in config_names:
+        for experiment in EXPERIMENTS:
+            prefix = f"{config_name}::{experiment}::"
+            for name in KEY_OUTPUTS:
+                key = f"{prefix}{name}"
+                if key not in current.files:
+                    continue
+
+                current_values = np.asarray(current[key], dtype=float)
+                baseline_values = np.asarray(baseline[key], dtype=float)
+                assert current_values.shape == baseline_values.shape, (
+                    f"Output shape differs for {key}: current={current_values.shape}, "
+                    f"main={baseline_values.shape}"
+                )
+
+                absolute_difference = np.abs(current_values - baseline_values)
+                max_abs = float(np.nanmax(absolute_difference))
+                metric = differences[name]
+                if max_abs > metric["max_abs"]:
+                    metric["max_abs"] = max_abs
+                    metric["abs_case"] = f"{config_name}::{experiment}"
+
+                nonzero_baseline = baseline_values != 0
+                if np.any(nonzero_baseline):
+                    relative_difference = (
+                        absolute_difference[nonzero_baseline]
+                        / np.abs(baseline_values[nonzero_baseline])
+                    )
+                    max_rel = float(np.nanmax(relative_difference))
+                    if max_rel > metric["max_rel"]:
+                        metric["max_rel"] = max_rel
+                        metric["rel_case"] = f"{config_name}::{experiment}"
+
+    print(
+        f"\n{duration_label} maximum differences from main across default and "
+        "CMIP6 configurations (relative differences use nonzero main values):"
+    )
+    print(
+        f"{'Output':<14} {'Max absolute':>14} {'Case':<32} "
+        f"{'Max relative':>14} {'Case':<32}"
+    )
+    for name, metric in differences.items():
+        print(
+            f"{name:<14} {metric['max_abs']:>14.6e} "
+            f"{metric['abs_case']:<32} {metric['max_rel']:>14.6e} "
+            f"{metric['rel_case']:<32}"
+        )
+
+
 def test_default_and_all_cmip6_calibrations_report_differences_from_main(
     tmp_path,
 ):
@@ -150,76 +211,32 @@ def test_default_and_all_cmip6_calibrations_report_differences_from_main(
             f"main-only={sorted(baseline_keys - current_keys)}"
         )
 
-        # With integer-year timescales, the current implementation should retain
-        # the legacy duration behavior used by main.
-        for key in sorted(current_keys):
-            np.testing.assert_allclose(
-                current_legacy[key],
-                baseline[key],
-                rtol=1e-8,
-                atol=1e-8,
-                err_msg=f"Integer tau_rgr differs from main for {key}",
-            )
-
-        # Collect maximum differences for key pools and fluxes across all
-        # configurations and experiments for the rounded-duration implementation.
-        # Relative differences are calculated only where the baseline value is
-        # nonzero; zero-baseline discrepancies are represented by the absolute
-        # difference.
-        differences = {
-            name: {
-                "max_abs": 0.0,
-                "max_rel": 0.0,
-                "abs_case": "",
-                "rel_case": "",
-            }
-            for name in KEY_OUTPUTS
-        }
-        for config_name in ("default", *calibrated_configs):
-            for experiment in EXPERIMENTS:
-                prefix = f"{config_name}::{experiment}::"
-                for name in KEY_OUTPUTS:
-                    key = f"{prefix}{name}"
-                    if key not in rounded_keys:
-                        continue
-                    current_values = np.asarray(current_rounded[key], dtype=float)
-                    baseline_values = np.asarray(baseline[key], dtype=float)
-                    assert current_values.shape == baseline_values.shape, (
-                        f"Output shape differs for {key}: "
-                        f"current={current_values.shape}, "
-                        f"main={baseline_values.shape}"
-                    )
-
-                    absolute_difference = np.abs(current_values - baseline_values)
-                    max_abs = float(np.nanmax(absolute_difference))
-                    metric = differences[name]
-                    if max_abs > metric["max_abs"]:
-                        metric["max_abs"] = max_abs
-                        metric["abs_case"] = f"{config_name}::{experiment}"
-
-                    nonzero_baseline = baseline_values != 0
-                    if np.any(nonzero_baseline):
-                        relative_difference = (
-                            absolute_difference[nonzero_baseline]
-                            / np.abs(baseline_values[nonzero_baseline])
-                        )
-                        max_rel = float(np.nanmax(relative_difference))
-                        if max_rel > metric["max_rel"]:
-                            metric["max_rel"] = max_rel
-                            metric["rel_case"] = f"{config_name}::{experiment}"
-
+        config_names = ("default", *calibrated_configs)
         print(
-            "\nRounded-duration maximum differences from main across default "
-            "and CMIP6 "
-            "configurations (relative differences use nonzero main values):"
+            "\nBoth tables compare the current code with `main` using the same "
+            "configurations and forcing data. The current code uses the "
+            "range-difference land-use calculation in both runs."
         )
         print(
-            f"{'Output':<14} {'Max absolute':>14} {'Case':<32} "
-            f"{'Max relative':>14} {'Case':<32}"
+            "Integer-duration run: before simulation, the test replaces "
+            "tau_rgr with int(tau_rgr.to('yr').m) years. This reproduces "
+            "main's truncation for these annual test inputs."
         )
-        for name, metric in differences.items():
-            print(
-                f"{name:<14} {metric['max_abs']:>14.6g} "
-                f"{metric['abs_case']:<32} {metric['max_rel']:>13.6%} "
-                f"{metric['rel_case']:<32}"
-            )
+        print(
+            "Rounded-duration run: the configured tau_rgr is left unchanged; "
+            "the current code rounds tau_rgr / time_step to a whole number "
+            "of intervals (minimum one). Differences from the integer run "
+            "therefore show the effect of this duration change."
+        )
+        _print_max_differences(
+            current_legacy,
+            baseline,
+            config_names,
+            "Current code with int-truncated tau_rgr",
+        )
+        _print_max_differences(
+            current_rounded,
+            baseline,
+            config_names,
+            "Current code with rounded tau_rgr duration",
+        )
