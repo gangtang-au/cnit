@@ -58,17 +58,6 @@ Quick Navigation
 
    → See :doc:`development/contributing` for development setup and coding guidelines.
 
-Getting Started
----------------
-
-Install CNit, then follow the basic usage guide to set up and run a simulation.
-
-.. toctree::
-   :caption: Getting started
-   :maxdepth: 2
-
-   quickstart
-
 Model Overview
 --------------
 
@@ -79,6 +68,17 @@ Learn about CNit’s structure, processes, scientific basis, and intended use.
    :maxdepth: 2
 
    overview
+
+Getting Started
+---------------
+
+Install CNit, then follow the basic usage guide to set up and run a simulation.
+
+.. toctree::
+   :caption: Getting started
+   :maxdepth: 2
+
+   quickstart
 
 API Reference
 -------------

@@ -6,6 +6,19 @@ All notable changes to CNit will be documented here.
 The format follows `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+Unreleased
+----------
+
+**Changed**
+
+* Land-use calculations support evenly spaced subannual time axes. Regrowth and
+  afforestation decay durations are rounded to whole model intervals, with a
+  minimum of one interval.
+* Improved validation of model configurations, experiment inputs, and calibration
+  CSV files.
+* Reorganized and expanded the documentation, including the configuration API and
+  emulation workflows built from the project notebooks.
+
 Version 2.2.0 (2026-10-22)
 --------------------------
 
