@@ -123,7 +123,7 @@ See [References](docs/project_info/references.rst) for the complete bibliography
 
 ## Development
 
-See the [contributing guide](docs/contributing.rst) for development setup and checks. The
+See [Contributing](docs/contributing.rst) for development setup and checks. The
 [Changelog](docs/development/changelog.rst) lists release history.
 
 ## Authors and Contributors
