@@ -101,7 +101,7 @@ model outputs.
 
 .. toctree::
    :caption: Emulation Workflows
-   :maxdepth: 3
+   :maxdepth: 2
 
    examples/cmip6-esm
    examples/trendy-dgvm
