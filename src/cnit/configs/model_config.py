@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 
 from attrs import define, field, fields
+import numpy as np
 import pint
 
 from ..utils.units import Q, check_units

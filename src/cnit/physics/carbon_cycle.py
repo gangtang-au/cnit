@@ -675,27 +675,12 @@ class CarbonCycleCalculator:
 
 @define
 class CarbonCycleModelResult:
-    """Results from running the carbon cycle model.
+    """Results returned by :meth:`CarbonCycleModel.run`.
 
-    This class stores the complete output from a carbon cycle model simulation,
-    including carbon pool states, fluxes, and all environmental effect modifiers.
-    Results can be converted to an xarray Dataset for analysis and visualization.
-
-    The carbon cycle model tracks three terrestrial carbon pools:
-
-    - Plant carbon pool (CplsP): Carbon in living plant biomass
-    - Litter carbon pool (CplsL): Carbon in dead plant material
-    - Soil carbon pool (CplsS): Carbon in soil organic matter
-
-    Key processes represented include:
-
-    - Carbon fixation through net primary production (NPP)
-    - Litter production respiration (LPR)
-    - Organic matter turnover (cLP, cLD, cSR)
-    - Land use change emissions (cLUgrs)
-    - Environmental modifiers: temperature, nitrogen, and land use effects
-
-    Flux and effect attributes are series aligned with ``time_axis``.
+    Stores the time-aligned carbon pool states and the flux and effect series used
+    during the simulation. Use :meth:`add_non_state_variables` to calculate derived
+    fluxes and diagnostics and assemble the complete xarray dataset. Attribute
+    descriptions below give the contents and units of the stored values.
     """
 
     c_state: Dict[str, pint.Quantity]
@@ -906,25 +891,20 @@ class CarbonCycleModelResult:
 
 @define
 class CarbonCycleModel:
-    """MAGICC's terrestrial carbon cycle model (carbon component of CNit).
+    """ODE model for CNit's three terrestrial carbon pools.
 
-    This model simulates the dynamics of three terrestrial carbon pools in the
-    terrestrial biosphere by solving a system of ordinary differential equations (ODEs)
-    using scipy.integrate.solve_ivp.  The model tracks carbon transfers between pools
-    through processes including:
+    The model represents carbon in plant biomass (CplsP), litter (CplsL), and soil
+    organic matter (CplsS). Net primary production adds carbon to the system; litter
+    production respiration and soil respiration release carbon, while litter
+    production and decomposition transfer carbon among pools. Land-use emissions
+    remove carbon from the pools according to the configured allocation fractions.
+    Temperature, nitrogen availability, and land-use history modify the relevant
+    process rates.
 
-    - Carbon fixation via net primary production (NPP)
-    - Litter production respiration (LPR)
-    - Organic matter turnover (litter production, litter decomposition, soil respiration)
-    - Land use change emissions
-    - Environmental modifiers (temperature, nitrogen availability, land use effects)
-
-    The model uses annual timesteps in its default examples and also accepts evenly spaced
-    subannual time axes. Empirical allocation fractions represent carbon transfers through
-    multiple pools within each model timestep.
-
-    Unit-aware flux and effect series are converted to numeric interpolators once
-    at the solver boundary, allowing adaptive evaluation without repeated unit work.
+    The model solves pool dynamics from carbon flux and effect series supplied by the
+    coupled model. Evenly spaced subannual time axes are supported; the default
+    examples use annual timesteps, with allocation fractions applying within each
+    timestep. See :meth:`run` for the required series and simulation behavior.
     """
 
     calc_c_turnover: CarbonTurnoverCalculator

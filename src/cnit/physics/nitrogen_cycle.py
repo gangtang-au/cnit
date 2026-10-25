@@ -1273,30 +1273,12 @@ class NitrogenCycleCalculator:
 
 @define
 class NitrogenCycleModelResult:
-    """Results from running the nitrogen cycle model.
+    """Results returned by :meth:`NitrogenCycleModel.run`.
 
-    This class stores the complete output from a nitrogen cycle model simulation,
-    including nitrogen pool states, fluxes, and all environmental effect modifiers.
-    Results can be converted to an xarray Dataset for analysis and visualization.
-
-    The nitrogen cycle model tracks four terrestrial nitrogen pools:
-
-    - Plant nitrogen pool (NplsP): Nitrogen in living plant biomass
-    - Litter nitrogen pool (NplsL): Nitrogen in dead plant material
-    - Soil nitrogen pool (NplsS): Nitrogen in soil organic matter
-    - Mineral nitrogen pool (NplsM): Plant-available inorganic nitrogen
-
-    Key processes represented include:
-
-    - External inputs: Biological nitrogen fixation (BNF), atmospheric deposition (AD),
-      and fertilizer application (FT)
-    - Plant uptake (PU): Transfer from mineral to organic pools
-    - Organic matter turnover (nLP, nLD, nSR)
-    - Mineral nitrogen losses (nLS): Gaseous emissions and leaching
-    - Land use changes: Gross deforestation (nLUgrs) and mineral losses (nLUmin)
-    - Environmental modifiers: temperature, nitrogen, and land use effects
-
-    Flux and effect attributes are series aligned with ``time_axis``.
+    Stores the time-aligned nitrogen pool states and the flux and effect series used
+    during the simulation. Use :meth:`add_non_state_variables` to calculate derived
+    fluxes and diagnostics and assemble the complete xarray dataset. Attribute
+    descriptions below give the contents and units of the stored values.
     """
 
     n_state: Dict[str, pint.Quantity]
@@ -1553,34 +1535,23 @@ class NitrogenCycleModelResult:
 
 @define
 class NitrogenCycleModel:
-    """MAGICC's terrestrial nitrogen cycle model (nitrogen component of CNit).
+    """ODE model for CNit's four terrestrial nitrogen pools.
 
-    This model simulates the dynamics of four terrestrial nitrogen pools in the
-    terrestrial biosphere by solving a system of ordinary differential equations (ODEs)
-    using scipy.integrate.solve_ivp. The model tracks nitrogen transfers between pools
-    through processes including:
+    The model represents nitrogen in plant biomass (NplsP), litter (NplsL), soil
+    organic matter (NplsS), and the mineral pool (NplsM). Biological fixation,
+    atmospheric deposition, and fertilizer add nitrogen; plant uptake transfers
+    mineral nitrogen into organic pools. Litter production, decomposition, and soil
+    respiration transfer or release organic nitrogen. Mineralization returns nitrogen
+    to the mineral pool, while gaseous losses, leaching, and land use remove it.
+    Temperature, nitrogen availability, and land-use history modify the relevant
+    process rates.
 
-    - External inputs: Biological nitrogen fixation (BNF), atmospheric deposition (AD),
-      and fertilizer application (FT)
-    - Plant uptake (PU): Transfer from mineral to organic pools
-    - Organic matter turnover (litter production, litter decomposition, soil respiration)
-    - Mineralization: Release of plant-available nitrogen from organic matter
-    - Mineral nitrogen losses: Gaseous emissions and leaching
-    - Land use changes: Gross deforestation and direct mineral losses
-    - Environmental modifiers (temperature, nitrogen availability, land use effects)
-
-    The model uses annual timesteps in its default examples and also accepts evenly spaced
-    subannual time axes. Empirical allocation fractions represent nitrogen transfers
-    through multiple pools within each model timestep.
-
-    The nitrogen cycle is solved in two stages:
-    (1) organic nitrogen pools (plant, litter, soil) are solved first, then
-    (2) the mineral nitrogen pool is solved using net mineralization calculated from
-    the organic pool dynamics.
-
-    Time-continuous functions (suffixed with `_t`) are generated through linear
-    interpolation of discrete time points and provide continuous values over the
-    simulation period, allowing the ODE solver to evaluate fluxes at any time point.
+    The model solves pool dynamics from nitrogen flux and effect series supplied by
+    the coupled model. Organic pools are solved first; the mineral pool is then solved
+    using net mineralization from the organic-pool solution. Evenly spaced subannual
+    time axes are supported; the default examples use annual timesteps, with
+    allocation fractions applying within each timestep. See :meth:`run` for the
+    required series and simulation behavior.
     """
 
     calc_n_turnover: NitrogenTurnoverCalculator
