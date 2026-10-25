@@ -6,17 +6,18 @@ All notable changes to CNit will be documented here.
 The format follows `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
-Unreleased
-----------
+Version 2.3.0 (2026-10-25)
+--------------------------
 
 **Changed**
 
-* Refactored regrowth and afforestation-decay pulse scheduling to record rate changes
-  at interval boundaries instead of updating every affected future interval. For a
-  given duration, this preserves the scheduled pulse while reducing repeated work.
-* Land-use calculations support evenly spaced subannual time axes. Regrowth and
-  afforestation-decay durations are rounded to the nearest whole model interval
-  (minimum one), instead of being truncated with ``int()`` as before.
+* Optimized regrowth and afforestation-decay pulse scheduling by recording rate
+  changes at interval boundaries instead of updating every affected future interval.
+  This preserves the pulse rates for a given duration while reducing repeated work.
+* Improved subannual time-axis support and documentation across CNit. In land-use
+  flux calculations, regrowth and afforestation-decay durations are rounded to the
+  nearest whole model interval (minimum one), rather than truncated with ``int()`` as
+  before.
 * Strengthened validation of model and experiment configurations and calibration CSV
   files.
 * Reorganized and expanded the documentation, including the configuration API.
