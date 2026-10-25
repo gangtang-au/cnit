@@ -81,7 +81,7 @@ jobs:
       - name: Compare model results with main
         env:
           CNIT_BASELINE_REF: origin/main
-        run: python -m pytest tests/test_model_results_regression.py -q
+        run: python -m pytest tests/test_model_results_regression.py -q -s
 
   docs:
     name: Build documentation

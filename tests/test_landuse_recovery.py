@@ -11,7 +11,7 @@ from cnit.physics.landuse import LanduseCalculator
 from cnit.utils.units import Q
 
 
-def test_single_deforestation_pulse_recovers_configured_land_carbon_fraction():
+def test_single_deforestation_event_produces_configured_regrowth_fraction():
     calculator = LanduseCalculator()
     # Gross-input mode represents one directly observed deforestation event.
     calculator.method_cLU = Q(1, "1")
@@ -31,13 +31,69 @@ def test_single_deforestation_pulse_recovers_configured_land_carbon_fraction():
         calculator.frc_rgr.to("1").m / calculator.tau_rgr.to("yr").m,
     )
 
-    recovered_carbon = fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1]
-    expected_recovery = calculator.frc_rgr.to("1").m * gross_emissions[0]
-    np.testing.assert_allclose(recovered_carbon, expected_recovery)
+    cumulative_regrowth = fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1]
+    expected_regrowth = calculator.frc_rgr.to("1").m * gross_emissions[0]
+    np.testing.assert_allclose(cumulative_regrowth, expected_regrowth)
 
     # Gross emissions retain only the one input pulse while regrowth proceeds.
     calculated_gross = fluxes["CflxLUgrs"].to("GtC/yr").m
     np.testing.assert_allclose(calculated_gross, gross_emissions)
+
+
+def test_subannual_gross_flux_rounds_regrowth_and_afforestation_decay_duration():
+    calculator = LanduseCalculator(
+        frc_rgr=Q(0.8, "1"),
+        tau_rgr=Q(1.4, "yr"),
+        method_cLU=Q(1, "1"),
+    )
+    time_axis = Q(np.arange(5) * 0.5, "yr")
+    gross_emissions = Q([2.0, -2.0, 0.0, 0.0, 0.0], "GtC/yr")
+
+    fluxes = calculator.calculate_CflxLU_series(
+        CemsLUnet_s=Q(np.zeros(5), "GtC/yr"),
+        CemsLUgrs_s=gross_emissions,
+        time_axis=time_axis,
+    )
+
+    # Each rate applies for half a year. A 1.4-year timescale becomes three steps
+    # (1.5 years), and each pulse begins one interval after its input event.
+    np.testing.assert_allclose(
+        fluxes["CflxLUrgr"].to("GtC/yr").m,
+        [0.0, 0.8 / 1.5, 0.8 / 1.5, 0.8 / 1.5, 0.0],
+    )
+    np.testing.assert_allclose(
+        fluxes["CflxLUafst_decay"].to("GtC/yr").m,
+        [0.0, 0.0, 0.2 / 1.5, 0.2 / 1.5, 0.2 / 1.5],
+    )
+    np.testing.assert_allclose(
+        fluxes["cumsum_CflxLUrgr"].to("GtC").m[-1],
+        0.8,
+    )
+    np.testing.assert_allclose(
+        fluxes["cumsum_CflxLUafst_decay"].to("GtC").m[-1],
+        0.2,
+    )
+
+
+def test_subannual_net_flux_reconstructs_gross_flux_with_regrowth():
+    calculator = LanduseCalculator(
+        frc_rgr=Q(0.8, "1"),
+        tau_rgr=Q(1.25, "yr"),
+        method_cLU=Q(0, "1"),
+    )
+    time_axis = Q(np.arange(4) * 0.5, "yr")
+    net_emissions = Q([2.0, 0.0, 0.0, 0.0], "GtC/yr")
+
+    fluxes = calculator.calculate_CflxLU_series(
+        CemsLUnet_s=net_emissions,
+        CemsLUgrs_s=Q(np.zeros(4), "GtC/yr"),
+        time_axis=time_axis,
+    )
+
+    gross = fluxes["CflxLUgrs"].to("GtC/yr").m
+    regrowth = fluxes["CflxLUrgr"].to("GtC/yr").m
+    np.testing.assert_allclose(gross, net_emissions.m + regrowth)
+    assert np.all(np.isfinite(gross))
 
 
 def test_model_land_carbon_stock_approaches_gross_land_use_adjusted_equilibrium():

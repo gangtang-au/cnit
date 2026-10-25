@@ -54,15 +54,16 @@ class CarbonNitrogenCycleModel:
         * Nitrogen deficit feedbacks
     - Environmental responses:
 
-        * CO2 fertilization effects on NPP
+        * CO₂ fertilization effects on NPP
         * Temperature effects on all processes
         * Land use change impacts (deforestation, afforestation, regrowth)
 
-    The model operates on annual timesteps and solves the carbon and nitrogen cycles
-    iteratively to capture their bidirectional coupling. A key feature is the explicit
-    calculation of nitrogen deficit (difference between nitrogen required and available
-    for plant uptake), which creates feedback loops regulating both carbon and nitrogen
-    cycling.
+    The model uses annual timesteps in its default examples and also accepts evenly spaced
+    subannual time axes. It solves the carbon and nitrogen cycles iteratively to capture
+    their bidirectional coupling. A key feature is the explicit calculation of nitrogen
+    deficit (difference between nitrogen required and available for plant uptake), which
+    creates feedback loops regulating both carbon and nitrogen cycling. Allocation
+    fractions describe pool turnover transfers within each model timestep.
 
     **Model Architecture:**
 
@@ -70,8 +71,8 @@ class CarbonNitrogenCycleModel:
 
     - **Land Use Calculator** (:class:`LanduseCalculator`): Processes land use change
       emissions and regrowth fluxes for both carbon and nitrogen
-    - **Effect Calculators**:  Compute environmental modifiers
-        * :class:`EffectCO2Calculator`: CO2 fertilization effects
+    - **Effect Calculators**: Compute environmental modifiers
+        * :class:`EffectCO2Calculator`: CO₂ fertilization effects
         * :class:`EffectTemperatureCalculator`: Temperature effects on all processes
         * :class:`EffectCarbonNitrogenCouplingCalculator`: C-N coupling effects
         * :class:`EffectLanduseCalculator`: Land use effects on turnover rates
@@ -103,30 +104,30 @@ class CarbonNitrogenCycleModel:
     The model can be initialized in two ways:
 
     - :meth:`from_dict`: Build from a parameter dictionary
-    - :meth:`from_config`: Build from a :class:`CarbonNitrogenCycleModelConfig` dataclass
+    - :meth:`from_config`: Build from a ``CNitModelConfig`` instance
 
     Both methods automatically distribute parameters to the appropriate sub-components.
     """
 
     # Calculators
     calc_lu: LanduseCalculator
-    """Calculator for land use fluxes. 
-    
+    """Calculator for land use fluxes.
+
     Processes land use change emissions (gross deforestation, net emissions) and
     regrowth for both carbon and nitrogen cycles.  Tracks cumulative land use changes
-    for calculating land use effects on productivity. 
+    for calculating land use effects on productivity.
     """
 
     calc_eff_CO2: EffectCO2Calculator
-    """Calculator for CO2 fertilization effects. 
-    
-    Computes the enhancement of NPP due to elevated atmospheric CO2 concentration
-    through increased photosynthetic efficiency and water use efficiency. 
+    """Calculator for CO₂ fertilization effects.
+
+    Computes the enhancement of NPP due to elevated atmospheric CO₂ concentration
+    through increased photosynthetic efficiency and water use efficiency.
     """
 
     calc_eff_dT: EffectTemperatureCalculator
-    """Calculator for temperature effects. 
-    
+    """Calculator for temperature effects.
+
     Computes temperature modifiers for all carbon and nitrogen processes including
     NPP, LPR, decomposition, mineralization, plant uptake, biological fixation, and
     gaseous losses.
@@ -134,38 +135,39 @@ class CarbonNitrogenCycleModel:
 
     calc_eff_CN: EffectCarbonNitrogenCouplingCalculator
     """Calculator for carbon-nitrogen coupling effects.
-    
+
     Computes nitrogen limitation effects on carbon processes (NPP, decomposition)
     and carbon availability effects on nitrogen processes (plant uptake, fixation)
     based on nitrogen deficit and NPP changes.
     """
 
     calc_eff_LU: EffectLanduseCalculator
-    """Calculator for land use effects. 
-    
+    """Calculator for land use effects.
+
     Computes land use change effects on process rates (turnover, decomposition)
-    based on land use history (regrowth, deforestation, afforestation). 
+    based on land use history (regrowth, deforestation, afforestation).
     """
 
     calc_npp_lpr: CarbonNPPLPRCalculator
-    """Calculator for net primary production (NPP) and litter production respiration (LPR).
-    
+    """Calculator for net primary production (NPP) and litter production
+    respiration (LPR).
+
     Computes carbon fixation by plants (NPP) and associated autotrophic respiration
-    (LPR) with environmental modifiers (CO2, temperature, nitrogen, land use).
+    (LPR) with environmental modifiers (CO₂, temperature, nitrogen, land use).
     """
 
     calc_pu_bnf: NitrogenPUBNFCalculator
     """Calculator for plant nitrogen uptake (PU) and biological nitrogen fixation (BNF).
-    
+
     Computes nitrogen inputs to organic pools through plant uptake from mineral pool
     and biological fixation from atmosphere, with environmental modifiers and nitrogen
-    deficit feedbacks. 
+    deficit feedbacks.
     """
 
     # Model components
     mdl_c_cycle: CarbonCycleModel
     """Carbon cycle model component.
-    
+
     Solves the carbon pool dynamics (plant, litter, soil) using ODE integration.
     Receives nitrogen limitation effects from nitrogen cycle and provides NPP for
     nitrogen demand calculation.
@@ -173,7 +175,7 @@ class CarbonNitrogenCycleModel:
 
     mdl_n_cycle: NitrogenCycleModel
     """Nitrogen cycle model component.
-    
+
     Solves the nitrogen pool dynamics (plant, litter, soil, mineral) using two-stage
     ODE integration. Receives carbon-driven nitrogen demand and provides nitrogen
     limitation effects to carbon cycle.
@@ -183,12 +185,12 @@ class CarbonNitrogenCycleModel:
     switch_N: pint.Quantity = field(
         default=Q(1, "1"),
     )
-    """Switch to enable/disable nitrogen cycle [dimensionless]. 
-    
-    Controls whether nitrogen limitation effects are applied to carbon cycle: 
+    """Switch to enable/disable nitrogen cycle [dimensionless].
+
+    Controls whether nitrogen limitation effects are applied to carbon cycle:
     - 1: Full carbon-nitrogen coupling (default)
     - 0: Carbon cycle only (no nitrogen limitation)
-    
+
     When set to 0, the model runs as a carbon-only model with no nitrogen feedbacks.
     """
 
@@ -237,7 +239,7 @@ class CarbonNitrogenCycleModel:
         cls, config: CarbonNitrogenCycleModelConfig
     ) -> "CarbonNitrogenCycleModel":
         """
-        Build a fully configured CarbonNitrogenCycleModel from a config dataclass.
+        Build a fully configured CarbonNitrogenCycleModel from a config instance.
 
         Each calculator and sub-model is constructed with its values from the
         supplied config.
@@ -245,7 +247,7 @@ class CarbonNitrogenCycleModel:
         Parameters
         ----------
         config
-            Configuration dataclass containing all model parameters.
+            Configuration instance containing all model parameters.
 
         Returns
         -------
@@ -255,7 +257,7 @@ class CarbonNitrogenCycleModel:
         See Also
         --------
         from_dict : Build model from parameter overrides
-        CarbonNitrogenCycleModelConfig : Configuration dataclass definition
+        CarbonNitrogenCycleModelConfig : Configuration class definition
         """
         calc_lu = LanduseCalculator(
             frc_rgr=config.frc_rgr,
@@ -392,14 +394,14 @@ class CarbonNitrogenCycleModel:
         Run multiple experiments with the model.
 
         This method facilitates running multiple model scenarios with different
-        configurations and/or forcing data. Results from all experiments are
+        configurations and/or input data. Results from all experiments are
         concatenated into a single dataset with an 'experiment' dimension.
 
         Parameters
         ----------
         experiments
-            List of experiment configurations.  Each experiment specifies forcing
-            data, nitrogen switch setting, and a name for identification.
+            List of experiment configurations. Each experiment specifies input data,
+            nitrogen switch setting, and a name for identification.
 
         Returns
         -------
@@ -413,12 +415,12 @@ class CarbonNitrogenCycleModel:
         >>> exp1 = CarbonNitrogenCycleExperimentConfig(
         ...     name="control",
         ...     switch_N=Q(1, "1"),
-        ...     # ...  forcing data ...
+        ...     # ... input data ...
         ... )
         >>> exp2 = CarbonNitrogenCycleExperimentConfig(
         ...     name="no_nitrogen",
         ...     switch_N=Q(0, "1"),
-        ...     # ... forcing data ...
+        ...     # ... input data ...
         ... )
         >>> results = model.run_experiments([exp1, exp2])
         >>> control_npp = results.sel(experiment="control")["CflxNPP"]
@@ -455,7 +457,7 @@ class CarbonNitrogenCycleModel:
 
         This is the main simulation method that:
 
-        1. Processes land use change forcing
+        1. Processes land-use input series
         2. Calculates potential and actual NPP with nitrogen limitation
         3. Calculates nitrogen deficit and feedbacks
         4. Solves carbon cycle with nitrogen effects
@@ -465,12 +467,13 @@ class CarbonNitrogenCycleModel:
         Parameters
         ----------
         time_axis
-            Time points for simulation [yr]. Must start at or after initialization
-            time (time0) specified in model components.
+            Evenly spaced time points for simulation [yr]. Must start at or after
+            initialization time (time0) specified in model components. All input
+            series must have one value per time point.
         dT_s
             Time series of temperature anomaly relative to preindustrial [K].
         CO2_s
-            Time series of atmospheric CO2 concentration [ppm].
+            Time series of atmospheric CO₂ concentration [ppm].
         CemsLUnet_s
             Time series of net land use carbon emissions [GtC/yr].  Includes both
             gross emissions and regrowth.
@@ -500,12 +503,12 @@ class CarbonNitrogenCycleModel:
 
             **Carbon Cycle Variables:**
 
-            - Pool sizes:  CplsP, CplsL, CplsS, CplsPLS
+            - Pool sizes: CplsP, CplsL, CplsS, CplsPLS
             - Primary fluxes: CflxNPP, CflxNPPpot, CflxLPR, CflxLPRpot
             - Turnover fluxes: CflxLP, CflxLD, CflxSR
             - Partitioned fluxes: CflxNPP2P/L/S, CflxLP2L/S, CflxLD2S/A, CflxLUgrs2P/L/S
             - Derived fluxes: CflxRH, CflxNetPLS
-            - Land use:  CflxLUgrs, CflxLUrgr, cumulative land use changes
+            - Land use: CflxLUgrs, CflxLUrgr, cumulative land use changes
 
             **Nitrogen Cycle Variables** (if switch_N=1):
 
@@ -514,7 +517,7 @@ class CarbonNitrogenCycleModel:
             - Turnover fluxes: NflxLP, NflxLD, NflxSR, NflxLS
             - Partitioned fluxes: NflxPU2P/L/S, NflxBNF2P/L/S, NflxLP2L/S,
               NflxLD2S/M, NflxLUgrs2P/L/S
-            - Derived fluxes:  NflxNetMIN, NflxNetPLSM
+            - Derived fluxes: NflxNetMIN, NflxNetPLSM
             - Nitrogen budget: NflxPUreq, NflxPUavail, NflxPUavail_netMIN, NflxPUdef
             - Land use: NflxLUgrs, NflxLUmin
 
@@ -552,8 +555,8 @@ class CarbonNitrogenCycleModel:
 
         The behavior can be controlled through switches:
         - switch_N = 0: Carbon-only mode (no nitrogen limitation)
-        - switch_Cpls = [0,0,0]:  Freeze all carbon pools
-        - switch_Npls = [0,0,0,0]:  Freeze all nitrogen pools
+        - switch_Cpls = [0,0,0]: Freeze all carbon pools
+        - switch_Npls = [0,0,0,0]: Freeze all nitrogen pools
 
         See Also
         --------
@@ -564,6 +567,7 @@ class CarbonNitrogenCycleModel:
         CflxLU_s = self.calc_lu.calculate_CflxLU_series(
             CemsLUnet_s=CemsLUnet_s,
             CemsLUgrs_s=CemsLUgrs_s,
+            time_axis=time_axis,
         )
         CflxLUrgr_s = CflxLU_s["CflxLUrgr"]
         CflxLUgrs_s = CflxLU_s["CflxLUgrs"]
@@ -633,6 +637,7 @@ class CarbonNitrogenCycleModel:
                 NemsLUnet_s=NemsLUnet_s,
                 NemsLUgrs_s=NemsLUgrs_s,
                 NemsLUmin_s=NemsLUmin_s,
+                time_axis=time_axis,
             )
             NflxLUgrs_s = NflxLU_s["NflxLUgrs"]
             NflxLUmin_s = NflxLU_s["NflxLUmin"]
@@ -714,7 +719,7 @@ class CarbonNitrogenCycleModel:
         dT
             Temperature anomaly [K]. Used for temperature effects on all processes.
         CO2
-            Atmospheric CO2 concentration [ppm]. Used for CO2 fertilization effect.
+            Atmospheric CO₂ concentration [ppm]. Used for CO₂ fertilization effect.
         CflxLUrgr
             Land use regrowth carbon flux [GtC/yr]. Adds to baseline NPP.
         cumsum_CflxLUrgr
@@ -736,7 +741,7 @@ class CarbonNitrogenCycleModel:
 
             **Carbon Fluxes:**
 
-            - CflxNPP:  Actual (nitrogen-limited) net primary production [GtC/yr]
+            - CflxNPP: Actual (nitrogen-limited) net primary production [GtC/yr]
             - CflxLPR: Actual (nitrogen-limited) litter production respiration [GtC/yr]
             - CflxNPPpot: Potential (non-nitrogen-limited) NPP [GtC/yr]
             - CflxLPRpot: Potential (non-nitrogen-limited) LPR [GtC/yr]
@@ -748,7 +753,7 @@ class CarbonNitrogenCycleModel:
 
             **Nitrogen Budget:**
 
-            - NflxPUreq:  Nitrogen required for plant uptake [GtN/yr]
+            - NflxPUreq: Nitrogen required for plant uptake [GtN/yr]
             - NflxPUavail: Nitrogen available for plant uptake [GtN/yr]
             - NflxPUavail_netMIN: N available from net mineralization [GtN/yr]
             - NflxPUdef: Nitrogen deficit for plant uptake [GtN/yr]
@@ -910,11 +915,11 @@ class CarbonNitrogenCycleModel:
         Calculate equilibrium initial state for the model.
 
         This method calculates the equilibrium pool sizes and turnover times that
-        would result from steady forcing conditions. It is typically used to initialize
+        would result from steady input conditions. It is typically used to initialize
         the model in equilibrium with preindustrial conditions before running transient
         simulations.
 
-        The method uses the first timestep values of all forcing to calculate steady-state
+        The method uses the first timestep values of all input series to calculate steady-state
         fluxes, then uses inverse turnover calculations to determine equilibrium pool
         sizes and turnover times.
 
@@ -923,7 +928,7 @@ class CarbonNitrogenCycleModel:
         dT_s
             Time series of temperature anomaly [K].  Only first value used.
         CO2_s
-            Time series of atmospheric CO2 concentration [ppm]. Only first value used.
+            Time series of atmospheric CO₂ concentration [ppm]. Only first value used.
         CemsLUnet_s
             Time series of net land use carbon emissions [GtC/yr]. Only first value used.
         CemsLUgrs_s
@@ -947,7 +952,7 @@ class CarbonNitrogenCycleModel:
             **Carbon Equilibrium:**
 
             - CflxLP_inverse, CflxLD_inverse, CflxSR_inverse: Turnover fluxes
-            - CflxLP2L_inverse, CflxLP2S_inverse:  Litter production partitioning
+            - CflxLP2L_inverse, CflxLP2S_inverse: Litter production partitioning
             - CflxLD2S_inverse, CflxLD2A_inverse: Litter decomposition partitioning
             - tau_CplsP_inverse, tau_CplsL_inverse, tau_CplsS_inverse: Turnover times
 
@@ -966,7 +971,7 @@ class CarbonNitrogenCycleModel:
         At equilibrium, pool sizes are constant (dC/dt = 0, dN/dt = 0), which means:
 
         - Inputs = Outputs for each pool
-        - Fluxes are determined by forcing conditions
+        - Fluxes are determined by input conditions
         - Pool sizes and turnover times are mutually consistent
 
         **Usage:**
@@ -979,7 +984,7 @@ class CarbonNitrogenCycleModel:
             eqm = model.calculate_mdl_eqm0(
                 dT_s=preindustrial_temp,
                 CO2_s=preindustrial_CO2,
-                # ... other preindustrial forcing ...
+                # ... other preindustrial inputs ...
             )
 
             # Set initial pool sizes (if desired)
@@ -1108,7 +1113,7 @@ class CarbonNitrogenCycleModel:
 
         **Environmental Effects:**
 
-        All environmental effects are calculated at the specified conditions (dT, CO2, etc.)
+        All environmental effects are calculated at the specified conditions (dT, CO₂, etc.)
         and applied to determine equilibrium turnover rates.
 
         See Also
@@ -1285,8 +1290,8 @@ class CarbonNitrogenCycleModel:
             **Turnover Fluxes:**
 
             - CflxLP_inverse: Litter production [GtC/yr]
-            - CflxLD_inverse:  Litter decomposition [GtC/yr]
-            - CflxSR_inverse:  Soil respiration [GtC/yr]
+            - CflxLD_inverse: Litter decomposition [GtC/yr]
+            - CflxSR_inverse: Soil respiration [GtC/yr]
 
             **Partitioned Fluxes:**
 
@@ -1296,7 +1301,7 @@ class CarbonNitrogenCycleModel:
             **Equilibrium Turnover Times:**
 
             - tau_CplsP_inverse: Plant pool turnover time [yr]
-            - tau_CplsL_inverse:  Litter pool turnover time [yr]
+            - tau_CplsL_inverse: Litter pool turnover time [yr]
             - tau_CplsS_inverse: Soil pool turnover time [yr]
 
         Notes
@@ -1471,7 +1476,7 @@ class CarbonNitrogenCycleModel:
             - NflxLP_inverse, NflxLD_inverse, NflxSR_inverse, NflxLS_inverse
 
             **Partitioned Fluxes:**
-            - NflxLP2L_inverse, NflxLP2S_inverse:  LP allocation
+            - NflxLP2L_inverse, NflxLP2S_inverse: LP allocation
             - NflxLD2S_inverse, NflxLD2M_inverse: LD allocation
 
             **Equilibrium Turnover Times:**

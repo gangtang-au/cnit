@@ -1,6 +1,5 @@
-"""Run calibrated CMIP6 cases against a selected CNit source tree."""
+"""Run default and calibrated CMIP6 cases against a CNit source tree."""
 
-import csv
 import json
 from pathlib import Path
 import sys
@@ -10,14 +9,12 @@ import xarray as xr
 
 
 source_path = Path(sys.argv[1])
-parameter_path = Path(sys.argv[2])
-forcing_path = Path(sys.argv[3])
-config_dir = Path(sys.argv[4])
-output_path = Path(sys.argv[5])
-revision = sys.argv[6]
+forcing_path = Path(sys.argv[2])
+config_path = Path(sys.argv[3])
+output_path = Path(sys.argv[4])
+truncate_tau_rgr = len(sys.argv) > 5 and sys.argv[5] == "truncate_tau_rgr"
 sys.path.insert(0, str(source_path))
 
-from cnit.configs.model_config import CarbonNitrogenCycleModelConfig  # noqa: E402
 from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModel  # noqa: E402
 from cnit.utils.units import Q  # noqa: E402
 
@@ -36,15 +33,7 @@ FORCING_UNITS = {
 EXPERIMENTS = ("1pctCO2", "hist_ssp585")
 
 
-def _load_model(model_name):
-    if revision == "current":
-        config = CarbonNitrogenCycleModelConfig.from_parameter_csv(
-            parameter_path,
-            model_name=model_name,
-        )
-        return CarbonNitrogenCycleModel.from_config(config)
-
-    values = json.loads((config_dir / f"{model_name}.json").read_text())
+def _load_model(values):
     params = {
         name: (
             Q(value["magnitude"], value["unit"])
@@ -53,6 +42,8 @@ def _load_model(model_name):
         )
         for name, value in values.items()
     }
+    if truncate_tau_rgr:
+        params["tau_rgr"] = Q(int(params["tau_rgr"].to("yr").m), "yr")
     return CarbonNitrogenCycleModel.from_dict(params)
 
 
@@ -65,14 +56,13 @@ def _experiment_forcing(forcing, model_name, experiment_name):
     return forcing.sel(experiment=experiment_name, model=model_name)
 
 
-with parameter_path.open(newline="", encoding="utf-8") as parameter_file:
-    model_names = next(csv.reader(parameter_file))[2:]
-
+model_configs = json.loads(config_path.read_text())
 forcing = xr.open_dataset(forcing_path)
 outputs = {}
 try:
-    for model_name in model_names:
-        model = _load_model(model_name)
+    for config_name, config_values in model_configs.items():
+        model = _load_model(config_values)
+        model_name = "ACCESS-ESM1-5" if config_name == "default" else config_name
         for experiment_name in EXPERIMENTS:
             experiment_forcing = _experiment_forcing(
                 forcing,
@@ -87,7 +77,7 @@ try:
                 for name, unit in FORCING_UNITS.items()
             }
             result = model.run(time_axis=Q(time, "yr"), **run_inputs)
-            prefix = f"{model_name}::{experiment_name}::"
+            prefix = f"{config_name}::{experiment_name}::"
             for variable, data_array in result.data_vars.items():
                 outputs[f"{prefix}{variable}"] = data_array.values
             outputs[f"{prefix}__time"] = time

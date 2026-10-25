@@ -20,9 +20,12 @@ use change), and nitrogen limitation on carbon uptake.
 
 * Explicit carbon-nitrogen coupling with nitrogen limitation feedbacks
 * Four nitrogen pools (plant, litter, soil, mineral) and three carbon pools
-* Environmental modifiers:  CO₂, temperature, land use, nitrogen availability
+* Environmental modifiers: CO₂, temperature, land use, nitrogen availability
 * Separation of deforestation and afforestation for CDR scenarios
-* Annual timestep with sub-annual process representation
+* Annual timesteps use flux-allocation and pool-turnover fractions to represent
+  within-year transfers
+* Evenly spaced subannual timesteps are also supported; allocation fractions apply
+  within each timestep
 * Computationally efficient for integrated assessment modeling
 
 Quick Navigation
@@ -31,28 +34,37 @@ Quick Navigation
 **🔬 For Scientists**
    Understand the model's scientific basis, processes, and when to use CNit.
 
-   → Start with :doc:`overview`, then see published papers in References.
+   → See :doc:`CNit Model Overview <overview>` for the model’s scientific basis and :doc:`References <project_info/references>` for recommended publications.
+
+   → See :doc:`CNit Physics API <api/cnit.physics>` for detailed scientific process descriptions and parameterizations.
 
 **📚 For Model Users**
    Install CNit and run your first simulation.
 
    → See :doc:`quickstart` for installation and basic usage.
 
-   → See :doc:`example` for complete CMIP6 ESM and TRENDY DGVM notebooks with code and outputs.
+   → See :doc:`CMIP6 ESM emulation <examples/cmip6-esm>` and
+   :doc:`TRENDY DGVM emulation <examples/trendy-dgvm>` for complete workflows,
+   code, and outputs.
+
+   → See :doc:`CNit Physics API <api/cnit.physics>` for detailed process equations and parameterizations.
+
+   → See :doc:`api/cnit.configs` for model parameters and experiment inputs.
 
 **🛠️ For Developers**
    Contribute to CNit development.
 
-   → See :doc:`api/cnit.physics` for implementation details with scientific descriptions.
+   → See :doc:`api/cnit.physics` for implementation details.
 
    → See :doc:`contributing` for development setup and coding guidelines.
 
-Understanding CNit
-------------------
+Model Overview
+--------------
 
-Learn about the model's structure, processes, and scientific basis before installing.
+Learn about CNit’s structure, processes, scientific basis, and intended use.
 
 .. toctree::
+   :caption: Model overview
    :maxdepth: 2
 
    overview
@@ -60,88 +72,64 @@ Learn about the model's structure, processes, and scientific basis before instal
 Getting Started
 ---------------
 
-New to CNit? Start here to understand the model and run your first simulation.
+Install CNit, then follow the basic usage guide to set up and run a simulation.
 
 .. toctree::
+   :caption: Getting started
    :maxdepth: 2
 
    quickstart
 
-User Guide
-----------
-
-Learn how to use CNit effectively with examples and best practices.
-
-.. toctree::
-   :maxdepth: 2
-
-   example
-
 API Reference
 -------------
 
-Complete documentation of all classes, methods, and modules.  The API documentation
-includes detailed scientific descriptions, equations, and implementation details.
+Look up detailed process parameterizations, model calculations, configuration
+parameters, and class methods.
 
 .. toctree::
+   :caption: API reference
    :maxdepth: 2
 
    api/cnit.physics
+   api/cnit.configs
+
+Emulation Workflows
+-------------------
+
+Explore complete CMIP6 ESM and TRENDY DGVM emulation workflows, with notebooks and
+model outputs.
+
+.. toctree::
+   :caption: Emulation Workflows
+   :maxdepth: 2
+
+   examples/cmip6-esm
+   examples/trendy-dgvm
 
 Development
 -----------
 
-..  toctree::
+Read the release history and find guidance for contributing to CNit.
+
+.. toctree::
+   :caption: Development
    :maxdepth: 2
 
-   changelog
+   development/changelog
    contributing
 
-Contact
--------
 
-CNit is developed and maintained by **Gang Tang**.
+Project Information
+-------------------
 
-**Questions or feedback?**
+Find maintainer contact details, licensing and citation information, and related projects.
 
-* Open an issue:  `GitHub Issues <https://github.com/gangtang-au/cnit/issues>`_
-* Email: gang.tang.au@gmail.com
+.. toctree::
+   :caption: Project information
+   :maxdepth: 2
 
-Interested in contributing or collaboration?  Please get in touch!
-
-License & Citation
-------------------
-
-CNit is released under the **BSD 3-Clause License**.
-
-Copyright (c) 2026, Gang Tang and contributors.
-
-See the `LICENSE file <https://github.com/gangtang-au/cnit/blob/main/LICENSE>`_
-for full details.
-
-**If you use CNit in your research, please cite our papers.**
-
-* Tang, G., Nicholls, Z., Norton, A., Zaehle, S., and Meinshausen, M.: Synthesizing
-  global carbon–nitrogen coupling effects – the MAGICC coupled carbon–nitrogen
-  cycle model v1.0, Geosci. Model Dev., 18, 2193–2230,
-  https://doi.org/10.5194/gmd-18-2193-2025, 2025.
-
-* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2026).
-  Understanding the drivers of carbon–nitrogen cycle variability in CMIP6 ESMs
-  with MAGICC CNit v2.0: Model and calibration updates. Journal of Advances in
-  Modeling Earth Systems, 18, e2025MS005270. https://doi.org/10.1029/2025MS005270
-
-Related Projects
-----------------
-
-MAGICC - Model for the Assessment of Greenhouse Gas Induced Climate Change
-
-* https://magicc.org/
-* https://gitlab.com/magicc/magicc
-
-Indices and Tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   project_info/references
+   project_info/calibration-data
+   project_info/license
+   project_info/related-projects
+   project_info/contact

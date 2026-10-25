@@ -8,16 +8,6 @@ coupled carbon and nitrogen cycles in terrestrial ecosystems.
 from cnit._version import __version__
 from cnit.utils.units import Q
 
-# Suppress expected warnings
-import warnings
-
-try:
-    from pint import UnitStrippedWarning
-
-    warnings.filterwarnings("ignore", category=UnitStrippedWarning)
-except ImportError:
-    pass
-
 # Core model classes
 from cnit.physics.carbon_nitrogen_cycle import (
     CarbonNitrogenCycleModel,

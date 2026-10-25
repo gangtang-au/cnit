@@ -1,0 +1,18 @@
+
+/* Left-align table captions on the configuration API page. */
+/* The Read the Docs theme centers captions with a more specific selector. */
+.rst-content table.docutils.config-table > caption {
+    text-align: left;
+}
+
+/* Keep section headings as the page labels; retain toctree captions in the sidebar. */
+section#getting-started > .toctree-wrapper > p.caption,
+section#api-reference > .toctree-wrapper > p.caption,
+section#emulation-workflows > .toctree-wrapper > p.caption,
+section#model-overview > .toctree-wrapper > p.caption,
+section#development > .toctree-wrapper > p.caption {
+    display: none;
+}
+section#project-information > .toctree-wrapper > p.caption {
+    display: none;
+}

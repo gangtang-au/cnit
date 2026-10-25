@@ -1,8 +1,8 @@
 import csv
-
-from dataclasses import fields
 from pathlib import Path
 
+from attrs import fields
+import pint
 import pytest
 
 from cnit.configs.model_config import CarbonNitrogenCycleModelConfig
@@ -55,7 +55,7 @@ def test_explicit_model_defaults_match_calculator_defaults():
     config = CarbonNitrogenCycleModelConfig()
     defaults = _calculator_defaults()
 
-    for item in fields(config):
+    for item in fields(type(config)):
         value = getattr(config, item.name)
         if item.name in {"switch_Cpls", "switch_Npls", "switch_N"}:
             continue
@@ -88,6 +88,34 @@ def test_parameter_csv_requires_explicit_file_and_model_name():
         CarbonNitrogenCycleModelConfig.from_parameter_csv("calibration.csv")
 
 
+@pytest.mark.parametrize(
+    "header, missing_column",
+    [
+        ("unit,example\n", "parameter"),
+        ("parameter,example\n", "unit"),
+    ],
+)
+def test_parameter_csv_requires_parameter_and_unit_columns(
+    tmp_path, header, missing_column
+):
+    csv_path = tmp_path / "missing_column.csv"
+    csv_path.write_text(header, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=f"missing required column.*{missing_column}"):
+        CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
+
+
+def test_parameter_csv_rejects_duplicate_parameter_rows(tmp_path):
+    csv_path = tmp_path / "duplicate_parameter.csv"
+    csv_path.write_text(
+        "parameter,unit,example\nNPP0,GtC/yr,50\nNPP0,GtC/yr,60\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="NPP0.*more than once"):
+        CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
+
+
 def test_missing_nitrogen_pool_parameter_freezes_nitrogen_without_changing_switch(
     tmp_path,
 ):
@@ -108,6 +136,11 @@ def test_config_can_be_created_from_parameter_dict():
 
     assert config.NPP0 == Q(42, "GtC/yr")
     assert config.CplsP0 == Q(400, "GtC")
+
+
+def test_model_config_validates_parameter_units_in_field_validator():
+    with pytest.raises(pint.errors.DimensionalityError):
+        CarbonNitrogenCycleModelConfig.from_dict({"tau_CplsP": Q(10, "GtC")})
 
 
 def test_from_config_does_not_delegate_to_from_dict(monkeypatch):
@@ -166,3 +199,48 @@ def test_carbon_pool_switch_uses_initial_plant_pool(tmp_path):
     config = CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
 
     assert config.switch_Cpls == [0, 0, 0]
+
+
+@pytest.mark.parametrize(
+    "name, value",
+    [
+        ("frc_rgr", Q(1.01, "1")),
+        ("frc_nLSgas", Q(-0.01, "1")),
+        ("frc_NPP2P", Q(float("nan"), "1")),
+    ],
+)
+def test_config_rejects_invalid_fraction_values(name, value):
+    with pytest.raises(ValueError, match=name):
+        CarbonNitrogenCycleModelConfig.from_dict({name: value})
+
+
+@pytest.mark.parametrize(
+    "parameters, message",
+    [
+        ({"frc_NPP2P": Q(0.7, "1"), "frc_NPP2L": Q(0.4, "1")}, "frc_NPP2P"),
+        ({"frc_PU2P": Q(0.8, "1"), "frc_PU2L": Q(0.3, "1")}, "frc_PU2P"),
+    ],
+)
+def test_config_rejects_fraction_partitions_above_one(parameters, message):
+    with pytest.raises(ValueError, match=message):
+        CarbonNitrogenCycleModelConfig.from_dict(parameters)
+
+
+@pytest.mark.parametrize(
+    "name, value",
+    [
+        ("tau_rgr", Q(0, "yr")),
+        ("tau_CplsP", Q(-1, "yr")),
+        ("tau_NplsM", Q(float("inf"), "yr")),
+    ],
+)
+def test_config_rejects_nonpositive_or_nonfinite_turnover_times(name, value):
+    with pytest.raises(ValueError, match=name):
+        CarbonNitrogenCycleModelConfig.from_dict({name: value})
+
+
+@pytest.mark.parametrize("name", ["CplsP0", "NplsM0"])
+def test_config_rejects_negative_initial_pool_sizes(name):
+    unit = "GtC" if name.startswith("C") else "GtN"
+    with pytest.raises(ValueError, match=name):
+        CarbonNitrogenCycleModelConfig.from_dict({name: Q(-1, unit)})

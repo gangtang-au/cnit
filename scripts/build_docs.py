@@ -22,7 +22,11 @@ def _validate_notebook_references(notebooks: list[Path]) -> None:
     referenced = set()
     for rst_file in DOCS_DIR.rglob("*.rst"):
         content = rst_file.read_text(encoding="utf-8")
-        referenced.update(re.findall(r"(?m)^\s{3,}(CNit_[\w-]+)\s*$", content))
+        notebook_refs = re.finditer(
+            r"(?m)^\s{3,}(?:[^<>\n]*<[^<>]*?(CNit_[\w-]+)>|(CNit_[\w-]+))\s*$",
+            content,
+        )
+        referenced.update(match.group(1) or match.group(2) for match in notebook_refs)
 
     missing = referenced - available
     unused = available - referenced

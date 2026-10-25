@@ -6,7 +6,7 @@ What is CNit?
 
 CNit (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
 terrestrial biogeochemistry model that simulates the coupled dynamics of carbon and
-nitrogen cycles.  It is designed as the land component of MAGICC (Model for the Assessment
+nitrogen cycles. It is designed as the land component of MAGICC (Model for the Assessment
 of Greenhouse Gas Induced Climate Change), providing a computationally efficient
 representation of terrestrial carbon-nitrogen feedbacks for integrated assessment and
 climate projection studies.
@@ -22,7 +22,7 @@ CNit answers questions about terrestrial biogeochemistry in the climate system:
 Conceptual Framework
 --------------------
 
-..   image:: _static/CNit_v2.png
+.. image:: _static/CNit_v2.png
    :alt: CNit conceptual diagram
    :align: center
    :width: 600px
@@ -31,8 +31,10 @@ CNit represents the terrestrial biosphere as interacting carbon and nitrogen poo
 connected by process-based fluxes. The model tracks both elements through their coupled
 cycles, with explicit representation of nitrogen constraints on carbon uptake.
 
-The model operates on annual timesteps, while capturing sub-annual processes through
-empirically-derived allocation fractions that represent rapid cycling within each year.
+CNit supports annual and evenly spaced subannual time axes; the default examples use
+annual timesteps. In the annual case, flux-allocation and pool-turnover fractions
+represent transfers within the year. If a subannual time axis is used, the same fractions
+apply within each model timestep.
 
 Model Structure
 ---------------
@@ -71,7 +73,7 @@ Carbon Processes
 ~~~~~~~~~~~~~~~~
 
 **Net Primary Production (NPP)**
-   Carbon fixation by plants through photosynthesis.  Modified by:
+   Carbon fixation by plants through photosynthesis. Modified by:
 
    - CO₂ fertilization effect
    - Temperature effect
@@ -79,7 +81,7 @@ Carbon Processes
    - Land use effect
 
 **Litter Production Respiration (LPR)**
-   Heterotrophic respiration associated with plant tissue fast turnover within one year.
+   Heterotrophic respiration associated with plant tissue fast turnover within one model timestep.
 
 **Carbon Turnover**
    - Litter production (cLP): Plant → Litter transfer
@@ -89,7 +91,7 @@ Carbon Processes
 **Land Use Change**
    - Deforestation (cLUdfst): Carbon loss from land clearing
    - Afforestation (cLUafst): Carbon gain from reforestation
-   - Regrowth (cLUrgr): Natural recovery after deforestation
+   - Regrowth (cLUrgr): Carbon uptake as vegetation returns after deforestation
 
 Nitrogen Processes
 ~~~~~~~~~~~~~~~~~~
@@ -120,14 +122,14 @@ Carbon-Nitrogen Coupling
 The key feature of CNit is bidirectional coupling between C and N cycles:
 
 **Nitrogen Limitation of Carbon Uptake**
-   Nitrogen availability constrains NPP.  The model calculates nitrogen deficit:
+   Nitrogen availability constrains NPP. The model calculates nitrogen deficit:
 
-   ..  math::
+   .. math::
 
       PUdef = PUreq - PUavail
 
    where PUreq is based on potential NPP and stoichiometric requirements, and PUavail
-   comes from mineralization and external inputs.  This deficit applies an exponential
+   comes from mineralization and external inputs. This deficit applies an exponential
    limitation effect on actual NPP.
 
 **Carbon-Driven Nitrogen Demand**
@@ -137,13 +139,20 @@ The key feature of CNit is bidirectional coupling between C and N cycles:
 Key Model Features
 ------------------
 
-Annual Timestep with Allocation Fractions
+Time Resolution and Allocation Fractions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The model uses annual timesteps for computational efficiency. Sub-annual processes are
-represented through allocation fractions that capture carbon and nitrogen cascading
-through multiple pools within one year (e.g., carbon fixed by plants that enters litter
-through turnover and then enters soil through decomposition within the same year).
+CNit supports annual and evenly spaced subannual time axes; the default examples use
+annual timesteps. Flux-allocation and pool-turnover fractions apply within each model
+timestep, representing within-year transfers in the annual case. The supplied calibration
+files are based on an annual timescale; subannual applications require calibration at the
+corresponding timescale. The model represents post-deforestation regrowth and afforestation
+decay over their configured timescales.
+
+For example, if NPP is a constant 50 GtC/yr during a one-year timestep and
+``frc_NPP2P = 0.6``, then 60% of the NPP flux, or 30 GtC, is allocated to the plant pool
+over that year. This is the NPP contribution to the pool; other incoming and outgoing
+fluxes also affect its final size.
 
 Explicit Deforestation-Afforestation Separation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,7 +161,7 @@ CNit separates gross land use emissions into:
 
 - **Deforestation (LUdfst)**: Always positive, carbon loss
 - **Afforestation (LUafst)**: Always positive, carbon gain
-- **Regrowth (LUrgr)**: Natural recovery following deforestation
+- **Regrowth (LUrgr)**: Carbon uptake as vegetation returns after deforestation
 - **Afforestation decay (LUafst_decay)**: Gradual carbon loss from afforested areas
 
 This separation is critical for carbon dioxide removal (CDR) scenarios where afforestation
@@ -214,7 +223,8 @@ CNit is Designed For:
 
 ✅ **Global-scale simulations** - Parameterized for global terrestrial biosphere
 
-✅ **Century-timescale projections** - Annual timesteps suitable for multi-century simulations
+✅ **Century-timescale projections** - Annual timesteps in the default examples; evenly
+   spaced subannual time axes are also accepted
 
 ✅ **Integrated assessment modeling** - Computational efficiency enables large ensemble studies
 
@@ -229,11 +239,13 @@ Use Caution When:
 
 ⚠️ **Individual site simulations** - Not parameterized for site-specific characteristics
 
-⚠️ **Sub-annual dynamics needed** - Annual timestep cannot resolve seasonal cycles
-
 ⚠️ **Spatial heterogeneity critical** - Pools are well-mixed, no spatial structure
 
 ⚠️ **Extreme events matter** - Fires, storms, pests not explicitly represented
+
+⚠️ **Subannual dynamics** - CNit supports subannual time steps, but representing
+   subannual dynamics requires calibration at the corresponding time scale. The
+   calibration files provided with CNit are currently based on an annual time scale.
 
 ⚠️ **Other nutrients limit** - Only carbon and nitrogen are modeled
 
@@ -242,16 +254,17 @@ Model Assumptions
 
 Key assumptions in CNit:
 
-1. **Well-mixed pools** - No spatial heterogeneity or depth structure within pools.   All
+1. **Well-mixed pools** - No spatial heterogeneity or depth structure within pools. All
    carbon and nitrogen in each pool is assumed to be uniformly mixed at the global scale.
 
-2. **Annual timestep** - Sub-annual dynamics (seasonal cycles, daily variations) are not
-   resolved.  Rapid within-year processes are represented through allocation fractions that
-   capture cascading through multiple pools within one year.
+2. **Time resolution** - Annual timesteps are used in the default examples; evenly spaced
+   subannual time axes are also accepted. Allocation fractions partition incoming fluxes
+   and describe turnover transfers among pools within each timestep. Land-use emissions
+   are treated as constant over their corresponding intervals.
 
 3. **First-order kinetics with environmental modifiers** - All turnover processes follow:
 
-   ..  math::
+   .. math::
 
       Flux = \frac{Pool\ Size}{\tau} \times \prod Environmental\ Effects
 
@@ -259,17 +272,18 @@ Key assumptions in CNit:
    modifiers (temperature, nitrogen, land use).
 
 4. **Constant baseline turnover times** - Turnover times (τ) are fixed parameters that do
-   not vary with environmental conditions or ecosystem state.  Environmental responses are
+   not vary with environmental conditions or ecosystem state. Environmental responses are
    captured through effect modifiers rather than dynamically changing turnover times.
 
-5. **Prescribed land use emissions** - Land use change is represented through prescribed
-   emission fluxes (deforestation, afforestation, regrowth) provided as model inputs rather
-   than computed from explicit simulation of land cover transitions, area changes, and
-   ecosystem carbon/nitrogen densities.
+5. **Prescribed land-use emissions** - CNit takes net or gross land-use emissions as
+   inputs and derives the associated deforestation, afforestation, regrowth, and
+   afforestation-decay fluxes. Direct mineral-nitrogen land-use emissions are supplied
+   separately. CNit does not simulate land-cover transitions, affected areas, or
+   ecosystem carbon and nitrogen densities.
 
 6. **Fixed stoichiometric parameters** - Carbon-to-nitrogen ratios for plant uptake
    requirements (C:N ratios) are fixed parameters rather than dynamically varying with
-   environmental conditions.   However, through carbon-nitrogen coupling, the model allows
+   environmental conditions. However, through carbon-nitrogen coupling, the model allows
    for emergent variability in ecosystem C:N ratios as nitrogen availability constrains
    carbon uptake and decomposition rates vary with substrate stoichiometry.
 
@@ -287,25 +301,18 @@ Next Steps
 **Understand the Science:**
    See the API documentation at :doc:`api/cnit.physics` for detailed equations and scientific
    descriptions in the docstrings. For complete theoretical background and validation,
-   see the published papers listed in the References section below.
+   see the publications on the :doc:`References <project_info/references>` page.
 
 **Start Using CNit:**
    Continue to :doc:`quickstart` to install CNit and run your first simulation.
 
 **Browse Examples:**
-   See :doc:`example` for common use cases and analysis workflows.
+   See :doc:`CMIP6 ESM emulation <examples/cmip6-esm>` and
+   :doc:`TRENDY DGVM emulation <examples/trendy-dgvm>` for common use cases and
+   analysis workflows.
 
-References
-----------
+Further Reading
+---------------
 
-**CNit Model Description:**
-
-* Tang, G., Nicholls, Z., Norton, A., Zaehle, S., and Meinshausen, M.: Synthesizing
-  global carbon–nitrogen coupling effects – the MAGICC coupled carbon–nitrogen cycle
-  model v1.0, Geosci. Model Dev., 18, 2193–2230,
-  https://doi.org/10.5194/gmd-18-2193-2025, 2025.
-
-* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2026).
-  Understanding the drivers of carbon–nitrogen cycle variability in CMIP6 ESMs
-  with MAGICC CNit v2.0: Model and calibration updates. Journal of Advances in
-  Modeling Earth Systems, 18, e2025MS005270. https://doi.org/10.1029/2025MS005270
+See the :doc:`References <project_info/references>` page for publications describing CNit
+and its applications.

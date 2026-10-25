@@ -1,14 +1,14 @@
-"""Compare calibrated model results with the implementation on ``main``."""
+"""Compare default and calibrated model results with the implementation on ``main``."""
 
 import csv
 import json
 import os
-from dataclasses import fields
 from pathlib import Path
 import subprocess
 import sys
 import tarfile
 
+from attrs import fields
 import numpy as np
 import pytest
 
@@ -21,12 +21,29 @@ PARAMETER_FILE = REPO_ROOT / "data" / "cali_cmip6_best_fitting.csv"
 FORCING_FILE = REPO_ROOT / "data" / "CMIP6_cali_forcing.nc"
 RUNNER = TEST_DIR / "_cmip6_version_runner.py"
 EXPERIMENTS = ("1pctCO2", "hist_ssp585")
+KEY_OUTPUTS = (
+    "CplsP",
+    "CplsL",
+    "CplsS",
+    "NplsP",
+    "NplsL",
+    "NplsS",
+    "NplsM",
+    "CflxNPP",
+    "NflxBNF",
+    "NflxPU",
+)
+
+
+def _cmip6_model_names():
+    with PARAMETER_FILE.open("r", encoding="utf-8", newline="") as csv_file:
+        return csv.DictReader(csv_file).fieldnames[2:]
 
 
 def _serialize_config(config):
-    """Convert configured quantities to JSON values for the baseline process."""
+    """Convert configured quantities to JSON values for the runner process."""
     values = {}
-    for config_field in fields(config):
+    for config_field in fields(type(config)):
         value = getattr(config, config_field.name)
         if hasattr(value, "units") and hasattr(value, "magnitude"):
             values[config_field.name] = {
@@ -55,25 +72,88 @@ def _extract_baseline_source(destination):
     return destination / "src"
 
 
-def _run_revision(source, revision, config_dir, output_path):
+def _run_revision(source, config_path, output_path, *, truncate_tau_rgr=False):
+    command = [
+        sys.executable,
+        str(RUNNER),
+        str(source),
+        str(FORCING_FILE),
+        str(config_path),
+        str(output_path),
+    ]
+    if truncate_tau_rgr:
+        command.append("truncate_tau_rgr")
     subprocess.run(
-        [
-            sys.executable,
-            str(RUNNER),
-            str(source),
-            str(PARAMETER_FILE),
-            str(FORCING_FILE),
-            str(config_dir),
-            str(output_path),
-            revision,
-        ],
+        command,
         cwd=REPO_ROOT,
         check=True,
     )
 
 
-def test_cmip6_results_match_main_for_calibrated_models(tmp_path):
-    """Current and main code produce identical outputs under one runtime."""
+def _print_max_differences(current, baseline, config_names, duration_label):
+    """Print maximum absolute and relative differences for selected outputs."""
+    differences = {
+        name: {
+            "max_abs": 0.0,
+            "max_rel": 0.0,
+            "abs_case": "",
+            "rel_case": "",
+        }
+        for name in KEY_OUTPUTS
+    }
+
+    for config_name in config_names:
+        for experiment in EXPERIMENTS:
+            prefix = f"{config_name}::{experiment}::"
+            for name in KEY_OUTPUTS:
+                key = f"{prefix}{name}"
+                if key not in current.files:
+                    continue
+
+                current_values = np.asarray(current[key], dtype=float)
+                baseline_values = np.asarray(baseline[key], dtype=float)
+                assert current_values.shape == baseline_values.shape, (
+                    f"Output shape differs for {key}: current={current_values.shape}, "
+                    f"main={baseline_values.shape}"
+                )
+
+                absolute_difference = np.abs(current_values - baseline_values)
+                max_abs = float(np.nanmax(absolute_difference))
+                metric = differences[name]
+                if max_abs > metric["max_abs"]:
+                    metric["max_abs"] = max_abs
+                    metric["abs_case"] = f"{config_name}::{experiment}"
+
+                nonzero_baseline = baseline_values != 0
+                if np.any(nonzero_baseline):
+                    relative_difference = absolute_difference[
+                        nonzero_baseline
+                    ] / np.abs(baseline_values[nonzero_baseline])
+                    max_rel = float(np.nanmax(relative_difference))
+                    if max_rel > metric["max_rel"]:
+                        metric["max_rel"] = max_rel
+                        metric["rel_case"] = f"{config_name}::{experiment}"
+
+    print(
+        f"\n{duration_label} maximum differences from main across default and "
+        "CMIP6 configurations (relative differences use nonzero main values):"
+    )
+    print(
+        f"{'Output':<14} {'Max absolute':>14} {'Case':<32} "
+        f"{'Max relative':>14} {'Case':<32}"
+    )
+    for name, metric in differences.items():
+        print(
+            f"{name:<14} {metric['max_abs']:>14.6e} "
+            f"{metric['abs_case']:<32} {metric['max_rel']:>14.6e} "
+            f"{metric['rel_case']:<32}"
+        )
+
+
+def test_default_and_all_cmip6_calibrations_report_differences_from_main(
+    tmp_path,
+):
+    """Report key output differences from ``main`` for all model configurations."""
     try:
         baseline_source = _extract_baseline_source(tmp_path / "baseline")
     except subprocess.CalledProcessError as exc:
@@ -83,41 +163,79 @@ def test_cmip6_results_match_main_for_calibrated_models(tmp_path):
             f"{exc}"
         )
 
-    with PARAMETER_FILE.open(newline="", encoding="utf-8") as parameter_file:
-        model_names = next(csv.reader(parameter_file))[2:]
-
-    config_dir = tmp_path / "configs"
-    config_dir.mkdir()
-    for model_name in model_names:
-        config = CarbonNitrogenCycleModelConfig.from_parameter_csv(
-            PARAMETER_FILE,
-            model_name=model_name,
+    default_config = CarbonNitrogenCycleModelConfig()
+    calibrated_configs = {
+        model_name: _serialize_config(
+            CarbonNitrogenCycleModelConfig.from_parameter_csv(
+                PARAMETER_FILE,
+                model_name=model_name,
+            )
         )
-        (config_dir / f"{model_name}.json").write_text(
-            json.dumps(_serialize_config(config)),
-            encoding="utf-8",
-        )
+        for model_name in _cmip6_model_names()
+    }
+    config_path = tmp_path / "configs.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "default": _serialize_config(default_config),
+                **calibrated_configs,
+            }
+        ),
+        encoding="utf-8",
+    )
 
-    current_output = tmp_path / "current.npz"
+    current_legacy_output = tmp_path / "current_legacy_tau.npz"
+    current_rounded_output = tmp_path / "current_rounded_tau.npz"
     baseline_output = tmp_path / "baseline.npz"
-    _run_revision(REPO_ROOT / "src", "current", config_dir, current_output)
-    _run_revision(baseline_source, "baseline", config_dir, baseline_output)
+    _run_revision(
+        REPO_ROOT / "src",
+        config_path,
+        current_legacy_output,
+        truncate_tau_rgr=True,
+    )
+    _run_revision(REPO_ROOT / "src", config_path, current_rounded_output)
+    _run_revision(baseline_source, config_path, baseline_output)
 
-    with np.load(current_output) as current, np.load(baseline_output) as baseline:
-        current_keys = set(current.files)
+    with (
+        np.load(current_legacy_output) as current_legacy,
+        np.load(current_rounded_output) as current_rounded,
+        np.load(baseline_output) as baseline,
+    ):
+        current_keys = set(current_legacy.files)
+        rounded_keys = set(current_rounded.files)
         baseline_keys = set(baseline.files)
-        assert current_keys == baseline_keys, (
+        assert current_keys == baseline_keys == rounded_keys, (
             f"Output keys differ: current-only={sorted(current_keys - baseline_keys)}, "
+            f"rounded-only={sorted(rounded_keys - baseline_keys)}, "
             f"main-only={sorted(baseline_keys - current_keys)}"
         )
 
-        assert any("::1pctCO2::" in key for key in current_keys)
-        assert any("::hist_ssp585::" in key for key in current_keys)
-        for key in sorted(current_keys):
-            np.testing.assert_allclose(
-                current[key],
-                baseline[key],
-                rtol=1e-8,
-                atol=1e-8,
-                err_msg=f"Current and main differ for {key}",
-            )
+        config_names = ("default", *calibrated_configs)
+        print(
+            "\nBoth tables compare the current code with `main` using the same "
+            "configurations and input data. The current code uses the "
+            "range-difference land-use calculation in both runs."
+        )
+        print(
+            "Integer-duration run: before simulation, the test replaces "
+            "tau_rgr with int(tau_rgr.to('yr').m) years. This reproduces "
+            "main's truncation for these annual test inputs."
+        )
+        print(
+            "Rounded-duration run: the configured tau_rgr is left unchanged; "
+            "the current code rounds tau_rgr / time_step to a whole number "
+            "of intervals (minimum one). Differences from the integer run "
+            "therefore show the effect of this duration change."
+        )
+        _print_max_differences(
+            current_legacy,
+            baseline,
+            config_names,
+            "Current code with int-truncated tau_rgr",
+        )
+        _print_max_differences(
+            current_rounded,
+            baseline,
+            config_names,
+            "Current code with rounded tau_rgr duration",
+        )

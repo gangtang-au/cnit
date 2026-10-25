@@ -3,7 +3,7 @@ MAGICC Terrestrial Carbon Cycle Model Implementation
 
 This module provides the implementation of the carbon cycle component of MAGICC's
 coupled carbon-nitrogen cycle model (CNit). It simulates the dynamics of terrestrial
-carbon pools and their responses to climate change, CO2 fertilization, nitrogen
+carbon pools and their responses to climate change, CO₂ fertilization, nitrogen
 availability, and land use change.
 
 **Carbon Cycle Components:**
@@ -22,15 +22,15 @@ availability, and land use change.
 1. **Three-Pool Structure**: The model tracks carbon in plant, litter, and soil organic
    matter pools, representing the major terrestrial carbon reservoirs.
 
-2. **Annual Timestep with Cascading**: The model operates on annual timesteps but accounts
-   for rapid sub-annual cycling through empirical allocation fractions that represent carbon
-   cascading through multiple pools within a year.
+2. **Allocation Fractions with Cascading**: Empirical allocation fractions represent
+   carbon transfers through multiple pools within each model timestep. Annual timesteps
+   are used in the default examples; evenly spaced subannual time axes are also supported.
 
 3. **Environmental Modifiers**: All process rates are modified by dimensionless effect factors
    representing:
 
    - Temperature effects on decomposition and respiration
-   - CO2 fertilization effects on NPP
+   - CO₂ fertilization effects on NPP
    - Nitrogen availability effects (carbon-nitrogen coupling)
    - Land use change effects on turnover rates
 
@@ -40,7 +40,8 @@ availability, and land use change.
    (flux = pool size / turnover time), modified by environmental effects.
 
 5. **Flux Partitioning**: Input fluxes (NPP, land use) are partitioned among pools using
-   empirical fractions that capture both direct allocation and rapid within-year cycling.
+   empirical fractions that capture both direct allocation and rapid cycling over their
+   model timestep.
 
 6. **Carbon-Nitrogen Coupling**:  Nitrogen availability affects carbon cycle processes through
    limitation effects on NPP and decomposition rates (calculated via nitrogen cycle effects).
@@ -85,16 +86,16 @@ class CarbonNPPLPRCalculator:
         default=Q(50, "GtC/yr"),
         validator=check_units("GtC/yr"),
     )
-    """
-        Initial net primary production (NPP), base NPP without any effects [GtC/yr]
+    """Base net primary production (NPP) rate under reference conditions, before
+    environmental effects [GtC/yr].
     """
 
     LPR0: pint.Quantity = field(
         default=Q(0, "GtC/yr"),
         validator=check_units("GtC/yr"),
     )
-    """
-        Initial Litter production respiration (LPR), base LPR without any effects [GtC/yr]
+    """Base litter production respiration (LPR) rate under reference conditions,
+    before environmental effects [GtC/yr].
     """
 
     def calculate(
@@ -112,7 +113,7 @@ class CarbonNPPLPRCalculator:
         Parameters
         ----------
         eff_CO2_NPP
-            CO2 effect on NPP [dimensionless]
+            CO₂ effect on NPP [dimensionless]
         eff_dT_NPP
             Temperature effect on NPP [dimensionless]
         eff_dT_LPR
@@ -137,10 +138,10 @@ class CarbonNPPLPRCalculator:
 
         .. math::
 
-            NPP = (NPP_0 + LUrgr) \\times \\epsilon_{T(NPP)} \\times \\epsilon_{CO2}
+            NPP = (NPP_0 + LUrgr) \\times \\epsilon_{T(NPP)} \\times \\epsilon_{CO_2}
             \\times \\epsilon_{N(NPP)} \\times \\epsilon_{LU(NPP)}
 
-            LPR = LPR0 \\times \\epsilon_{T(LPR)} \\times \\epsilon_{CO2} \\times
+            LPR = LPR0 \\times \\epsilon_{T(LPR)} \\times \\epsilon_{CO_2} \\times
             \\epsilon_{N(LPR)} \\times \\epsilon_{LU(NPP)}
         """
         return {
@@ -243,7 +244,7 @@ class CarbonTurnoverCalculator:
         -------
             Dictionary with keys:
 
-            - CflxLP:  Carbon flux from litter production [GtC/yr]
+            - CflxLP: Carbon flux from litter production [GtC/yr]
             - CflxLD: Carbon flux from litter decomposition [GtC/yr]
             - CflxSR: Carbon flux from soil respiration [GtC/yr]
 
@@ -330,7 +331,7 @@ class CarbonCycleCalculator:
 
     Key processes include:
 
-    - Carbon fixation:  Net primary production (NPP) converting atmospheric CO₂
+    - Carbon fixation: Net primary production (NPP) converting atmospheric CO₂
       to organic carbon
     - Autotrophic respiration: Litter production respiration (LPR) releasing CO₂
       from plant metabolism
@@ -342,7 +343,7 @@ class CarbonCycleCalculator:
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of carbon through different pathways in the
     terrestrial biosphere.  These fractions account for the cascade of carbon through
-    multiple pools within the annual timestep, capturing both immediate allocation
+    multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
 
@@ -353,8 +354,8 @@ class CarbonCycleCalculator:
     """Fraction of net primary production allocated to plant pool [dimensionless].
 
     Represents the portion of newly fixed carbon remaining in plant biomass at the
-    end of the annual timestep, primarily in long-lived tissues (wood, structural
-    tissues, storage organs) that do not turn over within the year.
+    end of a model timestep, primarily in long-lived tissues (wood, structural
+    tissues, storage organs) that do not turn over within the model timestep.
     """
 
     frc_NPP2L: pint.Quantity = field(
@@ -363,11 +364,11 @@ class CarbonCycleCalculator:
     )
     """Fraction of net primary production allocated to litter pool [dimensionless].
 
-    Represents newly fixed carbon that enters the litter pool within the annual
+    Represents newly fixed carbon that enters the litter pool within the model
     timestep through rapid plant-to-litter turnover (e.g., fine root turnover, leaf
     senescence). The remainder (1 - frc_NPP2P - frc_NPP2L) goes to the soil pool,
     representing carbon that cycles through both plant and litter pools and enters
-    soil within the annual timestep.
+    soil within the model timestep.
     """
 
     frc_cLP2L: pint.Quantity = field(
@@ -377,9 +378,9 @@ class CarbonCycleCalculator:
     """Fraction of litter production carbon retained in litter pool [dimensionless].
 
     Represents carbon in plant materials that remain in the litter pool at the end
-    of the annual timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
+    of a model timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
-    the soil pool within the annual timestep, bypassing extended residence in the
+    the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
     """
 
@@ -430,7 +431,8 @@ class CarbonCycleCalculator:
         on inputs (NPP), autotrophic respiration (LPR), internal transfers (cLP, cLD),
         heterotrophic respiration (cSR), and land use changes (cLUgrs). Each input
         flux is partitioned among pools according to the fractional allocation parameters,
-        which account for carbon cascading through multiple pools within the annual timestep.
+        which represent rapid carbon cascading through multiple pools within the model
+        parameterization.
 
         Parameters
         ----------
@@ -488,20 +490,19 @@ class CarbonCycleCalculator:
         where:
 
         - :math:`f_{NPP2S} = 1 - f_{NPP2P} - f_{NPP2L}` represents NPP carbon
-          cascading through plant→litter→soil within the annual timestep
+          cascading through plant→litter→soil within the model timestep
         - :math:`f_{cLP2S} = 1 - f_{cLP2L}` represents rapid litter decomposition
-          directly entering soil within the annual timestep
+          directly entering soil within the model timestep
         - :math:`f_{cLUgrs2S} = 1 - f_{cLUgrs2P} - f_{cLUgrs2L}` (remainder from soil)
 
-        **Important Note on Annual Timestep:**
+        **Allocation Fractions and Time Resolution:**
 
-        All allocation fractions account for the cascade of carbon through multiple
-        pools within the annual timestep. For example, :math:`f_{NPP2S}` does not
-        represent direct allocation from atmosphere to soil, but rather carbon that
-        is fixed by plants, then enters litter through turnover, and subsequently
-        enters soil through decomposition—all within a single year.  This approach
-        effectively captures rapid cycling processes without explicitly modeling
-        sub-annual dynamics.
+        All allocation fractions account for the rapid cascade of carbon through
+        multiple pools over the model timestep. For example,
+        :math:`f_{NPP2S}` does not represent direct allocation from atmosphere to
+        soil, but rather carbon that is fixed by plants, then enters litter through
+        turnover, and subsequently enters soil through decomposition over that model
+        timestep.
         """
         # Calculate NPP fractions to each pool
         CflxNPP2P = CflxNPP * self.frc_NPP2P
@@ -674,27 +675,12 @@ class CarbonCycleCalculator:
 
 @define
 class CarbonCycleModelResult:
-    """Results from running the carbon cycle model.
+    """Results returned by :meth:`CarbonCycleModel.run`.
 
-    This class stores the complete output from a carbon cycle model simulation,
-    including carbon pool states, fluxes, and all environmental effect modifiers.
-    Results can be converted to an xarray Dataset for analysis and visualization.
-
-    The carbon cycle model tracks three terrestrial carbon pools:
-
-    - Plant carbon pool (CplsP): Carbon in living plant biomass
-    - Litter carbon pool (CplsL): Carbon in dead plant material
-    - Soil carbon pool (CplsS): Carbon in soil organic matter
-
-    Key processes represented include:
-
-    - Carbon fixation through net primary production (NPP)
-    - Litter production respiration (LPR)
-    - Organic matter turnover (cLP, cLD, cSR)
-    - Land use change emissions (cLUgrs)
-    - Environmental modifiers: temperature, nitrogen, and land use effects
-
-    Forcing and effect attributes are series aligned with ``time_axis``.
+    Stores the time-aligned carbon pool states and the flux and effect series used
+    during the simulation. Use :meth:`add_non_state_variables` to calculate derived
+    fluxes and diagnostics and assemble the complete xarray dataset. Attribute
+    descriptions below give the contents and units of the stored values.
     """
 
     c_state: Dict[str, pint.Quantity]
@@ -704,7 +690,7 @@ class CarbonCycleModelResult:
 
     - 'CplsP': Plant carbon pool
     - 'CplsL': Litter carbon pool
-    - 'CplsS':  Soil carbon pool
+    - 'CplsS': Soil carbon pool
     """
 
     calc_c_turnover: CarbonTurnoverCalculator
@@ -724,8 +710,9 @@ class CarbonCycleModelResult:
     time_axis: pint.Quantity
     """Time points for simulation [yr].
 
-    Array of discrete time points at which the model state is evaluated,
-    typically representing annual timesteps.
+    Array of evenly spaced time points at which the model state is evaluated.
+    Annual timesteps are used in the default examples; subannual time axes are also
+    supported.
     """
 
     CflxNPP_s: pint.Quantity
@@ -807,11 +794,11 @@ class CarbonCycleModelResult:
         This method computes all diagnostic fluxes and derived quantities from the
         model state variables and returns a complete xarray Dataset containing:
 
-        - State variables:  Carbon pools (CplsP, CplsL, CplsS)
-        - Turnover fluxes:  Calculated from pools and environmental effects (cLP, cLD, cSR)
+        - State variables: Carbon pools (CplsP, CplsL, CplsS)
+        - Turnover fluxes: Calculated from pools and environmental effects (cLP, cLD, cSR)
         - All partitioned fluxes: NPP, LPR, and land use change distributed among pools
         - Derived quantities: Total terrestrial carbon (CplsPLS), net terrestrial flux (CflxNetPLS)
-        - Heterotrophic respiration:  Total CO₂ release from decomposition (CflxRH)
+        - Heterotrophic respiration: Total CO₂ release from decomposition (CflxRH)
 
         Returns
         -------
@@ -827,16 +814,16 @@ class CarbonCycleModelResult:
             **Primary Fluxes:**
 
             - CflxNPP: Net primary production [GtC/yr]
-            - CflxLPR:  Litter production respiration [GtC/yr]
+            - CflxLPR: Litter production respiration [GtC/yr]
             - CflxLP: Litter production [GtC/yr]
             - CflxLD: Litter decomposition [GtC/yr]
             - CflxSR: Soil respiration [GtC/yr]
-            - CflxLUgrs:  Gross land use emissions [GtC/yr]
+            - CflxLUgrs: Gross land use emissions [GtC/yr]
 
             **Partitioned Fluxes:**
 
             - CflxNPP2P, CflxNPP2L, CflxNPP2S: NPP allocation to each pool
-            - CflxLP2L, CflxLP2S:  Litter production allocation
+            - CflxLP2L, CflxLP2S: Litter production allocation
             - CflxLD2S, CflxLD2A: Litter decomposition to soil and atmosphere
             - CflxLUgrs2P, CflxLUgrs2L, CflxLUgrs2S: Land use emissions from each pool
 
@@ -904,25 +891,20 @@ class CarbonCycleModelResult:
 
 @define
 class CarbonCycleModel:
-    """MAGICC's terrestrial carbon cycle model (carbon component of CNit).
+    """ODE model for CNit's three terrestrial carbon pools.
 
-    This model simulates the dynamics of three terrestrial carbon pools in the
-    terrestrial biosphere by solving a system of ordinary differential equations (ODEs)
-    using scipy.integrate.solve_ivp.  The model tracks carbon transfers between pools
-    through processes including:
+    The model represents carbon in plant biomass (CplsP), litter (CplsL), and soil
+    organic matter (CplsS). Net primary production adds carbon to the system; litter
+    production respiration and soil respiration release carbon, while litter
+    production and decomposition transfer carbon among pools. Land-use emissions
+    remove carbon from the pools according to the configured allocation fractions.
+    Temperature, nitrogen availability, and land-use history modify the relevant
+    process rates.
 
-    - Carbon fixation via net primary production (NPP)
-    - Litter production respiration (LPR)
-    - Organic matter turnover (litter production, litter decomposition, soil respiration)
-    - Land use change emissions
-    - Environmental modifiers (temperature, nitrogen availability, land use effects)
-
-    The model uses annual timesteps and accounts for rapid carbon cycling through
-    empirical allocation fractions that represent carbon cascading through multiple
-    pools within a year.
-
-    Unit-aware forcing and effect series are converted to numeric interpolators once
-    at the solver boundary, allowing adaptive evaluation without repeated unit work.
+    The model solves pool dynamics from carbon flux and effect series supplied by the
+    coupled model. Evenly spaced subannual time axes are supported; the default
+    examples use annual timesteps, with allocation fractions applying within each
+    timestep. See :meth:`run` for the required series and simulation behavior.
     """
 
     calc_c_turnover: CarbonTurnoverCalculator
@@ -948,7 +930,7 @@ class CarbonCycleModel:
     """Initial plant carbon pool size [GtC].
 
     Carbon contained in living plant biomass at the start of the simulation
-    (time0). Typical values range from 400-550 GtC for global simulations.
+    (time0).
     """
 
     CplsL0: pint.Quantity = field(
@@ -958,7 +940,7 @@ class CarbonCycleModel:
     """Initial litter carbon pool size [GtC].
 
     Carbon contained in dead plant material (litter) at the start of the simulation
-    (time0). Typical values range from 40-70 GtC for global simulations.
+    (time0).
     """
 
     CplsS0: pint.Quantity = field(
@@ -968,7 +950,6 @@ class CarbonCycleModel:
     """Initial soil carbon pool size [GtC].
 
     Carbon contained in soil organic matter at the start of the simulation (time0).
-    Typical values range from 1400-1700 GtC for global simulations.
     """
 
     time0: pint.Quantity = field(
@@ -977,21 +958,21 @@ class CarbonCycleModel:
     )
     """Initialization time [yr].
 
-    Time point at which the initial pool sizes (CplsP0, CplsL0, CplsS0) apply.
-    The simulation time_axis must start at or after this time. Typically set to
-    the pre-industrial baseline year (1850).
+    Time point at which the initial pool sizes apply. The simulation time_axis must
+    start at or after this time. The default is the pre-industrial baseline year
+    (1850).
     """
 
     switch_Cpls: list[int] = field(
-        default=[1, 1, 1],
+        factory=lambda: [1, 1, 1],
     )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 
-    Binary switches (1=enabled, 0=disabled) to selectively enable or disable
-    pool dynamics. Useful for diagnostic purposes or simplified model configurations.
-    Setting a switch to 0 freezes that pool at its initial value.
+    Use 1 to enable or 0 to freeze a pool at its initial value. Other numeric values
+    scale that pool's derivative. These switches are useful for diagnostic purposes
+    or simplified model configurations.
 
-    - switch_Cpls[0]:  Plant pool switch
+    - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
     - switch_Cpls[2]: Soil pool switch
     """
@@ -1017,7 +998,7 @@ class CarbonCycleModel:
 
         This method solves the system of ODEs for carbon pool dynamics over the
         specified time period using scipy.integrate.solve_ivp. Numeric interpolators
-        are built directly from the unit-aware forcing and effect series for the
+        are built directly from the unit-aware flux and effect series for the
         solver's adaptive time steps.
 
         Parameters
@@ -1037,7 +1018,7 @@ class CarbonCycleModel:
 
             - Carbon pool time series (CplsP, CplsL, CplsS)
             - References to calculator instances
-            - All input forcing and effect series
+            - All flux and effect series
             - Methods to calculate derived fluxes and diagnostics
 
         Raises
@@ -1073,7 +1054,7 @@ class CarbonCycleModel:
         The solver uses scipy.integrate.solve_ivp with:
 
         - Adaptive time stepping (solver selects appropriate substeps)
-        - Absolute tolerance:  1e-6 GtC
+        - Absolute tolerance: 1e-6 GtC
         - Relative tolerance: 1e-3
         - Default solver method (typically RK45)
 
@@ -1083,7 +1064,7 @@ class CarbonCycleModel:
         is set to 0, the corresponding pool's rate of change is forced to zero,
         effectively freezing that pool at its initial value throughout the simulation.
 
-        The input series are converted to numeric interpolators once before
+        The flux and effect series are converted to numeric interpolators once before
         integration, allowing adaptive solver evaluations between output times.
         """
 

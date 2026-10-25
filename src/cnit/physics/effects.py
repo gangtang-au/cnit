@@ -2,7 +2,7 @@
 Effect Factor Calculators for the CNit Model.
 
 This module defines the calculators responsible for computing the
-dimensionless "effect factors" (e.g., from temperature change, CO2, land use)
+dimensionless "effect factors" (e.g., from temperature change, CO₂, land use)
 that modify the rates of core carbon and nitrogen cycle processes.
 
 The effect factors represent multiplicative modifiers applied to baseline process
@@ -10,12 +10,12 @@ rates to account for environmental changes and feedbacks. Each calculator class
 handles a specific category of effects:
 
 - :class:`EffectLanduseCalculator`: Land use change effects (deforestation, afforestation, regrowth)
-- :class:`EffectCO2Calculator`: Atmospheric CO2 fertilization effects
+- :class:`EffectCO2Calculator`: Atmospheric CO₂ fertilization effects
 - :class:`EffectTemperatureCalculator`: Temperature-dependent process modifications
 - :class:`EffectCarbonNitrogenCouplingCalculator`: Carbon-nitrogen cycle feedback effects
 
-All effect factors are dimensionless multipliers (typically near 1.0) that scale
-process rates up or down based on environmental conditions.
+All effect factors are dimensionless multipliers that scale process rates up or down
+based on environmental conditions.
 """
 
 from typing import Tuple
@@ -42,9 +42,9 @@ class EffectLanduseCalculator:
 
     1. **Effects on NPP**: Adjustments to primary production based on cumulative land
        use changes, blending instantaneous and equilibrium perspectives to capture
-       both immediate impacts and long-term recovery dynamics
+       both immediate impacts and long-term land-use dynamics
     2. **Effects on Turnovers**: Short-term immediate effects on litter production,
-       decomposition, and soil respiration based on current regrowth flux
+       decomposition, and soil respiration based on the current regrowth flux
 
     Notes
     -----
@@ -56,7 +56,7 @@ class EffectLanduseCalculator:
     land use effects implemented here prevent this unrealistic full return by:
 
     - Adjusting NPP to reflect permanent changes in productive land area
-    - Modifying turnover rates during recovery periods to capture transient dynamics
+    - Modifying turnover rates during ecosystem recovery to capture transient dynamics
 
     **Dual Effect Framework**
 
@@ -69,7 +69,7 @@ class EffectLanduseCalculator:
 
     - **Turnover adjustment** (``calculate_eff_LU_cLPLDSR``, ``calculate_eff_LU_nLPLDSR``):
       Capture immediate, short-term perturbations to organic matter cycling during
-      recovery periods. These effects decay as regrowth completes, avoiding
+      ecosystem recovery. These effects fade as vegetation recovers, avoiding
       permanent equilibrium shifts.
 
     **Regrowth Flux as Proxy for Turnover Effects**
@@ -77,16 +77,16 @@ class EffectLanduseCalculator:
     The turnover effects use regrowth flux as a proxy for land use perturbation
     state because:
 
-    1. Regrowth reflects the recovering state of all past perturbations
+    1. Regrowth reflects ongoing land-use effects from past perturbations
     2. It captures lagging effects that extend into the future
     3. It embodies the principle "where there is regrowth, land use
        perturbation still takes effect"
-    4. It naturally decays to zero as recovery completes, ensuring no permanent
+    4. It naturally declines to zero as scheduled regrowth ends, ensuring no permanent
        change to equilibrium turnover rates
 
-    The regrowth flux provides a single, time-varying indicator of ongoing recovery
-    that can be used as a proxy to parameterize how disturbance alters cycling rates
-    during the transient recovery period.
+    The regrowth flux provides a single, time-varying indicator of the ongoing
+    ecosystem response to land-use change. It is used as a proxy for how disturbance
+    alters cycling rates while vegetation recovers.
     """
 
     sns_cLP2LUrgr: pint.Quantity = field(
@@ -153,7 +153,7 @@ class EffectLanduseCalculator:
         ----------
         cumsum_CflxLUrgr
             Cumulative regrowth carbon flux [GtC].  Total carbon accumulated through
-            natural recovery following past deforestation events.
+            natural regrowth following past deforestation events.
         cumsum_CflxLUdfst
             Cumulative deforestation carbon flux [GtC]. Total carbon lost through all
             deforestation events.
@@ -167,8 +167,8 @@ class EffectLanduseCalculator:
             Initial equilibrium total terrestrial carbon pool size (Plant + Litter + Soil)
             [GtC]. Represents the baseline productive land carbon before land use changes.
         frc_rgr
-            Regrowth fraction (varphi) [dimensionless]. Fraction of deforested area that
-            can undergo natural recovery (typical values 0.8-0.95).
+            Regrowth fraction (varphi) [dimensionless]. Fraction of deforested area
+            assigned to natural regrowth.
         frc_afst_decay
             Afforestation decay fraction (phi) [dimensionless]. Fraction of afforested
             carbon that decays due to turnover (phi = 1 - varphi).
@@ -221,7 +221,7 @@ class EffectLanduseCalculator:
         where :math:`\\varphi` is the regrowth fraction (`frc_rgr`) and :math:`C_{Land0}`
         is the initial equilibrium land carbon (`CplsPLS0`).
 
-        **Physical interpretation**: Only the non-regrowing fraction : math:`(1-\\varphi)`
+        **Physical interpretation**: Only the non-regrowing fraction :math:`(1-\\varphi)`
         represents permanent loss of productive land.  If :math:`\\varphi = 0. 9`, then 90%
         of deforested area eventually recovers, so only 10% contributes to long-term NPP
         reduction.
@@ -267,8 +267,8 @@ class EffectLanduseCalculator:
         **Why** :math:`\\epsilon_{LUdfst}^{eqm}` **alone underestimates the effect:**
 
         - Assumes instantaneous adjustment to the post-regrowth equilibrium, ignoring the
-          actual lag in recovery.  During active regrowth, the realized NPP reduction is
-          larger than the long-term equilibrium would suggest.
+          actual lag in the NPP response. During active regrowth, the realized NPP
+          reduction is larger than the long-term equilibrium would suggest.
 
         **Combined Approach:  Weighted Blending**
 
@@ -282,7 +282,7 @@ class EffectLanduseCalculator:
 
         **Rationale for the 0.8φ tuning factor:**
 
-        The factor : math:`0.8\\varphi` prevents problematic behavior at extreme regrowth
+        The factor :math:`0.8\\varphi` prevents problematic behavior at extreme regrowth
         fractions:
 
         - **Problem at high φ** (e.g., :math:`\\varphi = 1`):
@@ -296,7 +296,7 @@ class EffectLanduseCalculator:
 
           * At :math:`\\varphi = 1`: weights are (0.9, 0.1) rather than (0.5, 0.5)
           * Minimum 10% contribution from instantaneous effect: :math:`(1 - 0.8 \\times 1) / 2 = 0.1`
-          * Maximum 90% from equilibrium:  :math:`(1 + 0.8 \\times 1) / 2 = 0.9`
+          * Maximum 90% from equilibrium: :math:`(1 + 0.8 \\times 1) / 2 = 0.9`
           * This preserves physically meaningful balance across the full regrowth range
             (0 ≤ φ ≤ 1)
 
@@ -423,13 +423,13 @@ class EffectLanduseCalculator:
         Computes exponential response factors for carbon litter production (cLP),
         litter decomposition (cLD), and soil respiration (cSR). These factors
         represent immediate, short-term effects of ongoing land use perturbations
-        on organic matter cycling rates during recovery periods.
+        on organic matter cycling rates during ecosystem recovery after land-use change.
 
         Parameters
         ----------
         CflxLUrgr : pint.Quantity
             Current regrowth carbon flux [GtC/yr]. Serves as a proxy for the
-            state of land use perturbation and ongoing recovery.
+            state of land-use disturbance and ongoing ecosystem recovery.
 
         Returns
         -------
@@ -447,7 +447,7 @@ class EffectLanduseCalculator:
         The NPP adjustment (``calculate_eff_LU_NPP``) prevents full equilibrium
         return in the long term, but it primarily controls the ultimate equilibrium
         state. These direct turnover effects are needed to capture the shorter-term
-        immediate effects of land use perturbation during active recovery periods.
+        immediate effects of land-use perturbation during ecosystem recovery.
 
         Without turnover effects, transient dynamics during recovery would be
         missing from the model, even though the long-term equilibrium is correctly
@@ -469,16 +469,16 @@ class EffectLanduseCalculator:
 
         Using regrowth flux to parameterize turnover effects is appropriate because:
 
-        1. **Reflects recovering state**: Regrowth magnitude indicates how much
-           past perturbation is still influencing the system
+        1. **Tracks ongoing recovery**: The regrowth flux indicates how strongly
+           past land-use perturbations are still affecting the system
         2. **Captures lagging effects**: Active regrowth means perturbation effects
-           extend into the future (ongoing recovery)
+           extend beyond the interval in which deforestation occurred
         3. **Embodies "where regrowth occurs, perturbation persists"**: The spatial
            and temporal extent of regrowth maps to perturbation influence
-        4. **Natural decay**: As regrowth completes, :math:`LUrgr \\to 0` and
+        4. **Natural decline**: As scheduled regrowth ends, :math:`LUrgr \\to 0` and
            effects vanish, preventing permanent equilibrium shifts
         5. **Single time-varying indicator**: Provides a convenient scalar measure
-           of system-wide recovery status
+           of the system's current land-use response
 
         **Interpretation of Sensitivities**
 
@@ -490,8 +490,8 @@ class EffectLanduseCalculator:
 
         **No Long-Term Equilibrium Change**
 
-        Because regrowth is not forever (recovery eventually completes), these
-        turnover effects naturally decay to 1.0 as :math:`LUrgr \\to 0`. This means:
+        As the regrowth flux declines to zero, these turnover effects return to 1.0.
+        This means:
 
         - Short-term perturbations to cycling rates are captured
         - Long-term equilibrium turnover rates remain unchanged
@@ -523,8 +523,8 @@ class EffectLanduseCalculator:
         Parameters
         ----------
         CflxLUrgr : pint.Quantity
-            Current regrowth carbon flux [GtC/yr]. Used as a proxy for ecosystem
-            recovery state affecting nitrogen cycling.
+            Current regrowth carbon flux [GtC/yr]. Used as a proxy for the ecosystem's
+            recovery after land-use change, which affects nitrogen cycling.
 
         Returns
         -------
@@ -555,30 +555,30 @@ class EffectLanduseCalculator:
 @define
 class EffectCO2Calculator:
     """
-    Calculator of CO2 fertilization effects on Net Primary Production (NPP).
+    Calculator of CO₂ fertilization effects on Net Primary Production (NPP).
 
-    Implements multiple formulations of the CO2 fertilization effect, including
+    Implements multiple formulations of the CO₂ fertilization effect, including
     logarithmic, rectangular hyperbolic (Gifford), and sigmoid forms. The calculator
     can blend between these formulations based on the ``method_CO2_NPP`` parameter
-    to represent different assumptions about CO2 response saturation behavior.
+    to represent different assumptions about CO₂ response saturation behavior.
 
-    The CO2 effect represents how elevated atmospheric CO2 concentrations enhance
+    The CO₂ effect represents how elevated atmospheric CO₂ concentrations enhance
     photosynthetic rates and water use efficiency in vegetation, leading to increased
     NPP. Different formulations capture different assumptions about saturation behavior
-    at high CO2 levels and the shape of the CO2 response curve.
+    at high CO₂ levels and the shape of the CO₂ response curve.
 
     Notes
     -----
-    **Physical Basis of CO2 Fertilization**
+    **Physical Basis of CO₂ Fertilization**
 
-    Elevated CO2 enhances plant productivity through two main mechanisms:
+    Elevated CO₂ enhances plant productivity through two main mechanisms:
 
-    1. **Direct photosynthetic enhancement**: Higher CO2 increases the rate of
+    1. **Direct photosynthetic enhancement**: Higher CO₂ increases the rate of
        carbon fixation in the Calvin cycle (substrate availability)
     2. **Improved water use efficiency**: Plants can partially close stomata while
-       maintaining CO2 uptake, reducing water loss
+       maintaining CO₂ uptake, reducing water loss
 
-    The strength of CO2 fertilization varies by:
+    The strength of CO₂ fertilization varies by:
 
     - Plant functional type (C3 vs. C4 photosynthesis)
     - Nutrient availability (progressive nitrogen limitation)
@@ -587,16 +587,16 @@ class EffectCO2Calculator:
 
     **Choice of Formulation**
 
-    Different formulations represent different hypotheses about CO2 response:
+    Different formulations represent different hypotheses about CO₂ response:
 
     - **Logarithmic**: No saturation, effect continues growing indefinitely.
-      Simple and commonly used, but may overestimate effects at very high CO2.
+      Simple and commonly used, but may overestimate effects at very high CO₂.
 
     - **Rectangular hyperbolic**: Moderate saturation following Michaelis-Menten
       kinetics. Based on photosynthesis theory (Gifford 1980).
 
     - **Sigmoid**: Strong saturation with explicit maximum effect. Most conservative
-      at high CO2, captures potential acclimation or nutrient limitation feedbacks.
+      at high CO₂, captures potential acclimation or nutrient limitation feedbacks.
 
     **Calibration Strategy**
 
@@ -609,40 +609,37 @@ class EffectCO2Calculator:
         default=Q(1, "1"),
         validator=check_units("1"),
     )
-    """
-    Sensitivity of NPP to atmospheric |CO2| concentration changes (logarithmic form) [dimensionless].
+    """Sensitivity of NPP to atmospheric CO₂ concentration changes
+    (logarithmic form) [dimensionless].
     """
 
     sns_CO2_sig: pint.Quantity = field(
         default=Q(1, "1"),
         validator=check_units("1"),
     )
-    """
-    Sensitivity of NPP to atmospheric |CO2| concentration changes (sigmoid form) [ppm].
+    """Sensitivity of NPP to atmospheric CO₂ concentration changes
+    (sigmoid form) [dimensionless].
     """
 
     eff_CO2_sig_max: pint.Quantity = field(
         default=Q(2, "1"),
         validator=check_units("1"),
     )
-    """
-    Maximum CO2 effect factor for the sigmoid form [dimensionless].
+    """Maximum CO₂ effect factor for the sigmoid form [dimensionless].
     """
 
     CO2ref: pint.Quantity = field(
         default=Q(284.875, "ppm"),
         validator=check_units("ppm"),
     )
-    """
-    Atmospheric |CO2| concentration at pre-industrial level [ppm].
+    """Atmospheric CO₂ concentration at pre-industrial level [ppm].
     """
 
     CO2b: pint.Quantity = field(
         default=Q(31, "ppm"),
         validator=check_units("ppm"),
     )
-    """
-    Atmospheric |CO2| concentration when NPP = 0 (for rectangular hyperbolic effect, 
+    """Atmospheric CO₂ concentration when NPP = 0 (for rectangular hyperbolic effect,
     default 31 ppm) [ppm].
     """
 
@@ -650,8 +647,7 @@ class EffectCO2Calculator:
         default=Q(0, "1"),
         validator=check_units("1"),
     )
-    """
-    |CO2| effect factor calculation method (value from 0 to 2), 
+    """CO₂ effect factor calculation method (value from 0 to 2),
     otherwise eff_CO2 is set equal to 1.
     """
 
@@ -660,29 +656,29 @@ class EffectCO2Calculator:
         CO2: pint.Quantity,
     ) -> pint.Quantity:
         """
-        Calculate the CO2 fertilization effect factor for Net Primary Production (NPP).
+        Calculate the CO₂ fertilization effect factor for Net Primary Production (NPP).
 
-        Computes a multiplicative factor representing how elevated CO2 enhances NPP
+        Computes a multiplicative factor representing how elevated CO₂ enhances NPP
         relative to the reference concentration. The calculation can use pure or
         blended formulations depending on the ``method_CO2_NPP`` parameter.
 
         Parameters
         ----------
         CO2 : pint.Quantity
-            Current atmospheric CO2 concentration [ppm].
+            Current atmospheric CO₂ concentration [ppm].
 
         Returns
         -------
         pint.Quantity
-            CO2 effect factor on NPP [dimensionless].
+            CO₂ effect factor on NPP [dimensionless].
 
-            - Values > 1: CO2 fertilization (enhanced NPP)
-            - Values = 1: No effect (CO2 at reference level)
-            - Values < 1: Suppression (rare, only at very low CO2 below reference)
+            - Values > 1: CO₂ fertilization (enhanced NPP)
+            - Values = 1: No effect (CO₂ at reference level)
+            - Values < 1: Suppression (rare, only at very low CO₂ below reference)
 
         Notes
         -----
-        **Three CO2 Effect Formulations**
+        **Three CO₂ Effect Formulations**
 
         1. **Logarithmic Form** (simple, commonly used):
 
@@ -690,21 +686,21 @@ class EffectCO2Calculator:
 
               \\epsilon^{log}_{CO_2} = 1 + s^{log}_{CO_2} \\times \\ln(CO_2/CO_{2,ref})
 
-           where :math:`CO_2` is the current atmospheric CO2 concentration and
+           where :math:`CO_2` is the current atmospheric CO₂ concentration and
            :math:`CO_{2,ref}` is the reference concentration (typically pre-industrial).
 
            **Properties**:
 
            - Effect factor = 1 at :math:`CO_2 = CO_{2,ref}`
            - Logarithmic relationship implies diminishing but never-ceasing returns
-           - No explicit saturation at high CO2
+           - No explicit saturation at high CO₂
            - Commonly used in Earth system models (e.g., OSCAR, simple IAMs)
 
            **Interpretation of** :math:`s^{log}_{CO_2}` **(β parameter)**:
 
-           - :math:`s^{log}_{CO_2} = 0.4`: Doubling CO2 increases NPP by ~28%
+           - :math:`s^{log}_{CO_2} = 0.4`: Doubling CO₂ increases NPP by ~28%
              (:math:`1 + 0.4 \\times \\ln(2) \\approx 1.277`)
-           - :math:`s^{log}_{CO_2} = 0.6`: Doubling CO2 increases NPP by ~42%
+           - :math:`s^{log}_{CO_2} = 0.6`: Doubling CO₂ increases NPP by ~42%
            - Literature estimates typically range from 0.2 to 0.6
 
         2. **Rectangular Hyperbolic Form** (Gifford formulation, includes saturation):
@@ -713,7 +709,7 @@ class EffectCO2Calculator:
               \\epsilon^{rect}_{CO_2} = \\frac{1/(CO_{2,ref}-CO_{2,b}) + s^{rect}_{CO_2}}{
               1/(CO_2-CO_{2,b}) + s^{rect}_{CO_2}}
 
-           where :math:`CO_{2,b}` is the CO2 compensation point (NPP = 0, typically ~31 ppm).
+           where :math:`CO_{2,b}` is the CO₂ compensation point (NPP = 0, typically ~31 ppm).
 
            **Derivation of** :math:`s^{rect}_{CO_2}`:
 
@@ -736,7 +732,7 @@ class EffectCO2Calculator:
            **Properties**:
 
            - Based on Michaelis-Menten enzyme kinetics
-           - Exhibits saturation at high CO2 levels
+           - Exhibits saturation at high CO₂ levels
            - Approaches asymptote as :math:`CO_2 \\to \\infty`
            - More physiologically grounded than logarithmic form
            - Used in some process-based terrestrial biosphere models
@@ -751,11 +747,11 @@ class EffectCO2Calculator:
            **Properties**:
 
            - Transitions smoothly from 1 at :math:`CO_{2,ref}` to
-             :math:`\\epsilon^{sig}_{CO_2,max}` at high CO2
+             :math:`\\epsilon^{sig}_{CO_2,max}` at high CO₂
            - Steepness controlled by :math:`s^{sig}_{CO_2}`
            - Allows explicit specification of maximum possible enhancement
            - Can represent nutrient limitation or acclimation feedbacks
-           - Most conservative at very high CO2 concentrations
+           - Most conservative at very high CO₂ concentrations
 
         **Blending Between Formulations**
 
@@ -775,10 +771,10 @@ class EffectCO2Calculator:
 
         **Blending rationale**:
 
-        - Allows exploration of uncertainty in CO2 response shape
+        - Allows exploration of uncertainty in CO₂ response shape
         - Smooth transitions between formulations (no discontinuities)
         - Can be calibrated against observations or expert judgment
-        - Value outside [0,2] disables CO2 fertilization entirely
+        - Value outside [0,2] disables CO₂ fertilization entirely
         """
         # calculate the logarithmic form CO2 effect factors
         eff_CO2_log = 1 + self.sns_CO2_log * np.log(CO2 / self.CO2ref)
@@ -873,108 +869,94 @@ class EffectTemperatureCalculator:
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of NPP to temperature changes, exponential form [K\ :sup:`-1`]
+    """Sensitivity of NPP to temperature changes, exponential form [K⁻¹]
     """
 
     sns_NPP2dT_sig: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of NPP to temperature changes, sigmoid form [K\ :sup:`-1`]
+    """Sensitivity of NPP to temperature changes, sigmoid form [K⁻¹]
     """
 
     method_dT_NPP: pint.Quantity = field(
         default=Q(0, "1"),
         validator=check_units("1"),
     )
-    """
-        Blending parameter between exponential (0) and sigmoid (1) NPP responses
-        [dimensionless, 0-1] [dimensionless]
+    """Blending parameter between exponential (0) and sigmoid (1) NPP responses
+    [dimensionless]
     """
 
     sns_LPR2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of litter production respiration to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of litter production respiration to temperature changes [K⁻¹]
     """
 
     sns_cLP2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of carbon litter production to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of carbon litter production to temperature changes [K⁻¹]
     """
 
     sns_cLD2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of carbon litter decomposition to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of carbon litter decomposition to temperature changes [K⁻¹]
     """
 
     sns_cSR2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of carbon soil respiration (soil organic matter decomposition) to 
-        temperature changes [K\ :sup:`-1`]
+    """Sensitivity of carbon soil respiration (soil organic matter decomposition) to
+    temperature changes [K⁻¹]
     """
 
     sns_PU2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen plant uptake to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen plant uptake to temperature changes [K⁻¹]
     """
 
     sns_BNF2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of biological nitrogen fixation to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of biological nitrogen fixation to temperature changes [K⁻¹]
     """
 
     sns_nLP2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen litter production to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen litter production to temperature changes [K⁻¹]
     """
 
     sns_nLD2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen litter decomposition to temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen litter decomposition to temperature changes [K⁻¹]
     """
 
     sns_nSR2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of nitrogen soil respiration (soil organic matter decomposition) to
-        temperature changes [K\ :sup:`-1`]
+    """Sensitivity of nitrogen soil respiration (soil organic matter decomposition) to
+    temperature changes [K⁻¹]
     """
 
     sns_nLSgas2dT: pint.Quantity = field(
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """
-        Sensitivity of mineral nitrogen gaseous loss to temperature changes [K\
-        :sup:`-1`]
+    """Sensitivity of mineral nitrogen gaseous loss to temperature changes [K⁻¹]
     """
 
     def calculate_eff_dT_NPPLPR(
@@ -1105,7 +1087,7 @@ class EffectTemperatureCalculator:
         - High: Q10 = 2.5 (:math:`s_{cSR2dT}` = 0.092 K⁻¹)
         - Very high: Q10 = 3.0 (:math:`s_{cSR2dT}` = 0.110 K⁻¹)
 
-        **Feedback loop**: Warming → Enhanced soil respiration → CO2 release →
+        **Feedback loop**: Warming → Enhanced soil respiration → CO₂ release →
         More warming. Magnitude depends critically on Q10.
 
         **Example**: For 3 K warming:
@@ -1211,7 +1193,7 @@ class EffectTemperatureCalculator:
         These temperature effects interact with C-N coupling effects:
 
         - Enhanced N uptake/fixation (temperature) may partially alleviate N
-          limitation of CO2-fertilized NPP
+          limitation of CO₂-fertilized NPP
         - However, if warming also increases NPP (temperature effect), N demand
           increases, potentially intensifying N limitation
         - Net effect on N limitation depends on the balance between enhanced
@@ -1269,7 +1251,7 @@ class EffectTemperatureCalculator:
         This is a **critical process** controlling N availability:
 
         - Warming → Enhanced mineralization → More plant-available N
-        - May alleviate progressive nitrogen limitation under CO2 fertilization
+        - May alleviate progressive nitrogen limitation under CO₂ fertilization
         - Often mirrors carbon soil respiration temperature sensitivity
 
         Typical sensitivities: :math:`s_{nSR2dT}` ~ 0.05-0.09 K⁻¹ (Q10 ~ 1.6-2.5).
@@ -1320,8 +1302,8 @@ class EffectCarbonNitrogenCouplingCalculator:
        availability (via NPP) enhances plant uptake and fixation
 
     These coupling effects are critical for predicting ecosystem responses to
-    CO2 fertilization and climate change, particularly the phenomenon of
-    "progressive nitrogen limitation" where CO2-stimulated growth is increasingly
+    CO₂ fertilization and climate change, particularly the phenomenon of
+    "progressive nitrogen limitation" where CO₂-stimulated growth is increasingly
     constrained by nitrogen availability.
 
     **Switch Parameter**
@@ -1336,32 +1318,31 @@ class EffectCarbonNitrogenCouplingCalculator:
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of net primary production to nitrogen plant uptake deficit [GtN/yr]
+    """Sensitivity of net primary production to nitrogen plant uptake deficit [yr/GtN]
     """
 
     sns_cLP2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of litter production (carbon) to nitrogen plant uptake deficit [GtN/yr]
+    """Sensitivity of litter production (carbon) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_cLD2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of litter decomposition (carbon) to nitrogen plant uptake deficit [GtN/yr]
+    """Sensitivity of litter decomposition (carbon) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_cSR2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of soil respiration (carbon) to nitrogen plant uptake deficit [GtN/yr]
+    """Sensitivity of soil respiration (carbon) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_PU2PUdef: pint.Quantity = field(
@@ -1388,24 +1369,24 @@ class EffectCarbonNitrogenCouplingCalculator:
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of litter production (nitrogen) to nitrogen plant uptake deficit [GtN/yr]
+    """Sensitivity of litter production (nitrogen) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     sns_nLD2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
+    """Sensitivity of litter decomposition (nitrogen) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
-        Sensitivity of litter decomposition (nitrogen) to nitrogen plant uptake deficit [GtN/yr]
-        """
 
     sns_nSR2PUdef: pint.Quantity = field(
         default=Q(0, "yr/GtN"),
         validator=check_units("yr/GtN"),
     )
-    """
-        Sensitivity of sol respiration (nitrogen) to nitrogen plant uptake deficit [GtN/yr]
+    """Sensitivity of soil respiration (nitrogen) to nitrogen plant uptake
+    deficit [yr/GtN]
     """
 
     eff_C_PU_max: pint.Quantity = field(

@@ -44,16 +44,13 @@ deposition, fertilizer application, and land use change.
    deficit drives compensatory responses in plant uptake efficiency and biological fixation.
 
 4. **Flux-Based Mineralization**: Net mineralization is parameterized as a flux-based process
-   rather than relying on explicit mineral pool dynamics.  This approach is necessary for
-   annual timestep integration, as the mineral nitrogen pool turnover time (days to weeks)
-   is much shorter than the annual timestep.  The flux-based approach captures essential
-   nitrogen limitation dynamics without modeling sub-annual mineral pool fluctuations.
+   rather than relying on explicit mineral pool dynamics. This captures essential nitrogen
+   limitation dynamics without modeling short-term mineral pool fluctuations; the mineral
+   nitrogen pool turnover time is days to weeks.
 
-5. **Annual Timestep with Cascading**: The model operates on annual timesteps but accounts
-   for rapid sub-annual cycling through empirical allocation fractions that represent nitrogen
-   cascading through multiple pools within a year (e.g., nitrogen taken up by plants, then
-   entering litter through turnover, then entering soil through decomposition—all within
-   one year).
+5. **Allocation Fractions with Cascading**: Empirical allocation fractions represent
+   nitrogen transfers through multiple pools within each model timestep. Annual timesteps
+   are used in the default examples; evenly spaced subannual time axes are also supported.
 
 6. **Environmental Modifiers**: All process rates are modified by dimensionless effect factors
    representing:
@@ -73,7 +70,7 @@ deposition, fertilizer application, and land use change.
 
 8. **Nitrogen Losses**: The model represents nitrogen losses through:
 
-   - Gaseous emissions:  Denitrification (N₂, N₂O, NO) and ammonia volatilization
+   - Gaseous emissions: Denitrification (N₂, N₂O, NO) and ammonia volatilization
    - Leaching: Nitrate leaching and dissolved organic nitrogen export
    - Land use change: Direct losses during deforestation and land conversion
 
@@ -131,17 +128,16 @@ class NitrogenPUBNFCalculator:
         default=Q(0.5, "GtN/yr"),
         validator=check_units("GtN/yr"),
     )
-    """Initial plant uptake rate, base rate of nitrogen uptake by plants
-    under reference conditions without any environmental effects [GtN/yr].
+    """Base plant uptake rate under reference conditions, before environmental
+    effects [GtN/yr].
     """
 
     BNF0: pint.Quantity = field(
         default=Q(0.1, "GtN/yr"),
         validator=check_units("GtN/yr"),
     )
-    """Initial biological nitrogen fixation rate, base rate of nitrogen
-    fixation by symbiotic and free-living organisms under reference conditions
-    without any environmental effects [GtN/yr].
+    """Base biological nitrogen fixation rate under reference conditions, before
+    environmental effects [GtN/yr].
     """
 
     # Stoichiometric Ratios
@@ -188,9 +184,9 @@ class NitrogenPUBNFCalculator:
         validator=check_units("yr/GtN"),
     )
     """Sensitivity of long-term net mineralization to nitrogen deposition [yr/GtN].
-    Controls how strongly long-term mineralization responds to cumulative nitrogen
-    deposition.  This represents priming effects where added nitrogen can stimulate
-    or suppress organic matter decomposition.
+    Controls how strongly the long-term mineralization rate responds to the
+    atmospheric nitrogen deposition rate. This represents priming effects where
+    added nitrogen can stimulate or suppress organic matter decomposition.
     """
 
     def calculate(
@@ -334,7 +330,7 @@ class NitrogenPUBNFCalculator:
             - NflxPUreq: Required nitrogen for plant uptake [GtN/yr]
             - NflxPUavail: Total available nitrogen for plant uptake [GtN/yr]
             - NflxPUavail_netMIN: Available nitrogen from net mineralization [GtN/yr]
-            - NflxPUdef:  Nitrogen deficit (positive means demand exceeds supply) [GtN/yr]
+            - NflxPUdef: Nitrogen deficit (positive means demand exceeds supply) [GtN/yr]
 
         Notes
         -----
@@ -346,7 +342,7 @@ class NitrogenPUBNFCalculator:
 
             PUreq = NPPpot \\times NCratio
 
-        where : math:`NPPpot` is the potential NPP (calculated without nitrogen
+        where :math:`NPPpot` is the potential NPP (calculated without nitrogen
         limitation) and :math:`NCratio` is the required nitrogen-to-carbon ratio
         (``NCratio_PUreq``). This reflects the requirement for plants to maintain
         specific carbon-to-nitrogen stoichiometry during carbon assimilation.
@@ -384,7 +380,7 @@ class NitrogenPUBNFCalculator:
            the mineral nitrogen pool (from the long-term past) and becomes available
            for plant uptake in the current timestep. Scaled by:
 
-           - :math:`NPPpot/NPP0` ratio:  Higher NPP produces more organic matter
+           - :math:`NPPpot/NPP0` ratio: Higher NPP produces more organic matter
              substrate for decomposition/mineralization, controlling the baseline
              rate for long-term net mineralization
            - Exponential response to AD: Incorporates that net mineralization
@@ -422,19 +418,20 @@ class NitrogenPUBNFCalculator:
 
         The parameterization of PUavail effectively approximates mineral nitrogen
         availability for plant uptake without explicitly relying on the current
-        mineral nitrogen pool size. This flux-based approximation is necessary for
-        representing nitrogen deficit at an annual timestep without modeling sub-annual
-        dynamics of mineral nitrogen processes.
+        mineral nitrogen pool size. This flux-based approximation represents nitrogen
+        deficit from mineral supply and demand without explicitly modeling short-term
+        mineral nitrogen pool dynamics.
 
         In complex carbon-nitrogen models, nitrogen availability is typically based on
         the current mineral nitrogen pool size (mass unit), and nitrogen requirement is
         computed from integrated fluxes in a given timestep (mass unit) (Thornton et al.,
         2007; Wiltshire et al., 2021; Zaehle et al., 2014). Competition from microbial
         immobilization is also considered in some complex models. However, in a model
-        with an annual timestep like CNit, such a pool-based system would be inherently
-        unstable:  the mineral nitrogen pool size would be orders of magnitude smaller
-        than the annual nitrogen demand, since the turnover time of the mineral nitrogen
-        pool is substantially shorter than the annual timestep.
+        when integrated over annual or longer intervals, such a pool-based system can be
+        unstable: the mineral nitrogen pool size is orders of magnitude smaller than
+        annual nitrogen demand because its turnover time is substantially shorter than a
+        year. CNit may use subannual integration intervals, but does not resolve these
+        short-term mineral-pool fluctuations.
 
         While the full ecosystem mineral nitrogen budget is usually balanced over long
         timescales (annual in CNit), short-term imbalances are the key that
@@ -533,7 +530,8 @@ class NitrogenTurnoverCalculator:
     )
     """Fraction of mineral nitrogen loss occurring as gaseous loss [dimensionless].
     Partitions total mineral nitrogen loss between gaseous pathways (denitrification,
-    volatilization) and leaching.  Values range from 0 (all leaching) to 1 (all gaseous).
+    volatilization) and leaching. Values range from 0 (all leaching) to 1 (all
+    gaseous).
     Only gaseous losses are temperature-sensitive in this formulation.
     """
 
@@ -617,7 +615,7 @@ class NitrogenTurnoverCalculator:
           respective turnover times
         - :math:`\\epsilon_{T}` represents temperature effects
         - :math:`\\epsilon_{N}` represents carbon-nitrogen coupling effects
-        - : math:`\\epsilon_{LU}` represents land use effects
+        - :math:`\\epsilon_{LU}` represents land use effects
 
         Each flux is calculated using first-order kinetics where the turnover rate
         equals pool size divided by turnover time, modified by environmental effects.
@@ -775,12 +773,12 @@ class NitrogenCycleCalculator:
       and soil respiration (nSR)
     - Mineralization: Release of mineral nitrogen from organic matter decomposition
     - Losses: Gaseous emissions and leaching (nLS)
-    - Land use changes:  Gross deforestation (nLUgrs) and direct mineral loss (nLUmin)
+    - Land use changes: Gross deforestation (nLUgrs) and direct mineral loss (nLUmin)
 
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of nitrogen through different pathways in the
     terrestrial biosphere.  These fractions account for the cascade of nitrogen through
-    multiple pools within the annual timestep, capturing both immediate allocation
+    multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
 
@@ -800,13 +798,14 @@ class NitrogenCycleCalculator:
         default=Q(0.35, "1"),
         validator=check_units("1"),
     )
-    """Fraction of biological nitrogen fixation allocated to litter pool [dimensionless].
+    """Fraction of biological nitrogen fixation allocated to litter pool
+    [dimensionless].
 
-    Represents newly fixed nitrogen that enters the litter pool within the annual
+    Represents newly fixed nitrogen that enters the litter pool within the model
     timestep through rapid plant-to-litter turnover (e.g., fine root turnover, leaf
     senescence of N-fixing plants). The remainder (1 - frc_BNF2P - frc_BNF2L) goes
     to the soil pool, representing nitrogen that cycles through both plant and litter
-    pools and enters soil within the annual timestep.
+    pools and enters soil within the model timestep.
     """
 
     # Plant Uptake (PU) fractions
@@ -816,9 +815,9 @@ class NitrogenCycleCalculator:
     )
     """Fraction of plant nitrogen uptake allocated to plant pool [dimensionless].
 
-    Represents nitrogen remaining in plant biomass at the end of the annual timestep,
+    Represents nitrogen remaining in plant biomass at the end of a model timestep,
     primarily in long-lived tissues (wood, structural tissues, storage organs) that
-    do not turn over within the year.
+    do not turn over within the model timestep.
     """
 
     frc_PU2L: pint.Quantity = field(
@@ -828,10 +827,10 @@ class NitrogenCycleCalculator:
     """Fraction of plant nitrogen uptake allocated to litter pool [dimensionless].
 
     Represents nitrogen that cycles from mineral pool to plant and then to litter
-    within the annual timestep through rapid turnover of short-lived tissues (fine
+    within the model timestep through rapid turnover of short-lived tissues (fine
     roots, senescing leaves, reproductive structures). The remainder (1 - frc_PU2P -
     frc_PU2L) goes to the soil pool, representing nitrogen that cascades through
-    plant, litter, and into soil within the annual timestep.
+    plant, litter, and into soil within the model timestep.
     """
 
     # Litter fractions
@@ -842,9 +841,9 @@ class NitrogenCycleCalculator:
     """Fraction of litter production nitrogen retained in litter pool [dimensionless].
 
     Represents nitrogen in plant materials that remain in the litter pool at the end
-    of the annual timestep as recognizable plant structures. The remainder (1 - frc_nLP2L)
+    of a model timestep as recognizable plant structures. The remainder (1 - frc_nLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
-    the soil pool within the annual timestep, bypassing extended residence in the
+    the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
     """
 
@@ -852,11 +851,13 @@ class NitrogenCycleCalculator:
         default=Q(0.3, "1"),
         validator=check_units("1"),
     )
-    """Fraction of litter decomposition nitrogen transferred to soil pool [dimensionless].
+    """Fraction of litter decomposition nitrogen transferred to soil pool
+    [dimensionless].
 
-    Represents nitrogen incorporated into stable soil organic matter during decomposition.
-    The remainder (1 - frc_nLD2S) is mineralized to the mineral pool (nLD2M), representing
-    nitrogen released as plant-available forms (NH₄⁺, NO₃⁻) during litter breakdown.
+    Represents nitrogen incorporated into stable soil organic matter during
+    decomposition. The remainder (1 - frc_nLD2S) is mineralized to the mineral pool
+    (nLD2M), representing nitrogen released as plant-available forms (NH₄⁺,
+    NO₃⁻) during litter breakdown.
     """
 
     # Grazing fractions
@@ -896,7 +897,7 @@ class NitrogenCycleCalculator:
         on inputs (BNF, PU), internal transfers (nLP, nLD), outputs (nSR), and land
         use changes (nLUgrs). Each input flux is partitioned among pools according
         to the fractional allocation parameters, which account for nitrogen cascading
-        through multiple pools within the annual timestep.
+        through multiple pools within the model timestep.
 
         Parameters
         ----------
@@ -932,7 +933,7 @@ class NitrogenCycleCalculator:
 
         **Plant Pool:**
 
-        ..  math::
+        .. math::
 
             \\frac{dN_P}{dt} = BNF \\times f_{BNF2P} + PU \\times f_{PU2P} - nLP -
             nLUgrs \\times f_{nLUgrs2P}
@@ -954,22 +955,21 @@ class NitrogenCycleCalculator:
         where:
 
         - :math:`f_{BNF2S} = 1 - f_{BNF2P} - f_{BNF2L}` represents BNF nitrogen
-          cascading through plant→litter→soil within the annual timestep
+          cascading through plant→litter→soil within the model timestep
         - :math:`f_{PU2S} = 1 - f_{PU2P} - f_{PU2L}` represents uptake nitrogen
-          cascading through plant→litter→soil within the annual timestep
+          cascading through plant→litter→soil within the model timestep
         - :math:`f_{nLP2S} = 1 - f_{nLP2L}` represents rapid litter decomposition
-          directly entering soil within the annual timestep
+          directly entering soil within the model timestep
         - :math:`f_{nLUgrs2S} = 1 - f_{nLUgrs2P} - f_{nLUgrs2L}` (remainder from soil)
 
-        **Important Note on Annual Timestep:**
+        **Allocation Fractions and Time Resolution:**
 
-        All allocation fractions account for the cascade of nitrogen through multiple
-        pools within the annual timestep. For example, :math:`f_{PU2S}` does not
+        All allocation fractions account for the rapid cascade of nitrogen through
+        multiple pools over the model timestep. For example,
+        :math:`f_{PU2S}` does not
         represent direct allocation from mineral to soil, but rather nitrogen that
         is taken up by plants, then enters litter through turnover, and subsequently
-        enters soil through decomposition—all within a single year.  This approach
-        effectively captures rapid cycling processes without explicitly modeling
-        sub-annual dynamics.
+        enters soil through decomposition over that model timestep.
         """
         # Calculate plant uptake partitioning
         NflxPU2P = NflxPU * self.frc_PU2P
@@ -1198,12 +1198,12 @@ class NitrogenCycleCalculator:
         -------
             Dictionary containing all nitrogen fluxes and their partitioned components:
 
-            - Primary fluxes:  NflxPU, NflxBNF, NflxLP, NflxLD, NflxSR, NflxLS,
+            - Primary fluxes: NflxPU, NflxBNF, NflxLP, NflxLD, NflxSR, NflxLS,
               NflxAD, NflxFT, NflxLUgrs, NflxLUmin
             - PU partitioning: NflxPU2P, NflxPU2L, NflxPU2S
             - BNF partitioning: NflxBNF2P, NflxBNF2L, NflxBNF2S
             - LP partitioning: NflxLP2L, NflxLP2S
-            - LD partitioning:  NflxLD2S, NflxLD2M
+            - LD partitioning: NflxLD2S, NflxLD2M
             - LUgrs partitioning: NflxLUgrs2P, NflxLUgrs2L, NflxLUgrs2S
             - Derived flux: NflxNetMIN (total net mineralization = nLD2M + nSR)
 
@@ -1273,30 +1273,12 @@ class NitrogenCycleCalculator:
 
 @define
 class NitrogenCycleModelResult:
-    """Results from running the nitrogen cycle model.
+    """Results returned by :meth:`NitrogenCycleModel.run`.
 
-    This class stores the complete output from a nitrogen cycle model simulation,
-    including nitrogen pool states, fluxes, and all environmental effect modifiers.
-    Results can be converted to an xarray Dataset for analysis and visualization.
-
-    The nitrogen cycle model tracks four terrestrial nitrogen pools:
-
-    - Plant nitrogen pool (NplsP): Nitrogen in living plant biomass
-    - Litter nitrogen pool (NplsL): Nitrogen in dead plant material
-    - Soil nitrogen pool (NplsS): Nitrogen in soil organic matter
-    - Mineral nitrogen pool (NplsM): Plant-available inorganic nitrogen
-
-    Key processes represented include:
-
-    - External inputs: Biological nitrogen fixation (BNF), atmospheric deposition (AD),
-      and fertilizer application (FT)
-    - Plant uptake (PU): Transfer from mineral to organic pools
-    - Organic matter turnover (nLP, nLD, nSR)
-    - Mineral nitrogen losses (nLS): Gaseous emissions and leaching
-    - Land use changes:  Gross deforestation (nLUgrs) and mineral losses (nLUmin)
-    - Environmental modifiers: temperature, nitrogen, and land use effects
-
-    Forcing and effect attributes are series aligned with ``time_axis``.
+    Stores the time-aligned nitrogen pool states and the flux and effect series used
+    during the simulation. Use :meth:`add_non_state_variables` to calculate derived
+    fluxes and diagnostics and assemble the complete xarray dataset. Attribute
+    descriptions below give the contents and units of the stored values.
     """
 
     n_state: Dict[str, pint.Quantity]
@@ -1306,7 +1288,7 @@ class NitrogenCycleModelResult:
 
     - 'NplsP': Plant nitrogen pool
     - 'NplsL': Litter nitrogen pool
-    - 'NplsS':  Soil nitrogen pool
+    - 'NplsS': Soil nitrogen pool
     - 'NplsM': Mineral nitrogen pool
     """
 
@@ -1328,8 +1310,9 @@ class NitrogenCycleModelResult:
     time_axis: pint.Quantity
     """Time points for simulation [yr].
 
-    Array of discrete time points at which the model state is evaluated,
-    typically representing annual timesteps.
+    Array of evenly spaced time points at which the model state is evaluated.
+    Annual timesteps are used in the default examples; subannual time axes are also
+    supported.
     """
 
     NflxPU_s: pint.Quantity
@@ -1435,10 +1418,10 @@ class NitrogenCycleModelResult:
         This method computes all diagnostic fluxes and derived quantities from the
         model state variables and returns a complete xarray Dataset containing:
 
-        - State variables:  Nitrogen pools (NplsP, NplsL, NplsS, NplsM)
+        - State variables: Nitrogen pools (NplsP, NplsL, NplsS, NplsM)
         - Turnover fluxes: Calculated from pools and environmental effects (nLP, nLD, nSR, nLS)
         - All partitioned fluxes: PU, BNF, and land use change distributed among pools
-        - Derived quantities:  Total organic nitrogen (NplsPLS), total terrestrial nitrogen
+        - Derived quantities: Total organic nitrogen (NplsPLS), total terrestrial nitrogen
           (NplsPLSM), net terrestrial nitrogen flux (NflxNetPLSM)
         - Net mineralization: Total nitrogen release from organic matter (NflxNetMIN)
 
@@ -1457,11 +1440,11 @@ class NitrogenCycleModelResult:
             **Primary Fluxes:**
 
             - NflxPU: Plant nitrogen uptake [GtN/yr]
-            - NflxBNF:  Biological nitrogen fixation [GtN/yr]
+            - NflxBNF: Biological nitrogen fixation [GtN/yr]
             - NflxAD: Atmospheric deposition [GtN/yr]
             - NflxFT: Fertilizer application [GtN/yr]
-            - NflxLP:  Litter production [GtN/yr]
-            - NflxLD:  Litter decomposition [GtN/yr]
+            - NflxLP: Litter production [GtN/yr]
+            - NflxLD: Litter decomposition [GtN/yr]
             - NflxSR: Soil respiration (soil turnover) [GtN/yr]
             - NflxLS: Mineral nitrogen losses [GtN/yr]
             - NflxLUgrs: Gross land use emissions [GtN/yr]
@@ -1469,9 +1452,9 @@ class NitrogenCycleModelResult:
 
             **Partitioned Fluxes:**
 
-            - NflxPU2P, NflxPU2L, NflxPU2S:  Plant uptake allocation to each pool
+            - NflxPU2P, NflxPU2L, NflxPU2S: Plant uptake allocation to each pool
             - NflxBNF2P, NflxBNF2L, NflxBNF2S: BNF allocation to each pool
-            - NflxLP2L, NflxLP2S:  Litter production allocation
+            - NflxLP2L, NflxLP2S: Litter production allocation
             - NflxLD2S, NflxLD2M: Litter decomposition to soil and mineral
             - NflxLUgrs2P, NflxLUgrs2L, NflxLUgrs2S: Land use emissions from each pool
 
@@ -1552,34 +1535,23 @@ class NitrogenCycleModelResult:
 
 @define
 class NitrogenCycleModel:
-    """MAGICC's terrestrial nitrogen cycle model (nitrogen component of CNit).
+    """ODE model for CNit's four terrestrial nitrogen pools.
 
-    This model simulates the dynamics of four terrestrial nitrogen pools in the
-    terrestrial biosphere by solving a system of ordinary differential equations (ODEs)
-    using scipy.integrate.solve_ivp. The model tracks nitrogen transfers between pools
-    through processes including:
+    The model represents nitrogen in plant biomass (NplsP), litter (NplsL), soil
+    organic matter (NplsS), and the mineral pool (NplsM). Biological fixation,
+    atmospheric deposition, and fertilizer add nitrogen; plant uptake transfers
+    mineral nitrogen into organic pools. Litter production, decomposition, and soil
+    respiration transfer or release organic nitrogen. Mineralization returns nitrogen
+    to the mineral pool, while gaseous losses, leaching, and land use remove it.
+    Temperature, nitrogen availability, and land-use history modify the relevant
+    process rates.
 
-    - External inputs:  Biological nitrogen fixation (BNF), atmospheric deposition (AD),
-      and fertilizer application (FT)
-    - Plant uptake (PU): Transfer from mineral to organic pools
-    - Organic matter turnover (litter production, litter decomposition, soil respiration)
-    - Mineralization: Release of plant-available nitrogen from organic matter
-    - Mineral nitrogen losses: Gaseous emissions and leaching
-    - Land use changes: Gross deforestation and direct mineral losses
-    - Environmental modifiers (temperature, nitrogen availability, land use effects)
-
-    The model uses annual timesteps and accounts for rapid nitrogen cycling through
-    empirical allocation fractions that represent nitrogen cascading through multiple
-    pools within a year.
-
-    The nitrogen cycle is solved in two stages:
-    (1) organic nitrogen pools (plant, litter, soil) are solved first, then
-    (2) the mineral nitrogen pool is solved using net mineralization calculated from
-    the organic pool dynamics.
-
-    Time-continuous functions (suffixed with `_t`) are generated through linear
-    interpolation of discrete time points and provide continuous values over the
-    simulation period, allowing the ODE solver to evaluate fluxes at any time point.
+    The model solves pool dynamics from nitrogen flux and effect series supplied by
+    the coupled model. Organic pools are solved first; the mineral pool is then solved
+    using net mineralization from the organic-pool solution. Evenly spaced subannual
+    time axes are supported; the default examples use annual timesteps, with
+    allocation fractions applying within each timestep. See :meth:`run` for the
+    required series and simulation behavior.
     """
 
     calc_n_turnover: NitrogenTurnoverCalculator
@@ -1607,7 +1579,7 @@ class NitrogenCycleModel:
     """Initial plant nitrogen pool size [GtN].
 
     Nitrogen contained in living plant biomass at the start of the simulation
-    (time0). Typical values range from 3-6 GtN for global simulations.
+    (time0).
     """
 
     NplsL0: pint.Quantity = field(
@@ -1617,7 +1589,7 @@ class NitrogenCycleModel:
     """Initial litter nitrogen pool size [GtN].
 
     Nitrogen contained in dead plant material (litter) at the start of the simulation
-    (time0). Typical values range from 0.5-2 GtN for global simulations.
+    (time0).
     """
 
     NplsS0: pint.Quantity = field(
@@ -1627,7 +1599,6 @@ class NitrogenCycleModel:
     """Initial soil nitrogen pool size [GtN].
 
     Nitrogen contained in soil organic matter at the start of the simulation (time0).
-    Typical values range from 95-140 GtN for global simulations.
     """
 
     NplsM0: pint.Quantity = field(
@@ -1637,8 +1608,7 @@ class NitrogenCycleModel:
     """Initial mineral nitrogen pool size [GtN].
 
     Plant-available inorganic nitrogen (primarily NH₄⁺ and NO₃⁻) at the start of
-    the simulation (time0). Typical values range from 0.01-0.1 GtN for global
-    simulations.  This pool has much faster turnover than organic pools.
+    the simulation (time0). This pool has much faster turnover than organic pools.
     """
 
     time0: pint.Quantity = field(
@@ -1647,19 +1617,20 @@ class NitrogenCycleModel:
     )
     """Initialization time [yr].
 
-    Time point at which the initial pool sizes (NplsP0, NplsL0, NplsS0, NplsM0) apply.
-    The simulation time_axis must start at or after this time.  Typically set to
-    the pre-industrial baseline year (1850).
+    Time point at which the initial pool sizes apply. The simulation time_axis must
+    start at or after this time. The default is the pre-industrial baseline year
+    (1850).
     """
 
     switch_Npls: list[int] = field(
-        default=[1, 1, 1, 1],
+        factory=lambda: [1, 1, 1, 1],
     )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 
-    Binary switches (1=enabled, 0=disabled) to selectively enable or disable
-    pool dynamics.  Useful for diagnostic purposes or simplified model configurations.
-    Setting a switch to 0 freezes that pool at its initial value.
+    For plant, litter, and soil pools, use 1 to enable or 0 to freeze the pool at its
+    initial value; other numeric values scale its derivative. For the mineral pool,
+    0 disables its dynamics and any non-zero value enables them. These switches are
+    useful for diagnostic purposes or simplified model configurations.
 
     - switch_Npls[0]: Plant pool switch
     - switch_Npls[1]: Litter pool switch
@@ -1694,13 +1665,13 @@ class NitrogenCycleModel:
         (1) Solves organic nitrogen pools (plant, litter, soil) first, then
         (2) Solves mineral nitrogen pool using net mineralization from stage 1.
 
-        Numeric interpolators are built directly from the unit-aware forcing and
+        Numeric interpolators are built directly from the unit-aware flux and
         effect series for the solver's adaptive time steps.
 
         Parameters
         ----------
         time_axis
-            Time points for simulation [yr], aligned with all input series.
+            Time points for simulation [yr], aligned with the flux and effect series.
         NflxPU_s, NflxBNF_s, NflxAD_s, NflxFT_s, NflxLUgrs_s, NflxLUmin_s
             Nitrogen flux series [GtN/yr], aligned with ``time_axis``.
         eff_dT_*_s, eff_N_*_s, eff_LU_*_s
@@ -1713,7 +1684,7 @@ class NitrogenCycleModel:
 
             - Nitrogen pool time series (NplsP, NplsL, NplsS, NplsM)
             - References to calculator instances
-            - All input forcing and effect series
+            - All flux and effect series
             - Methods to calculate derived fluxes and diagnostics
 
         Raises
@@ -1734,7 +1705,7 @@ class NitrogenCycleModel:
 
         1. **Stage 1 - Organic pools (plant, litter, soil):**
 
-        ..  math::
+        .. math::
 
             \\frac{dN_P}{dt} = BNF \\times f_{BNF2P} + PU \\times f_{PU2P} - nLP -
             nLUgrs \\times f_{nLUgrs2P}
@@ -1770,7 +1741,7 @@ class NitrogenCycleModel:
         Both stages use scipy.integrate.solve_ivp with:
 
         - Adaptive time stepping (solver selects appropriate substeps)
-        - Absolute tolerance:  1e-6 GtN
+        - Absolute tolerance: 1e-6 GtN
         - Relative tolerance: 1e-3
         - Default solver method (typically RK45)
         - Stage 2 uses max_step=2 yr for stability due to fast mineral pool turnover
@@ -1782,7 +1753,7 @@ class NitrogenCycleModel:
         effectively freezing that pool at its initial value throughout the simulation.
         If the mineral pool switch is 0, the mineral pool is set to zero throughout.
 
-        The input series are converted to numeric interpolators once before
+        The flux and effect series are converted to numeric interpolators once before
         integration, allowing adaptive solver evaluations between output times.
         """
 
