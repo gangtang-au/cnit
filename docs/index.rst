@@ -43,18 +43,20 @@ Quick Navigation
 
    → See :doc:`quickstart` for installation and basic usage.
 
-   → See :doc:`api/cnit.configs` for model parameters and experiment inputs.
+   → See :doc:`CMIP6 ESM emulation <examples/cmip6-esm>` and
+   :doc:`TRENDY DGVM emulation <examples/trendy-dgvm>` for complete workflows,
+   code, and outputs.
 
    → See :doc:`CNit Physics API <api/cnit.physics>` for detailed process equations and parameterizations.
 
-   → See :doc:`example` for complete CMIP6 ESM and TRENDY DGVM notebooks with code and outputs.
+   → See :doc:`api/cnit.configs` for model parameters and experiment inputs.
 
 **🛠️ For Developers**
    Contribute to CNit development.
 
    → See :doc:`api/cnit.physics` for implementation details.
 
-   → See :doc:`contributing` for development setup and coding guidelines.
+   → See :doc:`development/contributing` for development setup and coding guidelines.
 
 Getting Started
 ---------------
@@ -91,17 +93,18 @@ parameters, and class methods.
    api/cnit.physics
    api/cnit.configs
 
-Examples
---------
+Emulation Workflows
+-------------------
 
 Explore complete CMIP6 ESM and TRENDY DGVM emulation workflows, with notebooks and
 model outputs.
 
 .. toctree::
-   :caption: Examples
-   :maxdepth: 2
+   :caption: Emulation Workflows
+   :maxdepth: 3
 
-   example
+   examples/cmip6-esm
+   examples/trendy-dgvm
 
 Development
 -----------
@@ -112,8 +115,8 @@ Read the release history and find guidance for contributing to CNit.
    :caption: Development
    :maxdepth: 2
 
-   changelog
-   contributing
+   development/changelog
+   development/contributing
 
 
 Project Information
@@ -123,7 +126,7 @@ Find maintainer contact details, licensing and citation information, and related
 
 .. toctree::
    :caption: Project information
-   :maxdepth: 1
+   :maxdepth: 2
 
    project_info/references
    project_info/calibration-data

@@ -151,4 +151,5 @@ Next Steps
 - Read :doc:`overview` to understand the model structure
 - Browse :doc:`api/cnit.physics` for detailed process parameterizations and model API
 - See :doc:`api/cnit.configs` for configuration parameters, defaults, and inputs
-- Check :doc:`example` for CMIP6 ESM emulation and TRENDY DGVM emulation examples.
+- See :doc:`CMIP6 ESM emulation <examples/cmip6-esm>` and
+  :doc:`TRENDY DGVM emulation <examples/trendy-dgvm>` for complete workflows.

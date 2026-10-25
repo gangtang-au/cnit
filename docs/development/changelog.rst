@@ -48,7 +48,7 @@ documentation.
 * Computationally efficient for integrated assessment modeling
 * MAGICC integration ready
 
-See the :doc:`overview` for detailed model description.
+See the :doc:`model overview <../overview>` for a detailed model description.
 
 Earlier Source Releases
 -----------------------

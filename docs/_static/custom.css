@@ -8,7 +8,7 @@
 /* Keep section headings as the page labels; retain toctree captions in the sidebar. */
 section#getting-started > .toctree-wrapper > p.caption,
 section#api-reference > .toctree-wrapper > p.caption,
-section#examples > .toctree-wrapper > p.caption,
+section#emulation-workflows > .toctree-wrapper > p.caption,
 section#model-overview > .toctree-wrapper > p.caption,
 section#development > .toctree-wrapper > p.caption {
     display: none;

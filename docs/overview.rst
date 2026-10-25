@@ -310,7 +310,9 @@ Next Steps
    Continue to :doc:`quickstart` to install CNit and run your first simulation.
 
 **Browse Examples:**
-   See :doc:`example` for common use cases and analysis workflows.
+   See :doc:`CMIP6 ESM emulation <examples/cmip6-esm>` and
+   :doc:`TRENDY DGVM emulation <examples/trendy-dgvm>` for common use cases and
+   analysis workflows.
 
 Further Reading
 ---------------

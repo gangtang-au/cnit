@@ -92,4 +92,6 @@ Pull request checklist
 * Describe compatibility or scientific-result changes clearly in the pull
   request.
 
-CNit is released under the BSD 3-Clause License. See the :doc:`License <project_info/license>` page or the repository's LICENSE file for details.
+CNit is released under the BSD 3-Clause License. See the
+:doc:`License <../project_info/license>` page or the repository's LICENSE file
+for details.
