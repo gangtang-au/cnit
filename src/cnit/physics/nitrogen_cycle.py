@@ -1652,7 +1652,7 @@ class NitrogenCycleModel:
     """
 
     switch_Npls: list[int] = field(
-        default=[1, 1, 1, 1],
+        factory=lambda: [1, 1, 1, 1],
     )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 

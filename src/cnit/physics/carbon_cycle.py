@@ -984,7 +984,7 @@ class CarbonCycleModel:
     """
 
     switch_Cpls: list[int] = field(
-        default=[1, 1, 1],
+        factory=lambda: [1, 1, 1],
     )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 

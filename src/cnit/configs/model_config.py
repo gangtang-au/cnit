@@ -642,6 +642,24 @@ class CarbonNitrogenCycleModelConfig:
 
     def __attrs_post_init__(self) -> None:
         """Validate physical parameter ranges when the config is created."""
+        for name, expected_length in (("switch_Cpls", 3), ("switch_Npls", 4)):
+            switches = getattr(self, name)
+            if not isinstance(switches, (list, tuple, np.ndarray)):
+                raise TypeError(f"{name} must be a sequence of numeric switches.")
+            try:
+                values = np.asarray(switches)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"{name} must contain {expected_length} finite numeric values."
+                ) from exc
+
+            if values.ndim != 1 or values.size != expected_length:
+                raise ValueError(
+                    f"{name} must contain exactly {expected_length} values."
+                )
+            if values.dtype.kind not in "biuf" or not np.all(np.isfinite(values)):
+                raise ValueError(f"{name} must contain only finite numeric values.")
+
         fraction_names = (
             "frc_rgr",
             "frc_NPP2P",
