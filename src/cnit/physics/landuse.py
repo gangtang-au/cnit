@@ -2,7 +2,7 @@
 Land Use Flux Calculator for the CNit Model.
 
 This module defines the :class:`LanduseCalculator` class, which processes land use
-change forcing data and translates it into the specific fluxes required by the CNit
+input data and translates it into the specific fluxes required by the CNit
 model.  The calculator handles both carbon and nitrogen land use fluxes with explicit
 separation of deforestation, afforestation (or reforestation), and regrowth dynamics.
 
@@ -224,7 +224,7 @@ from ..utils.units import check_units, Q
 class LanduseCalculator:
     """Calculator for land use change fluxes with explicit deforestation/afforestation separation.
 
-    This calculator processes land use change forcing data (net or gross emissions) and
+    This calculator processes land-use input data (net or gross emissions) and
     generates detailed flux time series including deforestation, afforestation,
     regrowth, and afforestation-decay components. The separation of deforestation and
     afforestation is essential for scenarios involving carbon dioxide removal (CDR)
@@ -296,7 +296,7 @@ class LanduseCalculator:
         time_axis: Optional[pint.Quantity] = None,
     ) -> Dict[str, pint.Quantity]:
         """
-        Calculate carbon flux time series from land use change forcing.
+        Calculate carbon flux time series from land-use input series.
 
         This method processes land use change emissions and generates comprehensive
         flux time series including gross emissions, regrowth, deforestation,
@@ -433,7 +433,7 @@ class LanduseCalculator:
         time_axis: Optional[pint.Quantity] = None,
     ) -> Dict[str, pint.Quantity]:
         """
-        Calculate nitrogen flux time series from land use change forcing.
+        Calculate nitrogen flux time series from land-use input series.
 
         This method processes land use change emissions and generates comprehensive
         nitrogen flux time series.    In addition to organic nitrogen fluxes (analogous
@@ -694,7 +694,7 @@ class LanduseCalculator:
     ) -> np.ndarray:
         """Convert a prevalidated flux series to a copied numeric array.
 
-        Experiment configs validate forcing units and series lengths before model
+        Experiment configs validate input units and series lengths before model
         execution. This helper assumes those preconditions and only converts the
         values to the calculation unit. The copy ensures in-place calculations
         cannot alter caller inputs.

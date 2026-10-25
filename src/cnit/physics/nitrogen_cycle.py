@@ -1296,7 +1296,7 @@ class NitrogenCycleModelResult:
     - Land use changes: Gross deforestation (nLUgrs) and mineral losses (nLUmin)
     - Environmental modifiers: temperature, nitrogen, and land use effects
 
-    Forcing and effect attributes are series aligned with ``time_axis``.
+    Flux and effect attributes are series aligned with ``time_axis``.
     """
 
     n_state: Dict[str, pint.Quantity]
@@ -1694,13 +1694,13 @@ class NitrogenCycleModel:
         (1) Solves organic nitrogen pools (plant, litter, soil) first, then
         (2) Solves mineral nitrogen pool using net mineralization from stage 1.
 
-        Numeric interpolators are built directly from the unit-aware forcing and
+        Numeric interpolators are built directly from the unit-aware flux and
         effect series for the solver's adaptive time steps.
 
         Parameters
         ----------
         time_axis
-            Time points for simulation [yr], aligned with all input series.
+            Time points for simulation [yr], aligned with the flux and effect series.
         NflxPU_s, NflxBNF_s, NflxAD_s, NflxFT_s, NflxLUgrs_s, NflxLUmin_s
             Nitrogen flux series [GtN/yr], aligned with ``time_axis``.
         eff_dT_*_s, eff_N_*_s, eff_LU_*_s
@@ -1713,7 +1713,7 @@ class NitrogenCycleModel:
 
             - Nitrogen pool time series (NplsP, NplsL, NplsS, NplsM)
             - References to calculator instances
-            - All input forcing and effect series
+            - All flux and effect series
             - Methods to calculate derived fluxes and diagnostics
 
         Raises
@@ -1782,7 +1782,7 @@ class NitrogenCycleModel:
         effectively freezing that pool at its initial value throughout the simulation.
         If the mineral pool switch is 0, the mineral pool is set to zero throughout.
 
-        The input series are converted to numeric interpolators once before
+        The flux and effect series are converted to numeric interpolators once before
         integration, allowing adaptive solver evaluations between output times.
         """
 

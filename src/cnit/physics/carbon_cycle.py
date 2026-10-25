@@ -695,7 +695,7 @@ class CarbonCycleModelResult:
     - Land use change emissions (cLUgrs)
     - Environmental modifiers: temperature, nitrogen, and land use effects
 
-    Forcing and effect attributes are series aligned with ``time_axis``.
+    Flux and effect attributes are series aligned with ``time_axis``.
     """
 
     c_state: Dict[str, pint.Quantity]
@@ -923,7 +923,7 @@ class CarbonCycleModel:
     subannual time axes. Empirical allocation fractions represent carbon transfers through
     multiple pools within each model timestep.
 
-    Unit-aware forcing and effect series are converted to numeric interpolators once
+    Unit-aware flux and effect series are converted to numeric interpolators once
     at the solver boundary, allowing adaptive evaluation without repeated unit work.
     """
 
@@ -1018,7 +1018,7 @@ class CarbonCycleModel:
 
         This method solves the system of ODEs for carbon pool dynamics over the
         specified time period using scipy.integrate.solve_ivp. Numeric interpolators
-        are built directly from the unit-aware forcing and effect series for the
+        are built directly from the unit-aware flux and effect series for the
         solver's adaptive time steps.
 
         Parameters
@@ -1038,7 +1038,7 @@ class CarbonCycleModel:
 
             - Carbon pool time series (CplsP, CplsL, CplsS)
             - References to calculator instances
-            - All input forcing and effect series
+            - All flux and effect series
             - Methods to calculate derived fluxes and diagnostics
 
         Raises
@@ -1084,7 +1084,7 @@ class CarbonCycleModel:
         is set to 0, the corresponding pool's rate of change is forced to zero,
         effectively freezing that pool at its initial value throughout the simulation.
 
-        The input series are converted to numeric interpolators once before
+        The flux and effect series are converted to numeric interpolators once before
         integration, allowing adaptive solver evaluations between output times.
         """
 

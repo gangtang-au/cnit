@@ -68,7 +68,7 @@ build renders the notebooks with execution disabled, so notebook outputs should
 be saved in the notebook files.
 
 The model-results regression test compares the default model configuration with
-the local ``main`` branch using the ``1pctCO2`` and ``hist_ssp585`` forcing
+the local ``main`` branch using the ``1pctCO2`` and ``hist_ssp585`` input
 experiments. It also runs a calibrated ACCESS-ESM1-5 configuration and reports
 maximum absolute and relative differences for selected carbon and nitrogen
 diagnostics. To show those diagnostic values locally, run:

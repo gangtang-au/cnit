@@ -394,14 +394,14 @@ class CarbonNitrogenCycleModel:
         Run multiple experiments with the model.
 
         This method facilitates running multiple model scenarios with different
-        configurations and/or forcing data. Results from all experiments are
+        configurations and/or input data. Results from all experiments are
         concatenated into a single dataset with an 'experiment' dimension.
 
         Parameters
         ----------
         experiments
-            List of experiment configurations.  Each experiment specifies forcing
-            data, nitrogen switch setting, and a name for identification.
+            List of experiment configurations. Each experiment specifies input data,
+            nitrogen switch setting, and a name for identification.
 
         Returns
         -------
@@ -415,12 +415,12 @@ class CarbonNitrogenCycleModel:
         >>> exp1 = CarbonNitrogenCycleExperimentConfig(
         ...     name="control",
         ...     switch_N=Q(1, "1"),
-        ...     # ...  forcing data ...
+        ...     # ... input data ...
         ... )
         >>> exp2 = CarbonNitrogenCycleExperimentConfig(
         ...     name="no_nitrogen",
         ...     switch_N=Q(0, "1"),
-        ...     # ... forcing data ...
+        ...     # ... input data ...
         ... )
         >>> results = model.run_experiments([exp1, exp2])
         >>> control_npp = results.sel(experiment="control")["CflxNPP"]
@@ -457,7 +457,7 @@ class CarbonNitrogenCycleModel:
 
         This is the main simulation method that:
 
-        1. Processes land use change forcing
+        1. Processes land-use input series
         2. Calculates potential and actual NPP with nitrogen limitation
         3. Calculates nitrogen deficit and feedbacks
         4. Solves carbon cycle with nitrogen effects
@@ -468,7 +468,7 @@ class CarbonNitrogenCycleModel:
         ----------
         time_axis
             Evenly spaced time points for simulation [yr]. Must start at or after
-            initialization time (time0) specified in model components. All forcing
+            initialization time (time0) specified in model components. All input
             series must have one value per time point.
         dT_s
             Time series of temperature anomaly relative to preindustrial [K].
@@ -915,11 +915,11 @@ class CarbonNitrogenCycleModel:
         Calculate equilibrium initial state for the model.
 
         This method calculates the equilibrium pool sizes and turnover times that
-        would result from steady forcing conditions. It is typically used to initialize
+        would result from steady input conditions. It is typically used to initialize
         the model in equilibrium with preindustrial conditions before running transient
         simulations.
 
-        The method uses the first timestep values of all forcing to calculate steady-state
+        The method uses the first timestep values of all input series to calculate steady-state
         fluxes, then uses inverse turnover calculations to determine equilibrium pool
         sizes and turnover times.
 
@@ -971,7 +971,7 @@ class CarbonNitrogenCycleModel:
         At equilibrium, pool sizes are constant (dC/dt = 0, dN/dt = 0), which means:
 
         - Inputs = Outputs for each pool
-        - Fluxes are determined by forcing conditions
+        - Fluxes are determined by input conditions
         - Pool sizes and turnover times are mutually consistent
 
         **Usage:**
@@ -984,7 +984,7 @@ class CarbonNitrogenCycleModel:
             eqm = model.calculate_mdl_eqm0(
                 dT_s=preindustrial_temp,
                 CO2_s=preindustrial_CO2,
-                # ... other preindustrial forcing ...
+                # ... other preindustrial inputs ...
             )
 
             # Set initial pool sizes (if desired)

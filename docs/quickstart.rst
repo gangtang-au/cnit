@@ -137,7 +137,7 @@ Basic Usage
 -----------
 
 The runnable basic usage example is provided as a Jupyter notebook. It covers
-model setup, illustrative forcing, running a simulation, inspecting results, and
+model setup, illustrative input data, running a simulation, inspecting results, and
 plotting the carbon and nitrogen fluxes and pools.
 
 .. toctree::

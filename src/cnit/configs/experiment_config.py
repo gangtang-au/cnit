@@ -15,20 +15,20 @@ from ..utils.units import check_units
 
 @define
 class CarbonNitrogenCycleExperimentConfig:
-    """Stores the time axis and forcing series for one named CNit experiment.
+    """Stores the time axis and input series for one named CNit experiment.
 
     Use this config with
     :meth:`~cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel.run_experiments`.
     The model config stores parameters shared across runs; this config stores the name,
-    time axis, forcing data, and nitrogen-cycle switch for one scenario. The public
+    time axis, input series, and nitrogen-cycle switch for one scenario. The public
     alias is ``CNitExpConfig``, available from the package root::
 
         from cnit import CNitExpConfig
 
     Field validators check unit compatibility. On construction, the config checks that
     ``time_axis`` has at least two finite, strictly increasing, evenly spaced
-    coordinates and that every forcing series has exactly the same shape as the axis.
-    It does not check forcing-series values for finiteness or require unused net- and
+    coordinates and that every input series has exactly the same shape as the axis.
+    It does not check input-series values for finiteness or require unused net- and
     gross-land-use series to be zero; the model's land-use method settings determine
     which series are used.
 
@@ -133,10 +133,10 @@ class CarbonNitrogenCycleExperimentConfig:
 
     metadata: Optional[Dict[str, object]] = field(default=None)
     """Optional user-provided metadata. It is stored on the config but is not passed
-    as a forcing input to the model."""
+    as an input to the model."""
 
     def __attrs_post_init__(self) -> None:
-        """Check time-axis regularity and forcing-series lengths.
+        """Check time-axis regularity and input-series lengths.
 
         Field validators check unit compatibility before this method runs.
         """
