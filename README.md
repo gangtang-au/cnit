@@ -82,18 +82,9 @@ print(f"Final NPP: {res['CflxNPP'].data[-1]} {res['CflxNPP'].units}")
 
 ## Documentation
 
-The [CNit documentation](https://cnit.readthedocs.io/en/latest/) is organized for
-scientists, model users, and developers:
-
-- [Model overview](https://cnit.readthedocs.io/en/latest/overview.html) — model
-  structure, processes, and assumptions.
-- [Physics API](https://cnit.readthedocs.io/en/latest/api/cnit.physics.html) and
-  [Configuration API](https://cnit.readthedocs.io/en/latest/api/cnit.configs.html) —
-  process equations, parameterizations, model parameters, and experiment inputs.
-- [CMIP6 ESM](https://cnit.readthedocs.io/en/latest/examples/cmip6-esm.html) and
-  [TRENDY DGVM](https://cnit.readthedocs.io/en/latest/examples/trendy-dgvm.html)
-  emulation workflows.
-- [Calibration data and results](https://cnit.readthedocs.io/en/latest/project_info/calibration-data.html).
+The [CNit documentation](https://cnit.readthedocs.io/en/latest/) covers the model
+overview, quickstart, detailed physics and configuration APIs, CMIP6 ESM and TRENDY DGVM
+emulation workflows, and calibration data and results.
 
 ## References
 
@@ -133,9 +124,8 @@ the complete bibliography.
 
 ## Development
 
-See the [changelog](https://cnit.readthedocs.io/en/latest/development/changelog.html)
-for release history and the [contributing guide](docs/contributing.rst) for development
-setup and checks.
+See [Contributing](docs/contributing.rst) for development setup and checks. The
+[Changelog](docs/development/changelog.rst) lists release history.
 
 ## Authors and Contributors
 
