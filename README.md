@@ -119,12 +119,11 @@ If you use CNit in research, please cite the relevant publication(s):
   *Commun. Earth Environ.*, 7, 760,
   [doi:10.1038/s43247-026-03736-0](https://doi.org/10.1038/s43247-026-03736-0), 2026.
 
-See [References](https://cnit.readthedocs.io/en/latest/project_info/references.html) for
-the complete bibliography.
+See [References](docs/project_info/references.rst) for the complete bibliography.
 
 ## Development
 
-See [Contributing](docs/contributing.rst) for development setup and checks. The
+See the [contributing guide](docs/contributing.rst) for development setup and checks. The
 [Changelog](docs/development/changelog.rst) lists release history.
 
 ## Authors and Contributors
