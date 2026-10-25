@@ -70,7 +70,7 @@ format = ["black"]
 Homepage = "https://github.com/gangtang-au/cnit"
 Documentation = "https://cnit.readthedocs.io"
 Repository = "https://github.com/gangtang-au/cnit"
-Changelog = "https://cnit.readthedocs.io/en/latest/changelog.html"
+Changelog = "https://cnit.readthedocs.io/en/latest/development/changelog.html"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

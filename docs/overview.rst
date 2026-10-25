@@ -279,10 +279,11 @@ Key assumptions in CNit:
    not vary with environmental conditions or ecosystem state. Environmental responses are
    captured through effect modifiers rather than dynamically changing turnover times.
 
-5. **Prescribed land use emissions** - Land use change is represented through prescribed
-   emission fluxes (deforestation, afforestation, regrowth) provided as model inputs rather
-   than computed from explicit simulation of land cover transitions, area changes, and
-   ecosystem carbon/nitrogen densities.
+5. **Prescribed land-use emissions** - CNit takes net or gross land-use emissions as
+   inputs and derives the associated deforestation, afforestation, regrowth, and
+   afforestation-decay fluxes. Direct mineral-nitrogen land-use emissions are supplied
+   separately. CNit does not simulate land-cover transitions, affected areas, or
+   ecosystem carbon and nitrogen densities.
 
 6. **Fixed stoichiometric parameters** - Carbon-to-nitrogen ratios for plant uptake
    requirements (C:N ratios) are fixed parameters rather than dynamically varying with
