@@ -143,7 +143,7 @@ See [Contributing](docs/contributing.rst) for development setup and checks. The
 
 ## Related Projects
 
-CNit is the land component of [MAGICC](https://magicc.org/). See the
+CNit is the carbon cycle component of [MAGICC](https://magicc.org/). See the
 [MAGICC repository](https://gitlab.com/magicc/magicc) for the climate model.
 
 ## License
