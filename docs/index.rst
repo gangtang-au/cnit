@@ -34,7 +34,9 @@ Quick Navigation
 **🔬 For Scientists**
    Understand the model's scientific basis, processes, and when to use CNit.
 
-   → Start with :doc:`overview`, then see published papers in References.
+   → See :doc:`CNit Model Overview <overview>` for the model’s scientific basis and :doc:`References <project_info/references>` for recommended publications.
+
+   → See :doc:`CNit Physics API <api/cnit.physics>` for detailed scientific process descriptions and parameterizations.
 
 **📚 For Model Users**
    Install CNit and run your first simulation.
@@ -43,19 +45,21 @@ Quick Navigation
 
    → See :doc:`api/cnit.configs` for model parameters and experiment inputs.
 
+   → See :doc:`CNit Physics API <api/cnit.physics>` for detailed process equations and parameterizations.
+
    → See :doc:`example` for complete CMIP6 ESM and TRENDY DGVM notebooks with code and outputs.
 
 **🛠️ For Developers**
    Contribute to CNit development.
 
-   → See :doc:`api/cnit.physics` for implementation details with scientific descriptions.
+   → See :doc:`api/cnit.physics` for implementation details.
 
    → See :doc:`contributing` for development setup and coding guidelines.
 
 Getting Started
 ---------------
 
-New to CNit? Start here to understand the model and run your first simulation.
+Install CNit, then follow the basic usage guide to set up and run a simulation.
 
 .. toctree::
    :caption: Getting started
@@ -63,12 +67,22 @@ New to CNit? Start here to understand the model and run your first simulation.
 
    quickstart
 
+Model Overview
+--------------
+
+Learn about CNit’s structure, processes, scientific basis, and intended use.
+
+.. toctree::
+   :caption: Model overview
+   :maxdepth: 2
+
+   overview
+
 API Reference
 -------------
 
-The overview introduces CNit's structure and processes. These API pages provide the
-detailed process parameterizations, model calculations, configuration parameters, and
-class methods.
+Look up detailed process parameterizations, model calculations, configuration
+parameters, and class methods.
 
 .. toctree::
    :caption: API reference
@@ -80,7 +94,8 @@ class methods.
 Examples
 --------
 
-See complete CMIP6 ESM and TRENDY DGVM emulation workflows.
+Explore complete CMIP6 ESM and TRENDY DGVM emulation workflows, with notebooks and
+model outputs.
 
 .. toctree::
    :caption: Examples
@@ -88,19 +103,10 @@ See complete CMIP6 ESM and TRENDY DGVM emulation workflows.
 
    example
 
-Model Overview
---------------
-
-Read about CNit's structure, processes, and scientific basis.
-
-.. toctree::
-   :caption: Model overview
-   :maxdepth: 2
-
-   overview
-
 Development
 -----------
+
+Read the release history and find guidance for contributing to CNit.
 
 .. toctree::
    :caption: Development
@@ -110,51 +116,17 @@ Development
    contributing
 
 
-Contact
--------
+Project Information
+-------------------
 
-CNit is developed and maintained by **Gang Tang**.
+Find maintainer contact details, licensing and citation information, and related projects.
 
-**Questions or feedback?**
+.. toctree::
+   :caption: Project information
+   :maxdepth: 1
 
-* Open an issue: `GitHub Issues <https://github.com/gangtang-au/cnit/issues>`_
-* Email: gang.tang.au@gmail.com
-
-Interested in contributing or collaboration? Please get in touch!
-
-License & Citation
-------------------
-
-CNit is released under the **BSD 3-Clause License**.
-
-Copyright (c) 2026, Gang Tang and contributors.
-
-See the `LICENSE file <https://github.com/gangtang-au/cnit/blob/main/LICENSE>`_
-for full details.
-
-**If you use CNit in your research, please cite our papers.**
-
-* Tang, G., Nicholls, Z., Norton, A., Zaehle, S., and Meinshausen, M.: Synthesizing
-  global carbon–nitrogen coupling effects – the MAGICC coupled carbon–nitrogen
-  cycle model v1.0, Geosci. Model Dev., 18, 2193–2230,
-  https://doi.org/10.5194/gmd-18-2193-2025, 2025.
-
-* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2026).
-  Understanding the drivers of carbon–nitrogen cycle variability in CMIP6 ESMs
-  with MAGICC CNit v2.0: Model and calibration updates. Journal of Advances in
-  Modeling Earth Systems, 18, e2025MS005270. https://doi.org/10.1029/2025MS005270
-
-Related Projects
-----------------
-
-MAGICC - Model for the Assessment of Greenhouse Gas Induced Climate Change
-
-* https://magicc.org/
-* https://gitlab.com/magicc/magicc
-
-Indices and Tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   project_info/references
+   project_info/calibration-data
+   project_info/license
+   project_info/related-projects
+   project_info/contact

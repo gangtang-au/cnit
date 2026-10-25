@@ -304,7 +304,7 @@ Next Steps
 **Understand the Science:**
    See the API documentation at :doc:`api/cnit.physics` for detailed equations and scientific
    descriptions in the docstrings. For complete theoretical background and validation,
-   see the published papers listed in the References section below.
+   see the publications on the :doc:`References <project_info/references>` page.
 
 **Start Using CNit:**
    Continue to :doc:`quickstart` to install CNit and run your first simulation.
@@ -312,17 +312,8 @@ Next Steps
 **Browse Examples:**
    See :doc:`example` for common use cases and analysis workflows.
 
-References
-----------
+Further Reading
+---------------
 
-**CNit Model Description:**
-
-* Tang, G., Nicholls, Z., Norton, A., Zaehle, S., and Meinshausen, M.: Synthesizing
-  global carbon–nitrogen coupling effects – the MAGICC coupled carbon–nitrogen cycle
-  model v1.0, Geosci. Model Dev., 18, 2193–2230,
-  https://doi.org/10.5194/gmd-18-2193-2025, 2025.
-
-* Tang, G., Zaehle, S., Nicholls, Z., Norton, A., Ziehn, T., & Meinshausen, M. (2026).
-  Understanding the drivers of carbon–nitrogen cycle variability in CMIP6 ESMs
-  with MAGICC CNit v2.0: Model and calibration updates. Journal of Advances in
-  Modeling Earth Systems, 18, e2025MS005270. https://doi.org/10.1029/2025MS005270
+See the :doc:`References <project_info/references>` page for publications describing CNit
+and its applications.

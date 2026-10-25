@@ -1,5 +1,5 @@
-Examples
-========
+Emulation Workflows
+====================
 
 CNit's emulation examples are rendered from the current Jupyter notebooks. They
 show the complete workflows, code, and saved plots. Both notebooks use calibrated
@@ -15,7 +15,8 @@ fluxes, and nitrogen pools and fluxes against the model outputs. To run it
 locally, download ``cali_cmip6_best_fitting.csv``, ``CMIP6_cali_forcing.nc``,
 and ``CMIP6_cali_target.nc`` from the `CNit Model Calibration and Results
 <https://doi.org/10.5281/zenodo.18116573>`_ and put them in the project-level
-``data/`` directory.
+``data/`` directory. See :doc:`Calibration Data and Results <project_info/calibration-data>`
+for more about the archive.
 
 .. toctree::
    :maxdepth: 1
@@ -30,7 +31,8 @@ historical ``S1``–``S3`` experiments, compares NPP and land carbon pools and
 fluxes, and demonstrates an additional doubled-warming experiment. To run it
 locally, download ``cali_trendy_best_fitting.csv``,
 ``TRENDY_cali_forcing.nc``, and ``TRENDY_cali_target.nc`` from the `CNit Model Calibration and Results <https://doi.org/10.5281/zenodo.18116573>`_ and put them in the
-project-level ``data/`` directory.
+project-level ``data/`` directory. See :doc:`Calibration Data and Results <project_info/calibration-data>`
+for more about the archive.
 
 .. toctree::
    :maxdepth: 1
