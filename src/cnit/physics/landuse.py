@@ -77,12 +77,12 @@ rate over the afforestation-decay timescale, beginning at the next interval boun
 
 ..  math::
 
-    LUafst\_decay(T) = \\frac{\\phi A_i}{\\tau_{afst\_decay}},
-    \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{afst\_decay})
+    LUafst\\_decay(T) = \\frac{\\phi A_i}{\\tau_{afst\\_decay}},
+    \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{afst\\_decay})
 
 where :math:`\\phi` is the afforestation decay fraction (default
 :math:`\\phi = 1 - \\varphi`). In the current calculator,
-:math:`\\tau_{afst\_decay} = \\tau_{rgr}`.
+:math:`\\tau_{afst\\_decay} = \\tau_{rgr}`.
 
 **Implementation note:** The calculation rounds each configured duration to the
 nearest whole number of model intervals, with a minimum of one, and spreads the full
@@ -167,14 +167,14 @@ data sources like forest harvest statistics.
 
 **Important Notes:**
 
-- :math:`LUafst\_decay` is not part of the net land use flux equations. It provides
+- :math:`LUafst\\_decay` is not part of the net land use flux equations. It provides
   a reference for afforestation-related decay independent of environmental changes,
   analogous to :math:`LUrgr`.
 - :math:`LUrgr` is explicitly part of NPP and is further modified by CO₂
   fertilization and climate change.
 - Decay of afforested carbon is implicitly included in vegetation turnover and is
   therefore already affected by environmental conditions.
-- :math:`LUafst\_decay` supports parameterization of NPP effects associated with
+- :math:`LUafst\\_decay` supports parameterization of NPP effects associated with
   afforestation and deforestation.
 - Both algorithms use in-place array operations for efficiency when processing long
   time series.
@@ -384,7 +384,7 @@ class LanduseCalculator:
         interval boundary.
 
         where :math:`\\phi = 1 - \\varphi` by default. The current calculator
-        sets :math:`\\tau_{afst\_decay} = \\tau_{rgr}`.
+        sets :math:`\\tau_{afst\\_decay} = \\tau_{rgr}`.
 
         **Method Selection:**
 
