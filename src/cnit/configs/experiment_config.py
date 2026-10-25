@@ -24,49 +24,55 @@ class CarbonNitrogenCycleExperimentConfig:
     verify that unused net- and gross-land-use series are zero. The model's land-use
     method settings determine which series are used.
 
-    Attributes
-    ----------
-    name
-        Label used to identify this scenario in the combined results dataset.
-    switch_N
-        Dimensionless switch for nitrogen limitation and the nitrogen cycle: one
-        enables coupling and zero disables it.
-    time_axis
-        Time coordinates in years. Samples are evenly spaced; each forcing value
-        represents the interval beginning at that coordinate. Annual spacing is used
-        by the supplied calibrations, and evenly spaced subannual axes are accepted.
-    dT_s
-        Temperature anomaly relative to the model reference temperature [K].
-    CO2_s
-        Atmospheric CO₂ concentration [ppm].
-    CemsLUnet_s, CemsLUgrs_s
-        Net and gross land-use carbon emission rates [GtC/yr]. The model's carbon
-        land-use method selects which series is read.
-    NflxAD_s, NflxFT_s
-        Nitrogen input rates from atmospheric deposition and fertilizer [GtN/yr].
-    NemsLUnet_s, NemsLUgrs_s
-        Net and gross land-use organic nitrogen emission rates [GtN/yr]. The model's
-        nitrogen land-use method selects which series is read.
-    NemsLUmin_s
-        Direct mineral nitrogen loss associated with land use [GtN/yr].
-    metadata
-        Optional user-provided metadata. It is stored on the config but is not passed
-        as a forcing input to the model.
     """
 
     name: str
+    """Label used to identify this scenario in the combined results dataset."""
+
     switch_N: pint.Quantity = field(validator=check_units("1"))
+    """Dimensionless switch for nitrogen limitation and the nitrogen cycle: one
+    enables coupling and zero disables it [dimensionless]."""
+
     time_axis: pint.Quantity = field(validator=check_units("yr"))
+    """Time coordinates in years. Samples are evenly spaced; each forcing value
+    represents the interval beginning at that coordinate. Annual spacing is used
+    by the supplied calibrations, and evenly spaced subannual axes are accepted
+    [yr]."""
+
     dT_s: pint.Quantity = field(validator=check_units("K"))
+    """Temperature anomaly relative to the model reference temperature [K]."""
+
     CO2_s: pint.Quantity = field(validator=check_units("ppm"))
+    """Atmospheric CO₂ concentration [ppm]."""
+
     CemsLUnet_s: pint.Quantity = field(validator=check_units("GtC/yr"))
+    """Net land-use carbon emission rate; used when the carbon land-use method
+    selects net emissions [GtC/yr]."""
+
     CemsLUgrs_s: pint.Quantity = field(validator=check_units("GtC/yr"))
+    """Gross land-use carbon emission rate; used when the carbon land-use method
+    selects gross emissions [GtC/yr]."""
+
     NflxAD_s: pint.Quantity = field(validator=check_units("GtN/yr"))
+    """Nitrogen input rate from atmospheric deposition [GtN/yr]."""
+
     NflxFT_s: pint.Quantity = field(validator=check_units("GtN/yr"))
+    """Nitrogen input rate from fertilizer [GtN/yr]."""
+
     NemsLUnet_s: pint.Quantity = field(validator=check_units("GtN/yr"))
+    """Net land-use organic nitrogen emission rate; used when the nitrogen land-use
+    method selects net emissions [GtN/yr]."""
+
     NemsLUgrs_s: pint.Quantity = field(validator=check_units("GtN/yr"))
+    """Gross land-use organic nitrogen emission rate; used when the nitrogen land-use
+    method selects gross emissions [GtN/yr]."""
+
     NemsLUmin_s: pint.Quantity = field(validator=check_units("GtN/yr"))
+    """Direct mineral nitrogen loss associated with land use [GtN/yr]."""
+
     metadata: Optional[Dict[str, object]] = field(default=None)
+    """Optional user-provided metadata. It is stored on the config but is not passed
+    as a forcing input to the model."""
 
     def __attrs_post_init__(self) -> None:
         """Check time-axis regularity and forcing-series lengths.

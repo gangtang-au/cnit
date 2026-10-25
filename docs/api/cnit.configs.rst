@@ -1,13 +1,18 @@
-Model and Experiment Configuration
-==================================
+CNit Configuration API
+======================
 
-CNit separates **model parameters** from **experiment inputs**. A model
-configuration sets parameter values and initial pools. An experiment configuration
-provides the time axis and forcing series for one scenario. The same model instance
-can run several experiments with different forcing data.
+This page is the detailed reference for model parameters and experiment inputs. For a
+runnable configuration example, see :doc:`../quickstart`. The model overview introduces
+CNit conceptually; this page and the :doc:`physics API <cnit.physics>` provide parameter
+and implementation details.
 
-Model Parameters
-----------------
+Model config
+------------
+
+Import the model configuration as ``CNitModelConfig`` from the package root:
+``from cnit import CNitModelConfig``. This public alias refers to the implementation
+class ``CarbonNitrogenCycleModelConfig`` documented below. Its attribute descriptions
+match those used for the corresponding parameters in the physics API.
 
 Create a model configuration with defaults, override selected parameters with
 ``from_dict``, or load values from a calibration table with ``from_parameter_csv``.
@@ -28,10 +33,12 @@ times, and initial pool sizes when it is created.
    )
    model = CNitModel.from_config(config)
 
-Land-use parameters
-~~~~~~~~~~~~~~~~~~~
+**Land-use parameters**
 
-.. list-table::
+These parameters select the land-use input method and control the duration and fraction of deforestation-related regrowth.
+
+.. list-table:: Land-use parameters
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -58,10 +65,46 @@ Land-use parameters
      - dimensionless
      - Selects net (0) or gross (1) nitrogen land-use emissions as input.
 
-CO₂ response parameters
-~~~~~~~~~~~~~~~~~~~~~~~
+.. list-table:: Land-use response parameters
+   :class: config-table
+   :header-rows: 1
+   :widths: 20 12 14 54
 
-.. list-table::
+   * - Parameter
+     - Default
+     - Unit
+     - Description
+   * - ``sns_cLP2LUrgr``
+     - 0
+     - yr/GtC
+     - Sensitivity of carbon litter production to regrowth flux.
+   * - ``sns_cLD2LUrgr``
+     - 0
+     - yr/GtC
+     - Sensitivity of carbon litter decomposition to regrowth flux.
+   * - ``sns_cSR2LUrgr``
+     - 0
+     - yr/GtC
+     - Sensitivity of carbon soil respiration to regrowth flux.
+   * - ``sns_nLP2LUrgr``
+     - 0
+     - yr/GtC
+     - Sensitivity of nitrogen litter production to regrowth flux.
+   * - ``sns_nLD2LUrgr``
+     - 0
+     - yr/GtC
+     - Sensitivity of nitrogen litter decomposition to regrowth flux.
+   * - ``sns_nSR2LUrgr``
+     - 0
+     - yr/GtC
+     - Sensitivity of nitrogen soil respiration to regrowth flux.
+
+**Environmental response parameters**
+
+These parameters define how atmospheric CO₂ and temperature affect carbon and nitrogen process rates.
+
+.. list-table:: CO₂ response parameters
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -95,10 +138,8 @@ CO₂ response parameters
      - Selects or blends the logarithmic, rectangular-hyperbolic, and sigmoid CO₂ responses;
        values outside 0–2 give an effect factor of 1.
 
-Temperature response parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. list-table::
+.. list-table:: Temperature response parameters
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -159,16 +200,12 @@ Temperature response parameters
      - 1/K
      - Sensitivity of gaseous mineral nitrogen loss to temperature.
 
-Carbon–nitrogen coupling parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Carbon–nitrogen coupling parameters**
 
-These parameters describe how nitrogen availability and carbon supply
-influence carbon-cycle processes, plant nitrogen uptake, and biological fixation.
+These parameters describe how plant nitrogen deficit and NPP-dependent effects influence carbon processes, nitrogen uptake, and biological fixation.
 
-Responses to plant nitrogen deficit
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Responses to plant nitrogen deficit
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -214,10 +251,8 @@ Responses to plant nitrogen deficit
      - yr/GtN
      - Sensitivity of nitrogen soil respiration to plant nitrogen uptake deficit.
 
-NPP effects on plant nitrogen acquisition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: NPP effects on plant nitrogen acquisition
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -243,52 +278,12 @@ NPP effects on plant nitrogen acquisition
      - dimensionless
      - Sensitivity of biological nitrogen fixation to relative NPP changes.
 
-Land-use response parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Carbon-cycle parameters**
 
-.. list-table::
-   :header-rows: 1
-   :widths: 20 12 14 54
+These parameters set reference carbon fluxes, pool turnover times, within-timestep allocation, and initial carbon pool sizes.
 
-   * - Parameter
-     - Default
-     - Unit
-     - Description
-   * - ``sns_cLP2LUrgr``
-     - 0
-     - yr/GtC
-     - Sensitivity of carbon litter production to regrowth flux.
-   * - ``sns_cLD2LUrgr``
-     - 0
-     - yr/GtC
-     - Sensitivity of carbon litter decomposition to regrowth flux.
-   * - ``sns_cSR2LUrgr``
-     - 0
-     - yr/GtC
-     - Sensitivity of carbon soil respiration to regrowth flux.
-   * - ``sns_nLP2LUrgr``
-     - 0
-     - yr/GtC
-     - Sensitivity of nitrogen litter production to regrowth flux.
-   * - ``sns_nLD2LUrgr``
-     - 0
-     - yr/GtC
-     - Sensitivity of nitrogen litter decomposition to regrowth flux.
-   * - ``sns_nSR2LUrgr``
-     - 0
-     - yr/GtC
-     - Sensitivity of nitrogen soil respiration to regrowth flux.
-
-Carbon-cycle parameters
-~~~~~~~~~~~~~~~~~~~~~~~
-
-These parameters define reference carbon fluxes, pool turnover, transfers
-between pools, and initial pool sizes.
-
-Carbon process rates and turnover times
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Carbon process rates and turnover times
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -322,10 +317,8 @@ Carbon process rates and turnover times
      - yr
      - Soil carbon pool turnover time under reference conditions.
 
-Carbon allocation fractions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Carbon allocation fractions
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -366,10 +359,8 @@ Carbon allocation fractions
      - Fraction of gross deforestation carbon loss from the litter pool; the remainder comes
        from soil.
 
-Initial carbon pools
-^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Initial carbon pools
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -393,16 +384,13 @@ Initial carbon pools
      - GtC
      - Initial soil carbon pool size.
 
-Nitrogen-cycle parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~
+**Nitrogen-cycle parameters**
 
 These parameters define nitrogen supply and mineralization, pool turnover,
 transfers and losses, and initial pool sizes.
 
-Nitrogen inputs and mineralization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Nitrogen inputs and mineralization
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -447,10 +435,8 @@ Nitrogen inputs and mineralization
      - yr/GtN
      - Sensitivity of long-term net mineralization to atmospheric nitrogen deposition.
 
-Nitrogen pool turnover times
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Nitrogen pool turnover times
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -479,10 +465,8 @@ Nitrogen pool turnover times
      - yr
      - Mineral nitrogen pool turnover time under reference conditions.
 
-Nitrogen allocation and loss fractions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Nitrogen allocation and loss fractions
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -541,10 +525,8 @@ Nitrogen allocation and loss fractions
      - Fraction of gross deforestation nitrogen loss from the litter pool; the remainder
        comes from soil.
 
-Initial nitrogen pools
-^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
+.. list-table:: Initial nitrogen pools
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -574,10 +556,12 @@ Initial nitrogen pools
      - Initial mineral nitrogen pool size; this pool turns over faster than the organic
        pools.
 
-Initialization and pool switches
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Initialization and pool-switch parameters**
 
-.. list-table::
+These parameters set the initial-condition year and enable or scale individual carbon and nitrogen pools.
+
+.. list-table:: Initialization and pool switches
+   :class: config-table
    :header-rows: 1
    :widths: 20 12 14 54
 
@@ -608,8 +592,7 @@ Initialization and pool switches
 Land-use method selectors accept only 0 or 1. An invalid selector raises an error
 when non-zero land-use inputs are processed; all-zero flux inputs return zero fluxes.
 
-Loading a calibration table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**Loading a calibration table**
 
 The CSV loader uses the requested model name as a column heading. It reads each row's
 ``parameter``, ``unit``, and selected model value; blank values and parameters omitted
@@ -626,8 +609,18 @@ from the table keep their defaults.
    model = CNitModel.from_config(config)
 
 
-Experiment Inputs
+
+.. automodule:: cnit.configs.model_config
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Experiment config
 -----------------
+
+Import the experiment configuration as ``CNitExpConfig`` from the package root:
+``from cnit import CNitExpConfig``. This public alias refers to the implementation
+class ``CarbonNitrogenCycleExperimentConfig`` documented below.
 
 An experiment configuration contains one named scenario's forcing data. Every forcing
 series must have the same one-dimensional shape as ``time_axis``. The axis must contain
@@ -639,6 +632,7 @@ constant over each interval, and allocation fractions apply within each model ti
 The calibration files provided with CNit are based on an annual timescale.
 
 .. list-table:: Experiment inputs
+   :class: config-table
    :header-rows: 1
    :widths: 28 17 55
 
@@ -723,18 +717,9 @@ Use an experiment with ``run_experiments``:
    )
    results = model.run_experiments([experiment])
 
-Configuration API
------------------
 
-``CNitModel``
-   The main coupled model. Create it from a configuration with
-   ``CNitModel.from_config``. Use ``run`` for one experiment or ``run_experiments``
-   to run several experiments.
 
-``CNitModelConfig``
-   Stores model parameters and initial pool sizes. Use ``from_dict`` to override
-   selected parameters or ``from_parameter_csv`` to load a calibration.
-
-``CNitExpConfig``
-   Stores one experiment's time axis and forcing series. Use ``to_input_dict`` to
-   obtain the inputs for ``CNitModel.run``.
+.. automodule:: cnit.configs.experiment_config
+   :members:
+   :undoc-members:
+   :show-inheritance:

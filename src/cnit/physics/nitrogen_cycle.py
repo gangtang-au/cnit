@@ -856,7 +856,7 @@ class NitrogenCycleCalculator:
 
     Represents nitrogen incorporated into stable soil organic matter during
     decomposition. The remainder (1 - frc_nLD2S) is mineralized to the mineral pool
-    (nLD2M), representing nitrogen released as plant-available forms (NH₄⁺, 
+    (nLD2M), representing nitrogen released as plant-available forms (NH₄⁺,
     NO₃⁻) during litter breakdown.
     """
 

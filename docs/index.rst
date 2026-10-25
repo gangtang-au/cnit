@@ -41,6 +41,8 @@ Quick Navigation
 
    → See :doc:`quickstart` for installation and basic usage.
 
+   → See :doc:`api/cnit.configs` for model parameters and experiment inputs.
+
    → See :doc:`example` for complete CMIP6 ESM and TRENDY DGVM notebooks with code and outputs.
 
 **🛠️ For Developers**
@@ -50,56 +52,63 @@ Quick Navigation
 
    → See :doc:`contributing` for development setup and coding guidelines.
 
-Understanding CNit
-------------------
-
-Learn about the model's structure, processes, and scientific basis before installing.
-
-.. toctree::
-   :maxdepth: 2
-
-   overview
-
 Getting Started
 ---------------
 
 New to CNit? Start here to understand the model and run your first simulation.
 
 .. toctree::
+   :caption: Getting started
    :maxdepth: 2
 
    quickstart
 
-User Guide
-----------
-
-Learn how to use CNit effectively with examples and best practices.
-
-.. toctree::
-   :maxdepth: 2
-
-   configuration
-   example
-
 API Reference
 -------------
 
-Complete documentation of all classes, methods, and modules. The API documentation
-includes detailed scientific descriptions, equations, and implementation details.
+The overview introduces CNit's structure and processes. These API pages provide the
+detailed process parameterizations, model calculations, configuration parameters, and
+class methods.
 
 .. toctree::
+   :caption: API reference
    :maxdepth: 2
 
    api/cnit.physics
+   api/cnit.configs
+
+Examples
+--------
+
+See complete CMIP6 ESM and TRENDY DGVM emulation workflows.
+
+.. toctree::
+   :caption: Examples
+   :maxdepth: 2
+
+   example
+
+Model Overview
+--------------
+
+Read about CNit's structure, processes, and scientific basis.
+
+.. toctree::
+   :caption: Model overview
+   :maxdepth: 2
+
+   overview
 
 Development
 -----------
 
 .. toctree::
+   :caption: Development
    :maxdepth: 2
 
    changelog
    contributing
+
 
 Contact
 -------
