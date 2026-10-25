@@ -66,10 +66,5 @@ html_css_files = ['custom.css']          # Custom CSS file
 html_js_files = ['custom.js']
 
 # -- Misc configuration ------------------------------------------------------
-# Make the command |CO2| automatically subscript everywhere
-rst_epilog = """
-.. |CO2| replace:: CO\ :sub:`2`
-"""
-
 # Optional: Left-align math equations for MathJax
 mathjax3_config = {"chtml": {"displayAlign": "center"}}

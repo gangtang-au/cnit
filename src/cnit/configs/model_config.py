@@ -84,21 +84,21 @@ class CarbonNitrogenCycleModelConfig:
     CO2ref: pint.Quantity = field(
         default=Q(284.875, "ppm"), validator=check_units("ppm")
     )
-    """Atmospheric |CO2| concentration at pre-industrial level [ppm].
+    """Atmospheric CO₂ concentration at pre-industrial level [ppm].
     """
 
     CO2b: pint.Quantity = field(default=Q(31, "ppm"), validator=check_units("ppm"))
-    """Atmospheric |CO2| concentration when NPP = 0 (for rectangular hyperbolic effect,
+    """Atmospheric CO₂ concentration when NPP = 0 (for rectangular hyperbolic effect,
     default 31 ppm) [ppm].
     """
 
     sns_CO2_log: pint.Quantity = field(default=Q(1, "1"), validator=check_units("1"))
-    """Sensitivity of NPP to atmospheric |CO2| concentration changes
+    """Sensitivity of NPP to atmospheric CO₂ concentration changes
     (logarithmic form) [dimensionless].
     """
 
     sns_CO2_sig: pint.Quantity = field(default=Q(1, "1"), validator=check_units("1"))
-    """Sensitivity of NPP to atmospheric |CO2| concentration changes
+    """Sensitivity of NPP to atmospheric CO₂ concentration changes
     (sigmoid form) [dimensionless].
     """
 
@@ -109,7 +109,7 @@ class CarbonNitrogenCycleModelConfig:
     """
 
     method_CO2_NPP: pint.Quantity = field(default=Q(0, "1"), validator=check_units("1"))
-    """|CO2| effect factor calculation method (value from 0 to 2),
+    """CO₂ effect factor calculation method (value from 0 to 2),
     otherwise eff_CO2 is set equal to 1.
     """
 

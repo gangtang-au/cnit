@@ -19,7 +19,7 @@ Model description and calibration
 
 * **[CNit v2.1]** Tang, G., Norton, A., Gasser, T., Nicholls, Z. R. J., Ziehn, T.,
   Abrahão, G. M., and Meinshausen, M. A.: Reassessing the terrestrial carbon sink
-  reveals stronger CO\ :sub:`2` fertilization, elevated climate sensitivity, and
+  reveals stronger CO₂ fertilization, elevated climate sensitivity, and
   intensifying nitrogen limitation, ESS Open Archive, preprint,
   https://doi.org/10.22541/essoar.15006117/v2, 2026.
 
