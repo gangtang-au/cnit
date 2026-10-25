@@ -56,7 +56,7 @@ Quick Navigation
 
    → See :doc:`api/cnit.physics` for implementation details.
 
-   → See :doc:`development/contributing` for development setup and coding guidelines.
+   → See :doc:`contributing` for development setup and coding guidelines.
 
 Model Overview
 --------------
@@ -116,7 +116,7 @@ Read the release history and find guidance for contributing to CNit.
    :maxdepth: 2
 
    development/changelog
-   development/contributing
+   contributing
 
 
 Project Information
