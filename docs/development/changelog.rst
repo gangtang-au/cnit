@@ -11,21 +11,24 @@ Unreleased
 
 **Changed**
 
+* Refactored regrowth and afforestation-decay pulse scheduling to record rate changes
+  at interval boundaries instead of updating every affected future interval. For a
+  given duration, this preserves the scheduled pulse while reducing repeated work.
 * Land-use calculations support evenly spaced subannual time axes. Regrowth and
-  afforestation decay durations are rounded to whole model intervals, with a
-  minimum of one interval.
-* Improved validation of model configurations, experiment inputs, and calibration
-  CSV files.
-* Reorganized and expanded the documentation, including the configuration API and
-  emulation workflows built from the project notebooks.
+  afforestation-decay durations are rounded to the nearest whole model interval
+  (minimum one), instead of being truncated with ``int()`` as before.
+* Strengthened validation of model and experiment configurations and calibration CSV
+  files.
+* Reorganized and expanded the documentation, including the configuration API.
 
 Version 2.2.0 (2026-10-22)
 --------------------------
 
 **Added**
 
-* Model configuration helpers and support for loading calibration parameters
-  from user-supplied CSV files.
+* Model configuration constructors from dictionaries and calibration CSV files.
+* Quickstart, CMIP6 ESM, and TRENDY DGVM notebooks, together with example calibration
+  tables and forcing and target data.
 
 **Changed**
 
@@ -33,20 +36,21 @@ Version 2.2.0 (2026-10-22)
   inside the ODE solver, while preserving unit-aware model inputs and outputs.
   The model equations and parameterizations are unchanged. The benchmarked
   simulation ran approximately 6 times faster than in CNit 2.1.0.
-* Updated the quick start and examples to match the current model interface.
+* Updated the quickstart and emulation examples for the v2.2 model interface.
 
 Version 2.1.0 (2026-01-01)
 --------------------------
 
-Initial public release of CNit as a Python package with enhanced code and full
-documentation.
+First public release of CNit as a Python package, with code improvements and
+comprehensive documentation.
 
 **Added**
 
-* Python package structure with pip/conda installation and dependency management
-* Unit handling with Pint integration for robust physical quantities
-* Comprehensive Sphinx documentation with scientific background and API reference
-* Quick start guide and complete example notebook with code, outputs, and visualizations
+* Python package structure with pip and conda installation and dependency management.
+* Pint-based unit handling for physical quantities.
+* Sphinx documentation with scientific background and API reference.
+* Quickstart guide and a TRENDY DGVM emulation workflow with code, outputs, and
+  visualizations.
 
 **Model Features**
 
@@ -57,9 +61,9 @@ documentation.
 * Annual timesteps with subannual process representation through within-year flux and
   pool-turnover allocation fractions. Evenly spaced subannual timesteps are also
   supported, with allocation fractions applying within each timestep.
-* Separation of deforestation/afforestation for land use emissions
-* Computationally efficient for integrated assessment modeling
-* MAGICC integration ready
+* Separation of deforestation and afforestation for land-use emissions.
+* Computational efficiency for integrated assessment modeling.
+* Readiness for MAGICC integration.
 
 See the :doc:`model overview <../overview>` for a detailed model description.
 
