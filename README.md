@@ -4,6 +4,8 @@
 
 # CNit
 
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/cnit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/cnit)
+
 **CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
 terrestrial biogeochemistry model of coupled carbon and nitrogen cycles. It is the land
 component of **MAGICC** (Model for the Assessment of Greenhouse Gas Induced Climate
