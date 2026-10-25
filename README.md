@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="docs/_static/CNit_logo.svg" alt="CNit logo" width="100">
+  <img src="docs/_static/CNit_logo.png" alt="CNit logo" width="100">
 </p>
 
 **CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
