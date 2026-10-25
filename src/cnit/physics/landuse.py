@@ -231,13 +231,14 @@ class LanduseCalculator:
     and net-zero targets.
 
     The calculator operates on evenly spaced time series aligned with ``time_axis``.
-    Each input rate is held constant over its following interval. Regrowth and
-    afforestation decay are scheduled over ``tau_rgr`` years, with the duration
-    rounded to the nearest whole number of model intervals (at least one). If no time
-    axis is supplied, samples are treated as annual. Experiment configs validate input
-    units, series lengths, and time-axis regularity before model execution. Direct calls
-    to this calculator assume those inputs are valid and aligned. Direct callers must also
-    provide ``0 <= frc_rgr <= 1`` and a positive ``tau_rgr``.
+    Each net or gross land-use emission rate is held constant over its following
+    interval. Direct mineral-nitrogen land-use emissions are passed through unchanged.
+    Regrowth and afforestation decay are scheduled over ``tau_rgr`` years, with the
+    duration rounded to the nearest whole number of model intervals (at least one). If
+    no time axis is supplied, samples are treated as annual. Experiment configs validate
+    input units, series lengths, and time-axis regularity before model execution. Direct
+    calls to this calculator assume those inputs are valid and aligned. Direct callers
+    must also provide ``0 <= frc_rgr <= 1`` and a positive ``tau_rgr``.
     """
 
     frc_rgr: pint.Quantity = field(
@@ -545,7 +546,8 @@ class LanduseCalculator:
         This method is shared by the carbon and organic-nitrogen calculations. It
         converts the unit-aware flux inputs to numeric arrays once, performs the
         interval calculations using NumPy, and attaches units to the returned
-        quantities. Rates are treated as constant over equal-width intervals.
+        quantities. Net and gross land-use emission rates are treated as constant over
+        equal-width intervals.
 
         Parameters
         ----------

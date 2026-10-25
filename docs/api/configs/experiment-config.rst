@@ -6,13 +6,12 @@ Import the experiment configuration as ``CNitExpConfig`` from the package root:
 class ``CarbonNitrogenCycleExperimentConfig`` documented below.
 
 An experiment configuration contains one named scenario's forcing data. Every forcing
-series must have the same one-dimensional shape as ``time_axis``. The axis must contain
-at least two finite, strictly increasing, evenly spaced time coordinates in years. The
-input quantities are checked for compatible units when the config is created.
+series must have the same one-dimensional shape as ``time_axis``. On creation, the config
+checks compatible units and verifies that the axis has at least two finite, strictly
+increasing, evenly spaced time coordinates in years.
 
-The model accepts evenly spaced subannual time axes. Forcing rates are treated as
-constant over each interval, and allocation fractions apply within each model timestep.
-The calibration files provided with CNit are based on an annual timescale.
+Evenly spaced subannual time axes are supported. Allocation fractions apply within each
+model timestep, and the supplied calibration files use an annual timescale.
 
 .. list-table:: Experiment inputs
    :class: config-table
@@ -30,7 +29,7 @@ The calibration files provided with CNit are based on an annual timescale.
      - Enables nitrogen-cycle coupling for this experiment when 1; disables it when 0.
    * - ``time_axis``
      - yr
-     - Evenly spaced time coordinates. Each value marks the start of an input interval.
+     - Evenly spaced time coordinates.
    * - ``dT_s``
      - K
      - Temperature anomaly relative to the model reference temperature.
@@ -64,9 +63,8 @@ The calibration files provided with CNit are based on an annual timescale.
 
 
 
-Forcing values themselves are not checked for finiteness by this config. Net and gross
-land-use series are both required by the config, although the model uses only the series
-selected by the corresponding land-use method.
+Net and gross land-use series are both required by the config, although the model uses
+only the series selected by the corresponding land-use method.
 
 Use an experiment with ``run_experiments``:
 

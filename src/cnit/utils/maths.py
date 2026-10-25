@@ -88,7 +88,7 @@ def _make_numeric_interp(
     *,
     extrapolate: bool,
 ) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
-    """Build a unit-free interpolator from a quantity series."""
+    """Build a unit-free, linearly interpolated function from a quantity series."""
     if isinstance(values, pint.Quantity):
         values = values.to(unit).m
     else:

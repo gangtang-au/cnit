@@ -34,9 +34,7 @@ cycles, with explicit representation of nitrogen constraints on carbon uptake.
 CNit supports annual and evenly spaced subannual time axes; the default examples use
 annual timesteps. In the annual case, flux-allocation and pool-turnover fractions
 represent transfers within the year. If a subannual time axis is used, the same fractions
-apply within each model timestep. Each forcing value is treated as a rate held constant
-over its following interval, so an interval's flux amount is the rate multiplied by the
-interval duration.
+apply within each model timestep.
 
 Model Structure
 ---------------
@@ -146,12 +144,10 @@ Time Resolution and Allocation Fractions
 
 CNit supports annual and evenly spaced subannual time axes; the default examples use
 annual timesteps. Flux-allocation and pool-turnover fractions apply within each model
-timestep, representing within-year transfers in the annual case.
-Forcing rates are held constant over each interval, and cumulative fluxes account for the
-interval duration. The model represents post-deforestation regrowth and afforestation
-decay over their configured timescales. Each duration is rounded to the nearest whole
-number of model steps, with a minimum of one step, and the full amount is spread across
-those steps.
+timestep, representing within-year transfers in the annual case. The supplied calibration
+files are based on an annual timescale; subannual applications require calibration at the
+corresponding timescale. The model represents post-deforestation regrowth and afforestation
+decay over their configured timescales.
 
 For example, if NPP is a constant 50 GtC/yr during a one-year timestep and
 ``frc_NPP2P = 0.6``, then 60% of the NPP flux, or 30 GtC, is allocated to the plant pool
@@ -263,8 +259,8 @@ Key assumptions in CNit:
 
 2. **Time resolution** - Annual timesteps are used in the default examples; evenly spaced
    subannual time axes are also accepted. Allocation fractions partition incoming fluxes
-   and describe turnover transfers among pools within each timestep. Forcing rates are
-   treated as constant over their corresponding intervals.
+   and describe turnover transfers among pools within each timestep. Land-use emissions
+   are treated as constant over their corresponding intervals.
 
 3. **First-order kinetics with environmental modifiers** - All turnover processes follow:
 

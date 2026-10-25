@@ -18,11 +18,11 @@ class CarbonNitrogenCycleExperimentConfig:
     and nitrogen switch.
 
     Field validators check that inputs have compatible physical units. At construction,
-    the config also checks that ``time_axis`` has at least two finite, strictly
-    increasing, evenly spaced coordinates and that every forcing series has exactly
-    the same shape as the axis. It does not check forcing values for finiteness or
-    verify that unused net- and gross-land-use series are zero. The model's land-use
-    method settings determine which series are used.
+    the config checks that ``time_axis`` has at least two finite, strictly increasing,
+    evenly spaced coordinates and that every forcing series has exactly the same shape
+    as the axis. It does not check the forcing-series values for finiteness or verify
+    that unused net- and gross-land-use series are zero. The model's land-use method
+    settings determine which series are used.
 
     """
 
@@ -34,10 +34,8 @@ class CarbonNitrogenCycleExperimentConfig:
     enables coupling and zero disables it [dimensionless]."""
 
     time_axis: pint.Quantity = field(validator=check_units("yr"))
-    """Time coordinates in years. Samples are evenly spaced; each forcing value
-    represents the interval beginning at that coordinate. Annual spacing is used
-    by the supplied calibrations, and evenly spaced subannual axes are accepted
-    [yr]."""
+    """Evenly spaced time coordinates in years. The supplied calibrations use annual
+    spacing, and evenly spaced subannual axes are also accepted [yr]."""
 
     dT_s: pint.Quantity = field(validator=check_units("K"))
     """Temperature anomaly relative to the model reference temperature [K]."""
