@@ -35,8 +35,8 @@ Version 2.2.0 (2026-10-22)
 * Refactored the carbon and nitrogen cycle calculations to use numeric values
   inside the ODE solver, while preserving unit-aware model inputs and outputs.
   The model equations and parameterizations are unchanged. The benchmarked
-  simulation ran approximately 6 times faster than in CNit 2.1.0.
-* Updated the quickstart and emulation examples for the v2.2 model interface.
+  simulation ran approximately 6 times faster than in CNit v2.1.0.
+* Updated the quickstart and emulation examples for the CNit v2.2.0 model interface.
 
 Version 2.1.0 (2026-01-01)
 --------------------------
