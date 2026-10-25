@@ -74,12 +74,12 @@ from cnit import Q # Local pint.quantity class for units handling
 config = CNitModelConfig()
 model = CNitModel.from_config(config)
 
-# Set up time axis and forcing
+# Set up time axis and input series
 # We use the _s suffix to indicate series (time-dependent) inputs.
 time_axis = Q(np.arange(1850, 2101), "yr")
 n_steps = len(time_axis)
 
-# Simple forcing (constant values for illustration)
+# Example time-dependent input series
 dT_s = Q(np.linspace(0, 2, n_steps), "K")  # 2°C warming
 CO2_s = Q(np.linspace(280, 560, n_steps), "ppm")  # CO₂ doubling
 

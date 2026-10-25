@@ -88,6 +88,34 @@ def test_parameter_csv_requires_explicit_file_and_model_name():
         CarbonNitrogenCycleModelConfig.from_parameter_csv("calibration.csv")
 
 
+@pytest.mark.parametrize(
+    "header, missing_column",
+    [
+        ("unit,example\n", "parameter"),
+        ("parameter,example\n", "unit"),
+    ],
+)
+def test_parameter_csv_requires_parameter_and_unit_columns(
+    tmp_path, header, missing_column
+):
+    csv_path = tmp_path / "missing_column.csv"
+    csv_path.write_text(header, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=f"missing required column.*{missing_column}"):
+        CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
+
+
+def test_parameter_csv_rejects_duplicate_parameter_rows(tmp_path):
+    csv_path = tmp_path / "duplicate_parameter.csv"
+    csv_path.write_text(
+        "parameter,unit,example\nNPP0,GtC/yr,50\nNPP0,GtC/yr,60\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="NPP0.*more than once"):
+        CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
+
+
 def test_missing_nitrogen_pool_parameter_freezes_nitrogen_without_changing_switch(
     tmp_path,
 ):

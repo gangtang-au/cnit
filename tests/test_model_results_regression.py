@@ -213,7 +213,7 @@ def test_default_and_all_cmip6_calibrations_report_differences_from_main(
         config_names = ("default", *calibrated_configs)
         print(
             "\nBoth tables compare the current code with `main` using the same "
-            "configurations and forcing data. The current code uses the "
+            "configurations and input data. The current code uses the "
             "range-difference land-use calculation in both runs."
         )
         print(

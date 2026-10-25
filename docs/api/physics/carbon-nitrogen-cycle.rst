@@ -9,5 +9,4 @@ See :doc:`../../quickstart` for a configuration workflow and
 :doc:`../cnit.configs` for detailed parameter and input documentation.
 
 .. autoclass:: cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel
-   :exclude-members: from_config, run_experiments
    :show-inheritance:

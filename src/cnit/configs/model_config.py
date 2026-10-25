@@ -1333,8 +1333,9 @@ class CarbonNitrogenCycleModelConfig:
         Raises
         ------
         ValueError
-            If the model column is unavailable, a table parameter is not a config
-            field, or a value cannot be parsed or validated.
+            If required columns are missing or duplicated, a parameter row is
+            duplicated or invalid, the model column is unavailable, or a value
+            cannot be parsed or validated.
         """
         parameter_path = Path(csv_file)
         csv_context = parameter_path.open("r", encoding="utf-8", newline="")
@@ -1342,25 +1343,62 @@ class CarbonNitrogenCycleModelConfig:
 
         with csv_context:
             reader = csv.DictReader(csv_context)
-            if not reader.fieldnames or model_name not in reader.fieldnames:
-                available = reader.fieldnames[2:] if reader.fieldnames else []
+            if not reader.fieldnames:
+                raise ValueError(
+                    f"Calibration file {parameter_path.name} has no header row."
+                )
+
+            duplicate_headers = {
+                name for name in reader.fieldnames if reader.fieldnames.count(name) > 1
+            }
+            if duplicate_headers:
+                raise ValueError(
+                    f"Calibration file {parameter_path.name} has duplicate column "
+                    f"names: {sorted(duplicate_headers)}"
+                )
+
+            required_headers = {"parameter", "unit"}
+            missing_headers = required_headers - set(reader.fieldnames)
+            if missing_headers:
+                raise ValueError(
+                    f"Calibration file {parameter_path.name} is missing required "
+                    f"column(s): {', '.join(sorted(missing_headers))}"
+                )
+
+            if model_name not in reader.fieldnames:
+                available = [
+                    name for name in reader.fieldnames if name not in required_headers
+                ]
                 raise ValueError(
                     f"Unknown model {model_name!r}. Available models: "
                     f"{', '.join(available)}"
                 )
 
             values = {}
+            seen_parameters = set()
             for row in reader:
-                name = row["parameter"].strip()
+                name = (row.get("parameter") or "").strip()
+                if not name:
+                    raise ValueError(
+                        f"Calibration file {parameter_path.name} has a row with an "
+                        "empty parameter name."
+                    )
+                if name in seen_parameters:
+                    raise ValueError(
+                        f"Parameter {name!r} appears more than once in "
+                        f"{parameter_path.name}."
+                    )
+                seen_parameters.add(name)
+
                 if name not in config_fields:
                     raise ValueError(
                         f"Parameter {name!r} in {parameter_path.name} is not a "
                         "field of CarbonNitrogenCycleModelConfig"
                     )
-                raw_value = row[model_name].strip()
+                raw_value = (row.get(model_name) or "").strip()
                 if not raw_value:
                     continue
-                unit = row["unit"].strip()
+                unit = (row.get("unit") or "").strip()
                 if unit.lower() == "dimensionless":
                     unit = "1"
                 try:
