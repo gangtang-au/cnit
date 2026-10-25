@@ -5,7 +5,7 @@ Welcome to the documentation for **CNit** (Carbon-Nitrogen Interactions in Terre
 ecosystems), the coupled carbon-nitrogen cycle model for **MAGICC** (Model for the
 Assessment of Greenhouse Gas Induced Climate Change).
 
-.. image:: _static/CNit_logo.png
+.. image:: _static/CNit_logo.svg
    :alt: CNit logo
    :height: 150px
    :align: right
