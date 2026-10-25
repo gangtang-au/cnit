@@ -1,3 +1,9 @@
+"""Configuration of the time axis and input data for CNit experiments.
+
+The experiment input reference and attribute documentation are in
+:class:`CarbonNitrogenCycleExperimentConfig`.
+"""
+
 from typing import Dict, Optional
 
 from attrs import define, field
@@ -9,21 +15,78 @@ from ..utils.units import check_units
 
 @define
 class CarbonNitrogenCycleExperimentConfig:
-    """Time axis and forcing series for one model experiment.
+    """Stores the time axis and forcing series for one named CNit experiment.
 
-    Use this class with
+    Use this config with
     :meth:`~cnit.physics.carbon_nitrogen_cycle.CarbonNitrogenCycleModel.run_experiments`.
-    The model configuration stores parameters shared by the model; each experiment
-    config stores the time axis and forcing data for one scenario, along with its name
-    and nitrogen switch.
+    The model config stores parameters shared across runs; this config stores the name,
+    time axis, forcing data, and nitrogen-cycle switch for one scenario. The public
+    alias is ``CNitExpConfig``, available from the package root::
 
-    Field validators check that inputs have compatible physical units. At construction,
-    the config checks that ``time_axis`` has at least two finite, strictly increasing,
-    evenly spaced coordinates and that every forcing series has exactly the same shape
-    as the axis. It does not check the forcing-series values for finiteness or verify
-    that unused net- and gross-land-use series are zero. The model's land-use method
-    settings determine which series are used.
+        from cnit import CNitExpConfig
 
+    Field validators check unit compatibility. On construction, the config checks that
+    ``time_axis`` has at least two finite, strictly increasing, evenly spaced
+    coordinates and that every forcing series has exactly the same shape as the axis.
+    It does not check forcing-series values for finiteness or require unused net- and
+    gross-land-use series to be zero; the model's land-use method settings determine
+    which series are used.
+
+    Annual time axes are used in the supplied examples and calibration files. Evenly
+    spaced subannual axes are also supported, and allocation fractions apply within
+    each model timestep. Net and gross land-use series are both required, although the
+    model uses only the series selected by the corresponding land-use method.
+
+    The table summarizes the experiment inputs; the class attributes below provide
+    their detailed documentation.
+
+    .. list-table:: Experiment inputs
+       :class: config-table
+       :header-rows: 1
+       :widths: 28 17 55
+
+       * - Input
+         - Unit
+         - Description
+       * - ``name``
+         - —
+         - Scenario label stored in the experiment results.
+       * - ``switch_N``
+         - dimensionless
+         - Enables nitrogen-cycle coupling for this experiment when 1; disables it when 0.
+       * - ``time_axis``
+         - yr
+         - Evenly spaced time coordinates.
+       * - ``dT_s``
+         - K
+         - Temperature anomaly relative to the model reference temperature.
+       * - ``CO2_s``
+         - ppm
+         - Atmospheric CO₂ concentration.
+       * - ``CemsLUnet_s``
+         - GtC/yr
+         - Net carbon land-use emission rate; used when ``method_cLU`` is 0.
+       * - ``CemsLUgrs_s``
+         - GtC/yr
+         - Gross carbon land-use emission rate; used when ``method_cLU`` is 1.
+       * - ``NflxAD_s``
+         - GtN/yr
+         - Nitrogen input rate from atmospheric deposition.
+       * - ``NflxFT_s``
+         - GtN/yr
+         - Nitrogen input rate from fertilizer.
+       * - ``NemsLUnet_s``
+         - GtN/yr
+         - Net organic nitrogen land-use emission rate; used when ``method_nLU`` is 0.
+       * - ``NemsLUgrs_s``
+         - GtN/yr
+         - Gross organic nitrogen land-use emission rate; used when ``method_nLU`` is 1.
+       * - ``NemsLUmin_s``
+         - GtN/yr
+         - Direct mineral nitrogen loss associated with land use.
+       * - ``metadata``
+         - —
+         - Optional user metadata stored on the config and omitted from model inputs.
     """
 
     name: str
