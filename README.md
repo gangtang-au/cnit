@@ -1,8 +1,7 @@
-<p align="left">
-  <img src="https://raw.githubusercontent.com/gangtang-au/cnit/main/docs/_static/CNit_logo.png" alt="CNit logo" width="100">
-</p>
-
-# CNit
+<h1>
+  <img src="https://raw.githubusercontent.com/gangtang-au/cnit/main/docs/_static/CNit_logo.png" alt="CNit logo" width="75" align="middle">
+  CNit
+</h1>
 
 [![CI](https://github.com/gangtang-au/cnit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gangtang-au/cnit/actions/workflows/ci.yml)
 [![PyPI version](https://img.shields.io/pypi/v/cnit)](https://pypi.org/project/cnit/)
