@@ -2,6 +2,7 @@ import csv
 from pathlib import Path
 
 from attrs import fields
+import numpy as np
 import pint
 import pytest
 
@@ -244,3 +245,29 @@ def test_config_rejects_negative_initial_pool_sizes(name):
     unit = "GtC" if name.startswith("C") else "GtN"
     with pytest.raises(ValueError, match=name):
         CarbonNitrogenCycleModelConfig.from_dict({name: Q(-1, unit)})
+
+
+@pytest.mark.parametrize(
+    "name", [item.name for item in fields(CarbonNitrogenCycleModelConfig)]
+)
+@pytest.mark.parametrize("invalid", [np.nan, np.inf, -np.inf])
+def test_all_numeric_parameters_reject_nonfinite_values(name, invalid):
+    default = getattr(CarbonNitrogenCycleModelConfig(), name)
+    if isinstance(default, pint.Quantity):
+        value = Q(invalid, default.units)
+    else:
+        value = list(default)
+        value[0] = invalid
+    with pytest.raises(ValueError, match=name):
+        CarbonNitrogenCycleModelConfig.from_dict({name: value})
+
+
+def test_finite_signed_sensitivities_and_zero_fluxes_remain_valid():
+    config = CarbonNitrogenCycleModelConfig.from_dict(
+        {
+            "sns_NPP2dT": Q(-0.1, "1/K"),
+            "NPP0": Q(0, "GtC/yr"),
+        }
+    )
+    assert config.sns_NPP2dT == Q(-0.1, "1/K")
+    assert config.NPP0 == Q(0, "GtC/yr")

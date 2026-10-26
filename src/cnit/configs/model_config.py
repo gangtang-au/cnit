@@ -5,7 +5,6 @@ The detailed parameter reference and attribute documentation are in
 """
 
 import csv
-import math
 from pathlib import Path
 
 from attrs import define, field, fields
@@ -31,8 +30,8 @@ class CarbonNitrogenCycleModelConfig:
 
     Quantity fields require dimensionally compatible units. The units shown in the
     parameter tables are recommended units; equivalent units are accepted. On creation,
-    the config checks fraction ranges, allocation sums, positive turnover times, and
-    non-negative initial pool sizes.
+    the config checks that all numeric parameters are finite, along with fraction
+    ranges, allocation sums, positive turnover times, and non-negative initial pools.
 
     The tables summarize defaults and parameter meanings. The class attributes below
     provide the detailed attribute documentation, and the physics API documents the
@@ -1192,7 +1191,12 @@ class CarbonNitrogenCycleModelConfig:
     """
 
     def __attrs_post_init__(self) -> None:
-        """Validate physical parameter ranges when the config is created."""
+        """Validate parameter finiteness and physical ranges on creation."""
+        for item in fields(type(self)):
+            value = getattr(self, item.name)
+            if isinstance(value, pint.Quantity) and not np.all(np.isfinite(value.m)):
+                raise ValueError(f"{item.name} must contain only finite values.")
+
         for name, expected_length in (("switch_Cpls", 3), ("switch_Npls", 4)):
             switches = getattr(self, name)
             if not isinstance(switches, (list, tuple, np.ndarray)):
@@ -1232,7 +1236,7 @@ class CarbonNitrogenCycleModelConfig:
         fractions = {}
         for name in fraction_names:
             value = float(getattr(self, name).to("1").m)
-            if not math.isfinite(value) or not 0 <= value <= 1:
+            if not 0 <= value <= 1:
                 raise ValueError(f"{name} must be finite and between 0 and 1.")
             fractions[name] = value
 
@@ -1259,7 +1263,7 @@ class CarbonNitrogenCycleModelConfig:
         )
         for name in time_names:
             value = float(getattr(self, name).to("yr").m)
-            if not math.isfinite(value) or value <= 0:
+            if value <= 0:
                 raise ValueError(f"{name} must be a positive finite duration in years.")
 
         pool_names = (
@@ -1274,7 +1278,7 @@ class CarbonNitrogenCycleModelConfig:
         for name in pool_names:
             unit = "GtC" if name.startswith("C") else "GtN"
             value = float(getattr(self, name).to(unit).m)
-            if not math.isfinite(value) or value < 0:
+            if value < 0:
                 raise ValueError(f"{name} must be finite and non-negative.")
 
     @classmethod
