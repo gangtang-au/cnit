@@ -4,6 +4,9 @@
 
 # CNit
 
+[![CI](https://github.com/gangtang-au/cnit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gangtang-au/cnit/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/cnit)](https://pypi.org/project/cnit/)
+[![Documentation](https://app.readthedocs.org/projects/cnit/badge/?version=latest)](https://cnit.readthedocs.io/en/latest/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/cnit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/cnit)
 
 **CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
