@@ -15,18 +15,14 @@ def check_binary_switches(
         if not isinstance(value, (list, tuple, np.ndarray)):
             raise TypeError(f"{name} must be a sequence of binary switches.")
 
+        message = f"{name} must contain exactly {expected_length} binary values."
+
         try:
             values = np.asarray(value)
         except (TypeError, ValueError) as exc:
-            raise ValueError(
-                f"{name} must contain exactly {expected_length} binary values."
-            ) from exc
+            raise ValueError(message) from exc
 
-        if values.ndim != 1 or values.size != expected_length:
-            raise ValueError(f"{name} must contain exactly {expected_length} values.")
-        if values.dtype.kind not in "biuf" or not np.isfinite(values).all():
-            raise ValueError(f"{name} must contain only finite numeric values.")
-        if not np.isin(values, (0, 1)).all():
-            raise ValueError(f"{name} values must be 0 or 1.")
+        if values.shape != (expected_length,) or not np.isin(values, (0, 1)).all():
+            raise ValueError(message)
 
     return validate

@@ -2,6 +2,7 @@
 MAGICC Coupled Carbon-Nitrogen Cycle Model (CNit) Implementation
 """
 
+from copy import copy
 from typing import Dict, List
 from attrs import define, field
 import numpy as np
@@ -185,13 +186,15 @@ class CarbonNitrogenCycleModel:
     switch_N: pint.Quantity = field(
         default=Q(1, "1"),
     )
-    """Switch to enable/disable nitrogen cycle [dimensionless].
+    """Switch indicating whether this model includes the nitrogen cycle [dimensionless].
 
-    Controls whether nitrogen limitation effects are applied to carbon cycle:
-    - 1: Full carbon-nitrogen coupling (default)
-    - 0: Carbon cycle only (no nitrogen limitation)
+    A model with nitrogen disabled always runs in carbon-only mode. For experiments
+    run with :meth:`run_experiments`, this model-level switch is combined with each
+    experiment's switch, so an experiment can disable nitrogen even when there is a 
+     nitrogen cycle in the model.
 
-    When set to 0, the model runs as a carbon-only model with no nitrogen feedbacks.
+    - 1: Nitrogen cycle is included in the model (default)
+    - 0: Nitrogen cycle is not included in the model
     """
 
     @classmethod
@@ -401,7 +404,8 @@ class CarbonNitrogenCycleModel:
         ----------
         experiments
             List of experiment configurations. Each experiment specifies input data,
-            nitrogen switch setting, and a name for identification.
+            nitrogen switch setting, and a name for identification. Nitrogen is active
+            only when both the model-level and experiment-level switches are enabled.
 
         Returns
         -------
@@ -427,12 +431,11 @@ class CarbonNitrogenCycleModel:
         >>> no_n_npp = results.sel(experiment="no_nitrogen")["CflxNPP"]
         """
 
-        input_dicts = [exp.to_input_dict() for exp in experiments]
-
         results = []
-        for exp, input_dict in zip(experiments, input_dicts):
-            self.switch_N = exp.switch_N
-            res_exp = self.run(**input_dict)
+        for exp in experiments:
+            model = copy(self)
+            model.switch_N = exp.switch_N
+            res_exp = model.run(**exp.to_input_dict())
             res_exp = res_exp.assign_coords(experiment=exp.name).expand_dims(
                 "experiment"
             )
