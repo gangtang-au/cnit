@@ -21,9 +21,13 @@ class PackedLinearInterpolator:
         self.t0 = self.t_eval[0]
         self.n_times = len(self.t_eval)
         if self.n_times < 2:
-            raise ValueError("PackedLinearInterpolator requires at least two time points.")
+            raise ValueError(
+                "PackedLinearInterpolator requires at least two time points."
+            )
         self.dt = (self.t_eval[-1] - self.t_eval[0]) / (self.n_times - 1)
-        self.is_uniform = np.allclose(np.diff(self.t_eval), self.dt, rtol=1e-5, atol=1e-8)
+        self.is_uniform = np.allclose(
+            np.diff(self.t_eval), self.dt, rtol=1e-5, atol=1e-8
+        )
         self.data = np.asarray(data, dtype=float)
 
     def __call__(self, t: float) -> Union[float, np.ndarray]:

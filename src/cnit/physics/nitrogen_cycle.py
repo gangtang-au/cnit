@@ -1931,35 +1931,34 @@ class NitrogenCycleModel:
 
             # Mineralisation from litter and soil [GtN/yr]
             NflxLD2M = (
-                    res_NplsPLS["NplsL"]
-                    / self.calc_n_turnover.tau_NplsL
-                    * eff_dT_nLD_s
-                    * eff_N_nLD_s
-                    * eff_LU_nLD_s
-                    * (1 - self.calc_n_cycle.frc_nLD2S)
+                res_NplsPLS["NplsL"]
+                / self.calc_n_turnover.tau_NplsL
+                * eff_dT_nLD_s
+                * eff_N_nLD_s
+                * eff_LU_nLD_s
+                * (1 - self.calc_n_cycle.frc_nLD2S)
             )
             NflxSR = (
-                    res_NplsPLS["NplsS"]
-                    / self.calc_n_turnover.tau_NplsS
-                    * eff_dT_nSR_s
-                    * eff_N_nSR_s
-                    * eff_LU_nSR_s
+                res_NplsPLS["NplsS"]
+                / self.calc_n_turnover.tau_NplsS
+                * eff_dT_nSR_s
+                * eff_N_nSR_s
+                * eff_LU_nSR_s
             )
             NflxNetMIN = NflxLD2M + NflxSR
 
             # Net inflow to the mineral N pool [GtN/yr]
             net_inflow = (
-                    NflxAD_s.to("GtN/yr").m
-                    + NflxFT_s.to("GtN/yr").m
-                    + NflxNetMIN.to("GtN/yr").m
-                    - NflxPU_s.to("GtN/yr").m
-                    - NflxLUmin_s.to("GtN/yr").m
+                NflxAD_s.to("GtN/yr").m
+                + NflxFT_s.to("GtN/yr").m
+                + NflxNetMIN.to("GtN/yr").m
+                - NflxPU_s.to("GtN/yr").m
+                - NflxLUmin_s.to("GtN/yr").m
             )
 
             # Effective mineral N turnover time [yr]
             tau_NplsM_eff = tau_NplsM_yr / (
-                    frc_nLSgas * eff_dT_nLSgas_s.to("1").m
-                    + (1.0 - frc_nLSgas)
+                frc_nLSgas * eff_dT_nLSgas_s.to("1").m + (1.0 - frc_nLSgas)
             )
 
             # Initialise mineral N pool [GtN]
@@ -1971,10 +1970,7 @@ class NitrogenCycleModel:
                 dt = t_eval[k + 1] - t_eval[k]
 
                 # Harmonic mean of effective turnover times [yr]
-                tau_eff = 2.0 / (
-                        1.0 / tau_NplsM_eff[k]
-                        + 1.0 / tau_NplsM_eff[k + 1]
-                )
+                tau_eff = 2.0 / (1.0 / tau_NplsM_eff[k] + 1.0 / tau_NplsM_eff[k + 1])
 
                 # Fraction of mineral N remaining after turnover
                 decay = dt / tau_eff
@@ -1987,7 +1983,7 @@ class NitrogenCycleModel:
                 else:
                     # Taylor expansions for small decay
                     coeff_constant = dt * (1.0 - 0.5 * decay)
-                    coeff_linear = 0.5 * dt ** 2 * (1.0 - decay / 3.0)
+                    coeff_linear = 0.5 * dt**2 * (1.0 - decay / 3.0)
 
                 # Linear interpolation of net inflow
                 inflow_start = net_inflow[k]
@@ -1995,9 +1991,9 @@ class NitrogenCycleModel:
 
                 # Analytical update of mineral N pool
                 NplsM[k + 1] = (
-                        NplsM[k] * survival
-                        + inflow_start * coeff_constant
-                        + inflow_slope * coeff_linear
+                    NplsM[k] * survival
+                    + inflow_start * coeff_constant
+                    + inflow_slope * coeff_linear
                 )
 
             res_NplsM = {"NplsM": Q(NplsM, "GtN")}
