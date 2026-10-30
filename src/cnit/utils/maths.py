@@ -2,11 +2,10 @@
 Mathematical functions and operations
 """
 
-from typing import Any, Callable, List, Union
+from typing import Any, List, Union
 
 import numpy as np
 import pint
-import scipy.interpolate
 
 
 class PackedLinearInterpolator:
@@ -59,27 +58,6 @@ def _make_packed_numeric_interp(
         else:
             data.append(np.asarray(s, dtype=float))
     return PackedLinearInterpolator(time_values, np.vstack(data))
-
-
-def _make_numeric_interp(
-    values: Any,
-    time_values: np.ndarray,
-    unit: str,
-    *,
-    extrapolate: bool,
-) -> Callable[[Union[float, np.ndarray]], Union[float, np.ndarray]]:
-    """Build a unit-free, linearly interpolated function from a quantity series."""
-    if isinstance(values, pint.Quantity):
-        values = values.to(unit).m
-    else:
-        values = np.asarray(values)
-
-    return scipy.interpolate.interp1d(
-        time_values,
-        values,
-        bounds_error=not extrapolate,
-        fill_value="extrapolate" if extrapolate else np.nan,
-    )
 
 
 class SolveError(ValueError):
