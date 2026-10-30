@@ -3,7 +3,7 @@ Land Use Flux Calculator for the CNit Model.
 
 This module defines the :class:`LanduseCalculator` class, which processes land use
 input data and translates it into the specific fluxes required by the CNit
-model.  The calculator handles both carbon and nitrogen land use fluxes with explicit
+model. The calculator handles both carbon and nitrogen land use fluxes with explicit
 separation of deforestation, afforestation (or reforestation), and regrowth dynamics.
 
 **Key Features:**
@@ -33,13 +33,13 @@ separation of deforestation, afforestation (or reforestation), and regrowth dyna
 
 The net land use emission is related to gross emission and regrowth by:
 
-..  math::
+.. math::
 
     LUnet(t) = LUgrs(t) - LUrgr(t)
 
 Gross emissions are further separated into deforestation and afforestation:
 
-..  math::
+.. math::
 
     LUnet(t) = LUdfst(t) - LUrgr(t) - LUafst(t)
 
@@ -55,7 +55,7 @@ For an interval with positive gross land use flux rate :math:`F_i` and duration
 Regrowth from that amount starts at the following interval and occurs at a constant
 rate over the configured regrowth timescale:
 
-..  math::
+.. math::
 
     LUrgr(T) = \\frac{\\varphi \\times D_i}{\\tau_{rgr}},
     \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{rgr})
@@ -65,7 +65,7 @@ where :math:`\\varphi` is the fraction that can regrow.
 In each interval, total regrowth is the sum of contributions from all past deforestation
 events whose regrowth periods are active:
 
-..  math::
+.. math::
 
     LUrgr(t) = \\sum_i \\frac{\\varphi D_i}{\\tau_{rgr}}
     \\mathbb{1}_{[t_{i+1}, t_{i+1}+\\tau_{rgr})}(t)
@@ -75,7 +75,7 @@ events whose regrowth periods are active:
 Similarly, a fraction of each interval's afforestation amount decays at a constant
 rate over the afforestation-decay timescale, beginning at the next interval boundary.
 
-..  math::
+.. math::
 
     LUafst\\_decay(T) = \\frac{\\phi A_i}{\\tau_{afst\\_decay}},
     \\quad T \\in [t_{i+1}, t_{i+1}+\\tau_{afst\\_decay})
@@ -184,7 +184,7 @@ data sources like forest harvest statistics.
 
 **Typical Usage:**
 
-..    code-block:: python
+.. code-block:: python
 
     # Initialize calculator
     lu_calc = LanduseCalculator(
@@ -306,10 +306,10 @@ class LanduseCalculator:
         Parameters
         ----------
         CemsLUnet_s
-            Net land use carbon emission time series [GtC/yr].  Represents the
-            difference between gross emissions and regrowth.  Used when method_cLU=0.
+            Net land use carbon emission time series [GtC/yr]. Represents the
+            difference between gross emissions and regrowth. Used when method_cLU=0.
         CemsLUgrs_s
-            Gross land use carbon emission time series [GtC/yr].  Can be positive
+            Gross land use carbon emission time series [GtC/yr]. Can be positive
             (deforestation) or negative (afforestation). Used when method_cLU=1.
         time_axis
             Time coordinates aligned with the input series [yr]. They must be

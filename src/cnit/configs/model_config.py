@@ -886,7 +886,7 @@ class CarbonNitrogenCycleModelConfig:
     """Fraction of litter production carbon retained in litter pool [dimensionless].
 
     Represents carbon in plant materials that remain in the litter pool at the end
-    of a model timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
+    of a model timestep as recognizable plant structures. The remainder (1 - frc_cLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
     the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
@@ -972,8 +972,8 @@ class CarbonNitrogenCycleModelConfig:
     NCratio_PUreq: pint.Quantity = field(
         default=Q(0.02, "GtN/GtC"), validator=check_units("GtN/GtC")
     )
-    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC].  Stoichiometric
-    ratio determining nitrogen demand based on carbon uptake.  This represents the
+    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC]. Stoichiometric
+    ratio determining nitrogen demand based on carbon uptake. This represents the
     N:C ratio needed to support new plant biomass production.
     """
 
@@ -989,9 +989,9 @@ class CarbonNitrogenCycleModelConfig:
     sns_NetMIN2dT: pint.Quantity = field(
         default=Q(0, "1/K"), validator=check_units("1/K")
     )
-    """Temperature sensitivity of net mineralization [1/K].  Controls how strongly
+    """Temperature sensitivity of net mineralization [1/K]. Controls how strongly
     mineralization responds to temperature changes. Higher values indicate stronger
-    temperature effect on mineralization rates.  Positive values indicate increased
+    temperature effect on mineralization rates. Positive values indicate increased
     mineralization with warming.
     """
 

@@ -161,7 +161,7 @@ class CarbonTurnoverCalculator:
 
     This calculator determines carbon fluxes between different pools in the
     terrestrial carbon cycle based on pool sizes, turnover times, and
-    environmental effects.  The turnover processes include:
+    environmental effects. The turnover processes include:
 
     - Litter production (cLP): Transfer from plant to litter pool
     - Litter decomposition (cLD): Transfer from litter to soil pool
@@ -214,7 +214,7 @@ class CarbonTurnoverCalculator:
         Parameters
         ----------
         CplsP
-            Plant carbon pool size [GtC].  Total carbon contained in living
+            Plant carbon pool size [GtC]. Total carbon contained in living
             plant biomass.
         CplsL
             Litter carbon pool size [GtC]. Total carbon contained in dead
@@ -343,7 +343,7 @@ class CarbonCycleCalculator:
 
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of carbon through different pathways in the
-    terrestrial biosphere.  These fractions account for the cascade of carbon through
+    terrestrial biosphere. These fractions account for the cascade of carbon through
     multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
@@ -379,7 +379,7 @@ class CarbonCycleCalculator:
     """Fraction of litter production carbon retained in litter pool [dimensionless].
 
     Represents carbon in plant materials that remain in the litter pool at the end
-    of a model timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
+    of a model timestep as recognizable plant structures. The remainder (1 - frc_cLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
     the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
@@ -438,10 +438,10 @@ class CarbonCycleCalculator:
         Parameters
         ----------
         CflxNPP
-            Net primary production carbon flux [GtC/yr].  Total carbon fixation by
+            Net primary production carbon flux [GtC/yr]. Total carbon fixation by
             plants after autotrophic respiration.
         CflxLPR
-            Litter production respiration carbon flux [GtC/yr].  Autotrophic respiration
+            Litter production respiration carbon flux [GtC/yr]. Autotrophic respiration
             associated with plant tissue turnover.
         CflxLP
             Litter production flux [GtC/yr]. Carbon transfer from plant to litter
@@ -453,7 +453,7 @@ class CarbonCycleCalculator:
             Soil respiration flux [GtC/yr]. Carbon release from soil organic matter
             through decomposition (also called soil turnover).
         CflxLUgrs
-            Gross deforestation carbon flux [GtC/yr].  Carbon lost from system
+            Gross deforestation carbon flux [GtC/yr]. Carbon lost from system
             due to land conversion.
 
         Returns
@@ -585,7 +585,7 @@ class CarbonCycleCalculator:
         Calculate all carbon fluxes and their partitioning in the system.
 
         This method computes the complete set of carbon fluxes including all
-        partitioned flows between pools.  Useful for detailed budget analysis and
+        partitioned flows between pools. Useful for detailed budget analysis and
         diagnostic output.
 
         Parameters
@@ -805,7 +805,7 @@ class CarbonCycleModelResult:
         -------
         xr.Dataset
             Complete model results as xarray Dataset with time dimension and all
-            variables labeled with descriptive names and units.  The Dataset includes:
+            variables labeled with descriptive names and units. The Dataset includes:
 
             **State Variables:**
 
@@ -1008,7 +1008,7 @@ class CarbonCycleModel:
         Parameters
         ----------
         time_axis
-            Time points for simulation [yr].  Must start at or after time0.
+            Time points for simulation [yr]. Must start at or after time0.
             These are the time points at which solution is explicitly evaluated.
         CflxNPP_s, CflxLPR_s, CflxLUgrs_s
             Carbon flux series [GtC/yr], aligned with ``time_axis``.
@@ -1031,7 +1031,7 @@ class CarbonCycleModel:
             If time_axis starts before time0. The simulation cannot run backwards
             from the initialization time.
         SolveError
-            If the numerical ODE solver fails to converge.  This can occur due to
+            If the numerical ODE solver fails to converge. This can occur due to
             numerical instability, runaway feedbacks, or inappropriate tolerance settings.
 
         Notes

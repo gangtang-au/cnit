@@ -35,12 +35,12 @@ deposition, fertilizer application, and land use change.
 3. **Nitrogen Deficit Feedback**: A key feature is the explicit calculation of nitrogen
    deficit for plant uptake:
 
-   ..  math::
+   .. math::
 
        PUdef = PUreq - PUavail
 
    where nitrogen requirement (PUreq) is based on NPP and stoichiometric N: C ratios, and
-   nitrogen availability (PUavail) comes from mineralization and external inputs.  This
+   nitrogen availability (PUavail) comes from mineralization and external inputs. This
    deficit drives compensatory responses in plant uptake efficiency and biological fixation.
 
 4. **Flux-Based Mineralization**: Net mineralization is parameterized as a flux-based process
@@ -146,8 +146,8 @@ class NitrogenPUBNFCalculator:
         default=Q(0.02, "GtN/GtC"),
         validator=check_units("GtN/GtC"),
     )
-    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC].  Stoichiometric
-    ratio determining nitrogen demand based on carbon uptake.  This represents the
+    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC]. Stoichiometric
+    ratio determining nitrogen demand based on carbon uptake. This represents the
     N:C ratio needed to support new plant biomass production.
     """
 
@@ -165,9 +165,9 @@ class NitrogenPUBNFCalculator:
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """Temperature sensitivity of net mineralization [1/K].  Controls how strongly
+    """Temperature sensitivity of net mineralization [1/K]. Controls how strongly
     mineralization responds to temperature changes. Higher values indicate stronger
-    temperature effect on mineralization rates.  Positive values indicate increased
+    temperature effect on mineralization rates. Positive values indicate increased
     mineralization with warming.
     """
 
@@ -205,10 +205,10 @@ class NitrogenPUBNFCalculator:
         Parameters
         ----------
         eff_dT_PU
-            Temperature effect on plant uptake [dimensionless].  Values > 1 indicate
+            Temperature effect on plant uptake [dimensionless]. Values > 1 indicate
             enhanced uptake with warming, < 1 indicate reduced uptake.
         eff_C_PU
-            Carbon cycle effect on plant uptake [dimensionless].  Represents how
+            Carbon cycle effect on plant uptake [dimensionless]. Represents how
             changes in NPP affect nitrogen uptake capacity. This is a sigmoid function
             of relative NPP change (see ``calculate_eff_C_PUBNF``), where increased
             NPP enhances the ability to take up nitrogen up to a maximum value.
@@ -250,7 +250,7 @@ class NitrogenPUBNFCalculator:
         -----
         The following formulas are used:
 
-        ..  math::
+        .. math::
 
             PU = PU_0 \\times \\epsilon_{T(PU)} \\times \\epsilon_{C(PU)} \\times \\epsilon_{N(PU)}
 
@@ -307,18 +307,18 @@ class NitrogenPUBNFCalculator:
         Parameters
         ----------
         CflxNPP
-            Net primary production carbon flux [GtC/yr].  This should be potential
+            Net primary production carbon flux [GtC/yr]. This should be potential
             NPP (NPPpot) calculated with no nitrogen limitation effect (ε_N(NPP) = 1)
             to properly determine nitrogen requirement independent of current limitation.
         CflxNPP0
             Initial/reference net primary production carbon flux [GtC/yr]. Used
             to normalize NPP changes for long-term mineralization calculation.
         NflxAD
-            Nitrogen deposition flux [GtN/yr].  Atmospheric nitrogen deposition
+            Nitrogen deposition flux [GtN/yr]. Atmospheric nitrogen deposition
             from anthropogenic and natural sources. All deposition is assumed to be
             immediately available for plant uptake.
         NflxFT
-            Nitrogen fertilizer flux [GtN/yr].  Direct fertilizer application
+            Nitrogen fertilizer flux [GtN/yr]. Direct fertilizer application
             (currently not used in calculation but included for future extension).
         dT
             Temperature change relative to reference [K]. Used to calculate
@@ -339,7 +339,7 @@ class NitrogenPUBNFCalculator:
 
         **Nitrogen Required for Plant Uptake:**
 
-        ..  math::
+        .. math::
 
             PUreq = NPPpot \\times NCratio
 
@@ -390,7 +390,7 @@ class NitrogenPUBNFCalculator:
 
         **Plant Uptake Deficit:**
 
-        ..  math::
+        .. math::
 
             PUdef = PUreq - PUavail
 
@@ -436,7 +436,7 @@ class NitrogenPUBNFCalculator:
 
         While the full ecosystem mineral nitrogen budget is usually balanced over long
         timescales (annual in CNit), short-term imbalances are the key that
-        determines nutrient limitation on processes.  To represent this effect, we
+        determines nutrient limitation on processes. To represent this effect, we
         transform the mineral nitrogen availability from a pool size basis to a flux
         basis by estimating the net mineralization fluxes that would be available for
         plant uptake over a year. This flux-based approach allows us to compare nitrogen
@@ -471,7 +471,7 @@ class NitrogenTurnoverCalculator:
 
     This calculator determines nitrogen fluxes between different pools in the
     terrestrial nitrogen cycle based on pool sizes, turnover times, and
-    environmental effects.  The turnover processes include:
+    environmental effects. The turnover processes include:
 
     - Plant nitrogen turnover (nLP): Transfer from plant to litter pool
     - Litter nitrogen decomposition (nLD): Transfer from litter to soil pool
@@ -671,16 +671,16 @@ class NitrogenTurnoverCalculator:
 
         This method calculates total nitrogen loss from the mineral pool through
         two pathways: gaseous losses (denitrification and volatilization) and
-        leaching.  Only gaseous losses are assumed to be temperature-sensitive.
+        leaching. Only gaseous losses are assumed to be temperature-sensitive.
 
         Parameters
         ----------
         NplsM
-            Mineral nitrogen pool size [GtN].  Total plant-available mineral
+            Mineral nitrogen pool size [GtN]. Total plant-available mineral
             nitrogen in the soil.
         eff_dT_nLSgas
             Temperature effect on gaseous nitrogen loss from mineral pool [dimensionless].
-            Values > 1 indicate enhanced gaseous losses with warming.  Only affects
+            Values > 1 indicate enhanced gaseous losses with warming. Only affects
             the gaseous component of total losses.
 
         Returns
@@ -712,7 +712,7 @@ class NitrogenTurnoverCalculator:
 
         1. **Gaseous losses** (:math:`f_{gas}` fraction): Temperature-sensitive
            losses through denitrification (conversion to N₂, N₂O, NO) and ammonia
-           volatilization.  These processes are enhanced by warming.
+           volatilization. These processes are enhanced by warming.
 
         2. **Leaching losses** (:math:`1 - f_{gas}` fraction): Temperature-insensitive
            losses through nitrate leaching and dissolved organic nitrogen export.
@@ -778,7 +778,7 @@ class NitrogenCycleCalculator:
 
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of nitrogen through different pathways in the
-    terrestrial biosphere.  These fractions account for the cascade of nitrogen through
+    terrestrial biosphere. These fractions account for the cascade of nitrogen through
     multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
@@ -903,7 +903,7 @@ class NitrogenCycleCalculator:
         Parameters
         ----------
         NflxPU
-            Plant nitrogen uptake flux [GtN/yr].  Total uptake from mineral pool.
+            Plant nitrogen uptake flux [GtN/yr]. Total uptake from mineral pool.
         NflxBNF
             Biological nitrogen fixation flux [GtN/yr]. New nitrogen entering system
             from atmospheric N₂.
@@ -917,7 +917,7 @@ class NitrogenCycleCalculator:
             Soil respiration flux [GtN/yr]. Nitrogen release from soil organic matter
             through decomposition (also called soil turnover).
         NflxLUgrs
-            Gross deforestation nitrogen flux [GtN/yr].  Nitrogen lost from system
+            Gross deforestation nitrogen flux [GtN/yr]. Nitrogen lost from system
             due to land conversion.
 
         Returns
@@ -1074,21 +1074,21 @@ class NitrogenCycleCalculator:
         Parameters
         ----------
         NflxPU
-            Plant nitrogen uptake flux [GtN/yr].  Removal of mineral N by plants.
+            Plant nitrogen uptake flux [GtN/yr]. Removal of mineral N by plants.
         NflxNetMIN
             Net mineralization flux [GtN/yr]. Release of mineral nitrogen from
             organic matter decomposition (mineralization minus microbial immobilization).
         NflxLS
-            Nitrogen loss flux from mineral pool [GtN/yr].  Combined gaseous and
+            Nitrogen loss flux from mineral pool [GtN/yr]. Combined gaseous and
             leaching losses.
         NflxAD
             Atmospheric deposition flux [GtN/yr]. External input from wet and dry
             deposition.
         NflxFT
-            Fertilizer application flux [GtN/yr].  Anthropogenic input from agricultural
+            Fertilizer application flux [GtN/yr]. Anthropogenic input from agricultural
             fertilization.
         NflxLUmin
-            Direct mineral nitrogen loss from land use change [GtN/yr].  Mineral N
+            Direct mineral nitrogen loss from land use change [GtN/yr]. Mineral N
             lost during land conversion events.
 
         Returns
@@ -1169,7 +1169,7 @@ class NitrogenCycleCalculator:
         Calculate all nitrogen fluxes and their partitioning in the system.
 
         This method computes the complete set of nitrogen fluxes including all
-        partitioned flows between pools.  Useful for detailed budget analysis and
+        partitioned flows between pools. Useful for detailed budget analysis and
         diagnostic output.
 
         Parameters
@@ -1430,7 +1430,7 @@ class NitrogenCycleModelResult:
         -------
         xr.Dataset
             Complete model results as xarray Dataset with time dimension and all
-            variables labeled with descriptive names and units.  The Dataset includes:
+            variables labeled with descriptive names and units. The Dataset includes:
 
             **State Variables:**
 
@@ -1696,7 +1696,7 @@ class NitrogenCycleModel:
             If time_axis starts before time0. The simulation cannot run backwards
             from the initialization time.
         SolveError
-            If the numerical ODE solver fails to converge.  This can occur due to
+            If the numerical ODE solver fails to converge. This can occur due to
             numerical instability, runaway feedbacks, or inappropriate tolerance settings.
 
         Notes
@@ -1751,7 +1751,7 @@ class NitrogenCycleModel:
 
         **Pool Switches:**
 
-        Pool dynamics can be selectively disabled using switch_Npls.  When a switch
+        Pool dynamics can be selectively disabled using switch_Npls. When a switch
         is set to 0, the corresponding pool's rate of change is forced to zero,
         effectively freezing that pool at its initial value throughout the simulation.
         If the mineral pool switch is 0, the mineral pool is set to zero throughout.

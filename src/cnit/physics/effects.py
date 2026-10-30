@@ -142,7 +142,7 @@ class EffectLanduseCalculator:
         reductions from deforestation and NPP enhancements from afforestation. The
         calculation addresses a fundamental limitation of box models:  with constant
         turnover times, carbon pools always return to their equilibrium state following
-        any perturbation.  Land use effects on NPP prevent this unrealistic behavior by
+        any perturbation. Land use effects on NPP prevent this unrealistic behavior by
         scaling NPP to reflect persistent changes in productive land area.
 
         The method uses a refined parameterization that distinguishes between equilibrium
@@ -152,7 +152,7 @@ class EffectLanduseCalculator:
         Parameters
         ----------
         cumsum_CflxLUrgr
-            Cumulative regrowth carbon flux [GtC].  Total carbon accumulated through
+            Cumulative regrowth carbon flux [GtC]. Total carbon accumulated through
             natural regrowth following past deforestation events.
         cumsum_CflxLUdfst
             Cumulative deforestation carbon flux [GtC]. Total carbon lost through all
@@ -175,7 +175,7 @@ class EffectLanduseCalculator:
 
         Returns
         -------
-        Land use effect factor for NPP [dimensionless].  Multiplicative factor applied
+        Land use effect factor for NPP [dimensionless]. Multiplicative factor applied
             to baseline NPP:
 
             - Values < 1: Net NPP reduction (deforestation dominates)
@@ -190,7 +190,7 @@ class EffectLanduseCalculator:
         to their initial equilibrium state following any perturbation, whether deforestation
         or afforestation. This occurs because:
 
-        ..  math::
+        .. math::
 
             \\frac{dC}{dt} = NPP - \\frac{C}{\\tau}
 
@@ -222,13 +222,13 @@ class EffectLanduseCalculator:
         is the initial equilibrium land carbon (`CplsPLS0`).
 
         **Physical interpretation**: Only the non-regrowing fraction :math:`(1-\\varphi)`
-        represents permanent loss of productive land.  If :math:`\\varphi = 0.9`, then 90%
+        represents permanent loss of productive land. If :math:`\\varphi = 0.9`, then 90%
         of deforested area eventually recovers, so only 10% contributes to long-term NPP
         reduction.
 
         **Limitation**: This assumes NPP immediately adjusts to the new equilibrium level
         after deforestation, potentially underestimating the effect during the regrowth
-        period.  The new equilibrium corresponds to the end of the regrowth period
+        period. The new equilibrium corresponds to the end of the regrowth period
         (:math:`\\tau_{rgr}`), so at time t during active regrowth, :math:`\\epsilon_{LUdfst}^{eqm}`
         underestimates the realized impact because it doesn't account for lagged regrowth.
 
@@ -236,7 +236,7 @@ class EffectLanduseCalculator:
 
         Represents the realized net impact at the current time:
 
-        ..  math::
+        .. math::
 
             \\epsilon_{LUdfst}^{inst} = \\frac{\\sum_{0}^{t}(LUdfst - LUrgr)}{C_{Land0}}
 
@@ -260,7 +260,7 @@ class EffectLanduseCalculator:
 
         2. **Missing high NPP of young vegetation**: Young regrowing forests have high NPP
            potential relative to their carbon stock, which isn't captured in the simple
-           cumulative carbon balance.  The instantaneous effect treats all carbon equally,
+           cumulative carbon balance. The instantaneous effect treats all carbon equally,
            missing the fact that a small amount of regrowth carbon represents substantial
            NPP recovery.
 
