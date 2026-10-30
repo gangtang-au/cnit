@@ -1758,7 +1758,8 @@ class NitrogenCycleModel:
         """
 
         t_eval = time_axis.to("yr").m
-        drivers_pls_t = _make_packed_numeric_interp(
+        # Pack the fluxes and environmental effect factors into a unified interpolator
+        flux_and_effect_t = _make_packed_numeric_interp(
             [
                 NflxPU_s,
                 NflxBNF_s,
@@ -1825,7 +1826,25 @@ class NitrogenCycleModel:
             list
                 Time derivatives [dNplsP/dt, dNplsL/dt, dNplsS/dt] in GtN/yr (unitless)
             """
-            d = drivers_pls_t(t)
+            # Interpolate all fluxes and effect multipliers at continuous time t
+            fluxes_and_effects = flux_and_effect_t(t)
+
+            # Unpack fluxes [GtN/yr]
+            NflxPU_GtN_yr = fluxes_and_effects[0]
+            NflxBNF_GtN_yr = fluxes_and_effects[1]
+            NflxLUgrs_GtN_yr = fluxes_and_effects[2]
+
+            # Unpack environmental effects [1]
+            eff_dT_nLP = fluxes_and_effects[3]
+            eff_dT_nLD = fluxes_and_effects[4]
+            eff_dT_nSR = fluxes_and_effects[5]
+            eff_N_nLP = fluxes_and_effects[6]
+            eff_N_nLD = fluxes_and_effects[7]
+            eff_N_nSR = fluxes_and_effects[8]
+            eff_LU_nLP = fluxes_and_effects[9]
+            eff_LU_nLD = fluxes_and_effects[10]
+            eff_LU_nSR = fluxes_and_effects[11]
+
             turnover = calc_turnover.calculate_nLPLDSR_numeric(
                 NplsP_GtN=y[0],
                 NplsL_GtN=y[1],
@@ -1833,24 +1852,24 @@ class NitrogenCycleModel:
                 tau_NplsP_yr=tau_NplsP_yr,
                 tau_NplsL_yr=tau_NplsL_yr,
                 tau_NplsS_yr=tau_NplsS_yr,
-                eff_dT_nLP=d[3],
-                eff_dT_nLD=d[4],
-                eff_dT_nSR=d[5],
-                eff_N_nLP=d[6],
-                eff_N_nLD=d[7],
-                eff_N_nSR=d[8],
-                eff_LU_nLP=d[9],
-                eff_LU_nLD=d[10],
-                eff_LU_nSR=d[11],
+                eff_dT_nLP=eff_dT_nLP,
+                eff_dT_nLD=eff_dT_nLD,
+                eff_dT_nSR=eff_dT_nSR,
+                eff_N_nLP=eff_N_nLP,
+                eff_N_nLD=eff_N_nLD,
+                eff_N_nSR=eff_N_nSR,
+                eff_LU_nLP=eff_LU_nLP,
+                eff_LU_nLD=eff_LU_nLD,
+                eff_LU_nSR=eff_LU_nSR,
             )
             dydt = (
                 calc_cycle.calculate_dNplsPLS_dt_numeric(
-                    NflxPU_GtN_yr=d[0],
-                    NflxBNF_GtN_yr=d[1],
+                    NflxPU_GtN_yr=NflxPU_GtN_yr,
+                    NflxBNF_GtN_yr=NflxBNF_GtN_yr,
                     NflxLP_GtN_yr=turnover["NflxLP"],
                     NflxLD_GtN_yr=turnover["NflxLD"],
                     NflxSR_GtN_yr=turnover["NflxSR"],
-                    NflxLUgrs_GtN_yr=d[2],
+                    NflxLUgrs_GtN_yr=NflxLUgrs_GtN_yr,
                     frc_PU2P=frc_PU2P,
                     frc_PU2L=frc_PU2L,
                     frc_BNF2P=frc_BNF2P,
@@ -1861,41 +1880,6 @@ class NitrogenCycleModel:
                     frc_nLUgrs2L=frc_nLUgrs2L,
                 )
                 * pool_switches
-            )
-            if np.all(np.abs(dydt) < 1e-12):
-                dydt[:] = 0
-            return dydt
-
-        def func_to_solve_NplsM(t: float, y: np.ndarray) -> np.ndarray:
-            """
-            ODE system function for mineral nitrogen pool (stage 2).
-
-            Parameters
-            ----------
-            t
-                Current time [yr] (unitless for solver)
-            y
-                Current state vector [NplsM] in GtN (unitless for solver)
-
-            Returns
-            -------
-            list
-                Time derivative [dNplsM/dt] in GtN/yr (unitless)
-            """
-            d = drivers_m_t(t)
-            turnover = calc_turnover.calculate_nLS_numeric(
-                NplsM_GtN=y[0],
-                tau_NplsM_yr=tau_NplsM_yr,
-                frc_nLSgas=frc_nLSgas,
-                eff_dT_nLSgas=d[5],
-            )
-            dydt = calc_cycle.calculate_dNplsM_dt_numeric(
-                NflxPU_GtN_yr=d[0],
-                NflxNetMIN_GtN_yr=d[1],
-                NflxLS_GtN_yr=turnover["NflxLS"],
-                NflxAD_GtN_yr=d[2],
-                NflxFT_GtN_yr=d[3],
-                NflxLUmin_GtN_yr=d[4],
             )
             if np.all(np.abs(dydt) < 1e-12):
                 dydt[:] = 0
@@ -1936,59 +1920,87 @@ class NitrogenCycleModel:
         }
 
         if self.switch_Npls[-1] != 0:
+            # Stage 2: Solve the mineral nitrogen pool analytically.
+            #
+            # Governing equation:
+            #     dNplsM/dt = net_inflow(t) - NplsM(t) / tau_NplsM_eff(t)
+            #
+            # Assume a constant effective turnover time (harmonic mean) and
+            # linearly varying net inflow within each time step. The analytical
+            # solution avoids numerical stiffness for rapid mineral N turnover.
+
+            # Mineralisation from litter and soil [GtN/yr]
             NflxLD2M = (
-                res_NplsPLS["NplsL"]
-                / self.calc_n_turnover.tau_NplsL
-                * eff_dT_nLD_s
-                * eff_N_nLD_s
-                * eff_LU_nLD_s
-                * (1 - self.calc_n_cycle.frc_nLD2S)
+                    res_NplsPLS["NplsL"]
+                    / self.calc_n_turnover.tau_NplsL
+                    * eff_dT_nLD_s
+                    * eff_N_nLD_s
+                    * eff_LU_nLD_s
+                    * (1 - self.calc_n_cycle.frc_nLD2S)
             )
             NflxSR = (
-                res_NplsPLS["NplsS"]
-                / self.calc_n_turnover.tau_NplsS
-                * eff_dT_nSR_s
-                * eff_N_nSR_s
-                * eff_LU_nSR_s
+                    res_NplsPLS["NplsS"]
+                    / self.calc_n_turnover.tau_NplsS
+                    * eff_dT_nSR_s
+                    * eff_N_nSR_s
+                    * eff_LU_nSR_s
             )
             NflxNetMIN = NflxLD2M + NflxSR
-            drivers_m_t = _make_packed_numeric_interp(
-                [
-                    NflxPU_s,
-                    NflxNetMIN,
-                    NflxAD_s,
-                    NflxFT_s,
-                    NflxLUmin_s,
-                    eff_dT_nLSgas_s,
-                ],
-                t_eval,
-                [
-                    "GtN/yr",
-                    "GtN/yr",
-                    "GtN/yr",
-                    "GtN/yr",
-                    "GtN/yr",
-                    "1",
-                ],
+
+            # Net inflow to the mineral N pool [GtN/yr]
+            net_inflow = (
+                    NflxAD_s.to("GtN/yr").m
+                    + NflxFT_s.to("GtN/yr").m
+                    + NflxNetMIN.to("GtN/yr").m
+                    - NflxPU_s.to("GtN/yr").m
+                    - NflxLUmin_s.to("GtN/yr").m
             )
 
-            raw = scipy.integrate.solve_ivp(
-                func_to_solve_NplsM,
-                t_span=t_span,
-                t_eval=t_eval,
-                y0=(self.NplsM0.to("GtN").m,),
-                atol=1e-6,
-                rtol=1e-3,
-                max_step=2,
-                # method='LSODA',
+            # Effective mineral N turnover time [yr]
+            tau_NplsM_eff = tau_NplsM_yr / (
+                    frc_nLSgas * eff_dT_nLSgas_s.to("1").m
+                    + (1.0 - frc_nLSgas)
             )
 
-            if not raw.success:
-                raise SolveError(
-                    f"Model failed to solve (possible runaway feedback)\n{raw}"
+            # Initialise mineral N pool [GtN]
+            NplsM = np.empty(len(t_eval), dtype=float)
+            NplsM[0] = self.NplsM0.to("GtN").m
+
+            # Analytical integration over each time interval
+            for k in range(len(t_eval) - 1):
+                dt = t_eval[k + 1] - t_eval[k]
+
+                # Harmonic mean of effective turnover times [yr]
+                tau_eff = 2.0 / (
+                        1.0 / tau_NplsM_eff[k]
+                        + 1.0 / tau_NplsM_eff[k + 1]
                 )
 
-            res_NplsM = {"NplsM": Q(raw.y[0, :], "GtN")}
+                # Fraction of mineral N remaining after turnover
+                decay = dt / tau_eff
+                survival = np.exp(-decay)
+
+                # Integrating-factor coefficients for constant and linear inflow
+                if decay > 1e-4:
+                    coeff_constant = tau_eff * (1.0 - survival)
+                    coeff_linear = tau_eff * (dt - coeff_constant)
+                else:
+                    # Taylor expansions for small decay
+                    coeff_constant = dt * (1.0 - 0.5 * decay)
+                    coeff_linear = 0.5 * dt ** 2 * (1.0 - decay / 3.0)
+
+                # Linear interpolation of net inflow
+                inflow_start = net_inflow[k]
+                inflow_slope = (net_inflow[k + 1] - inflow_start) / dt
+
+                # Analytical update of mineral N pool
+                NplsM[k + 1] = (
+                        NplsM[k] * survival
+                        + inflow_start * coeff_constant
+                        + inflow_slope * coeff_linear
+                )
+
+            res_NplsM = {"NplsM": Q(NplsM, "GtN")}
 
         else:
             res_NplsM = {"NplsM": Q(np.zeros_like(time_axis), "GtN")}
