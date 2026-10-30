@@ -79,7 +79,7 @@ def test_parameter_csv_uses_explicit_file_and_model_name():
 
     assert config.frc_rgr == Q(float(rows["frc_rgr"]["ACCESS-ESM1-5"]), "1")
     assert config.switch_N == Q(float(rows["switch_N"]["ACCESS-ESM1-5"]), "1")
-    assert config.switch_Npls == [1, 1, 1, 1]
+    assert config.switch_Npls == (1, 1, 1, 1)
 
 
 def test_parameter_csv_requires_explicit_file_and_model_name():
@@ -129,7 +129,7 @@ def test_missing_nitrogen_pool_parameter_freezes_nitrogen_without_changing_switc
     config = CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
 
     assert config.switch_N == Q(1, "1")
-    assert config.switch_Npls == [0, 0, 0, 0]
+    assert config.switch_Npls == (0, 0, 0, 0)
 
 
 def test_config_can_be_created_from_parameter_dict():
@@ -187,7 +187,7 @@ def test_nitrogen_pool_switch_uses_switch_and_initial_pool(
     config = CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
 
     assert config.switch_N == Q(switch_n, "1")
-    assert config.switch_Npls == [expected] * 4
+    assert config.switch_Npls == (expected,) * 4
 
 
 def test_carbon_pool_switch_uses_initial_plant_pool(tmp_path):
@@ -199,7 +199,46 @@ def test_carbon_pool_switch_uses_initial_plant_pool(tmp_path):
 
     config = CarbonNitrogenCycleModelConfig.from_parameter_csv(csv_path, "example")
 
-    assert config.switch_Cpls == [0, 0, 0]
+    assert config.switch_Cpls == (0, 0, 0)
+
+
+def test_switches_are_immutable_but_can_be_reassigned():
+    config = CarbonNitrogenCycleModelConfig.from_dict(
+        {"switch_Cpls": [0, 1, 0], "switch_Npls": [1, 0, 1, 0]}
+    )
+    model = CarbonCycleModel(
+        CarbonTurnoverCalculator(),
+        CarbonCycleCalculator(),
+        switch_Cpls=[0, 1, 0],
+    )
+    nitrogen_model = NitrogenCycleModel(
+        NitrogenTurnoverCalculator(),
+        NitrogenCycleCalculator(),
+        switch_Npls=[1, 0, 1, 0],
+    )
+
+    assert config.switch_Cpls == (0, 1, 0)
+    assert config.switch_Npls == (1, 0, 1, 0)
+    assert model.switch_Cpls == (0, 1, 0)
+    assert nitrogen_model.switch_Npls == (1, 0, 1, 0)
+
+    with pytest.raises(TypeError):
+        config.switch_Cpls[0] = 1
+    with pytest.raises(TypeError):
+        model.switch_Cpls[0] = 1
+    with pytest.raises(TypeError):
+        nitrogen_model.switch_Npls[0] = 0
+
+    config.switch_Cpls = [1, 0, 1]
+    assert config.switch_Cpls == (1, 0, 1)
+    with pytest.raises(ValueError, match="0 or 1"):
+        config.switch_Cpls = [1, 2, 1]
+
+    model.switch_Cpls = [1, 0, 1]
+    assert model.switch_Cpls == (1, 0, 1)
+
+    with pytest.raises(ValueError, match="0 or 1"):
+        model.switch_Cpls = [1, 2, 1]
 
 
 @pytest.mark.parametrize(
@@ -213,6 +252,46 @@ def test_carbon_pool_switch_uses_initial_plant_pool(tmp_path):
 def test_config_rejects_invalid_fraction_values(name, value):
     with pytest.raises(ValueError, match=name):
         CarbonNitrogenCycleModelConfig.from_dict({name: value})
+
+
+@pytest.mark.parametrize(
+    "name, values",
+    [
+        ("switch_Cpls", [1, 2, 1]),
+        ("switch_Cpls", [1, 0.5, 1]),
+        ("switch_Npls", [1, 1, -1, 1]),
+        ("switch_Npls", [1, 1, 1, 2]),
+    ],
+)
+def test_config_rejects_non_binary_pool_switches(name, values):
+    with pytest.raises(ValueError, match="0 or 1"):
+        CarbonNitrogenCycleModelConfig.from_dict({name: values})
+
+
+@pytest.mark.parametrize(
+    "model_factory, switch_name, values",
+    [
+        (
+            lambda **kwargs: CarbonCycleModel(
+                CarbonTurnoverCalculator(), CarbonCycleCalculator(), **kwargs
+            ),
+            "switch_Cpls",
+            [1, 2, 1],
+        ),
+        (
+            lambda **kwargs: NitrogenCycleModel(
+                NitrogenTurnoverCalculator(), NitrogenCycleCalculator(), **kwargs
+            ),
+            "switch_Npls",
+            [1, 1, 2, 1],
+        ),
+    ],
+)
+def test_cycle_models_reject_non_binary_pool_switches(
+    model_factory, switch_name, values
+):
+    with pytest.raises(ValueError, match="0 or 1"):
+        model_factory(**{switch_name: values})
 
 
 @pytest.mark.parametrize(

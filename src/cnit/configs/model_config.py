@@ -12,6 +12,7 @@ import numpy as np
 import pint
 
 from ..utils.units import Q, check_units
+from ..utils.switches import check_binary_switches
 
 
 @define
@@ -1164,25 +1165,34 @@ class CarbonNitrogenCycleModelConfig:
     When set to 0, the model runs as a carbon-only model with no nitrogen feedbacks.
     """
 
-    switch_Cpls: list = field(factory=lambda: [1, 1, 1])
+    switch_Cpls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(3),
+    )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 
-    Use 1 to enable or 0 to freeze a pool at its initial value. Other numeric values
-    scale that pool's derivative. These switches are useful for diagnostic purposes
-    or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
     - switch_Cpls[2]: Soil pool switch
     """
 
-    switch_Npls: list = field(factory=lambda: [1, 1, 1, 1])
+    switch_Npls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(4),
+    )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 
-    For plant, litter, and soil pools, use 1 to enable or 0 to freeze the pool at its
-    initial value; other numeric values scale its derivative. For the mineral pool,
-    0 disables its dynamics and any non-zero value enables them. These switches are
-    useful for diagnostic purposes or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Npls[0]: Plant pool switch
     - switch_Npls[1]: Litter pool switch
@@ -1196,24 +1206,6 @@ class CarbonNitrogenCycleModelConfig:
             value = getattr(self, item.name)
             if isinstance(value, pint.Quantity) and not np.all(np.isfinite(value.m)):
                 raise ValueError(f"{item.name} must contain only finite values.")
-
-        for name, expected_length in (("switch_Cpls", 3), ("switch_Npls", 4)):
-            switches = getattr(self, name)
-            if not isinstance(switches, (list, tuple, np.ndarray)):
-                raise TypeError(f"{name} must be a sequence of numeric switches.")
-            try:
-                values = np.asarray(switches)
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    f"{name} must contain {expected_length} finite numeric values."
-                ) from exc
-
-            if values.ndim != 1 or values.size != expected_length:
-                raise ValueError(
-                    f"{name} must contain exactly {expected_length} values."
-                )
-            if values.dtype.kind not in "biuf" or not np.all(np.isfinite(values)):
-                raise ValueError(f"{name} must contain only finite numeric values.")
 
         fraction_names = (
             "frc_rgr",

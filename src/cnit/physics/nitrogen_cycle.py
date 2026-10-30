@@ -107,6 +107,7 @@ import pint
 from ..utils.units import check_units, Q
 from ..utils.maths import _make_packed_numeric_interp, SolveError
 from ..utils.data_utils import make_dataset_from_var_dict
+from ..utils.switches import check_binary_switches
 
 
 @define
@@ -1622,15 +1623,17 @@ class NitrogenCycleModel:
     (1850).
     """
 
-    switch_Npls: list[int] = field(
-        factory=lambda: [1, 1, 1, 1],
+    switch_Npls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(4),
     )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 
-    For plant, litter, and soil pools, use 1 to enable or 0 to freeze the pool at its
-    initial value; other numeric values scale its derivative. For the mineral pool,
-    0 disables its dynamics and any non-zero value enables them. These switches are
-    useful for diagnostic purposes or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Npls[0]: Plant pool switch
     - switch_Npls[1]: Litter pool switch

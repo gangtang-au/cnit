@@ -74,6 +74,7 @@ import pint
 from ..utils.units import check_units, Q
 from ..utils.maths import SolveError, _make_packed_numeric_interp
 from ..utils.data_utils import make_dataset_from_var_dict
+from ..utils.switches import check_binary_switches
 
 
 @define
@@ -963,14 +964,17 @@ class CarbonCycleModel:
     (1850).
     """
 
-    switch_Cpls: list[int] = field(
-        factory=lambda: [1, 1, 1],
+    switch_Cpls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(3),
     )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 
-    Use 1 to enable or 0 to freeze a pool at its initial value. Other numeric values
-    scale that pool's derivative. These switches are useful for diagnostic purposes
-    or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
