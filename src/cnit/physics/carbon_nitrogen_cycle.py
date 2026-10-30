@@ -699,7 +699,7 @@ class CarbonNitrogenCycleModel:
         Calculate coupled carbon and nitrogen fluxes with nitrogen limitation feedback.
 
         This is the core coupling method that implements the nitrogen limitation feedback
-        on NPP.   It follows a two-step approach:
+        on NPP. It follows a two-step approach:
 
         1. **Calculate potential fluxes** (without nitrogen limitation):
 

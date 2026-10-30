@@ -222,7 +222,7 @@ class EffectLanduseCalculator:
         is the initial equilibrium land carbon (`CplsPLS0`).
 
         **Physical interpretation**: Only the non-regrowing fraction :math:`(1-\\varphi)`
-        represents permanent loss of productive land.  If :math:`\\varphi = 0. 9`, then 90%
+        represents permanent loss of productive land.  If :math:`\\varphi = 0.9`, then 90%
         of deforested area eventually recovers, so only 10% contributes to long-term NPP
         reduction.
 

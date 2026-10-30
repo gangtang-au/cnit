@@ -436,17 +436,17 @@ class LanduseCalculator:
         Calculate nitrogen flux time series from land-use input series.
 
         This method processes land use change emissions and generates comprehensive
-        nitrogen flux time series.    In addition to organic nitrogen fluxes (analogous
+        nitrogen flux time series. In addition to organic nitrogen fluxes (analogous
         to carbon), it includes direct mineral nitrogen emissions (e.g., NH₃, NOₓ,
         N₂O from agricultural land use change).
 
         Parameters
         ----------
         NemsLUnet_s
-            Net land use nitrogen emission time series [GtN/yr].  Represents emissions
-            from organic nitrogen pools.    Used when method_nLU=0.
+            Net land use nitrogen emission time series [GtN/yr]. Represents emissions
+            from organic nitrogen pools. Used when method_nLU=0.
         NemsLUgrs_s
-            Gross land use nitrogen emission time series [GtN/yr].  Can be positive
+            Gross land use nitrogen emission time series [GtN/yr]. Can be positive
             (deforestation) or negative (afforestation). Used when method_nLU=1.
         NemsLUmin_s
             Direct land use nitrogen emission from mineral pool time series [GtN/yr].
