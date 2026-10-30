@@ -72,7 +72,7 @@ import xarray as xr
 import pint
 
 from ..utils.units import check_units, Q
-from ..utils.maths import SolveError, _make_numeric_interp
+from ..utils.maths import SolveError, _make_numeric_interp, _make_packed_numeric_interp
 from ..utils.data_utils import make_dataset_from_var_dict
 
 
@@ -1069,32 +1069,36 @@ class CarbonCycleModel:
         """
 
         t_eval = time_axis.to("yr").m
-        CflxNPP_t = _make_numeric_interp(CflxNPP_s, t_eval, "GtC/yr", extrapolate=True)
-        CflxLPR_t = _make_numeric_interp(CflxLPR_s, t_eval, "GtC/yr", extrapolate=True)
-        CflxLUgrs_t = _make_numeric_interp(
-            CflxLUgrs_s, t_eval, "GtC/yr", extrapolate=True
-        )
-
-        eff_dT_cLP_t = _make_numeric_interp(
-            eff_dT_cLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_cLD_t = _make_numeric_interp(
-            eff_dT_cLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_cSR_t = _make_numeric_interp(
-            eff_dT_cSR_s, t_eval, "1", extrapolate=False
-        )
-        eff_N_cLP_t = _make_numeric_interp(eff_N_cLP_s, t_eval, "1", extrapolate=False)
-        eff_N_cLD_t = _make_numeric_interp(eff_N_cLD_s, t_eval, "1", extrapolate=False)
-        eff_N_cSR_t = _make_numeric_interp(eff_N_cSR_s, t_eval, "1", extrapolate=False)
-        eff_LU_cLP_t = _make_numeric_interp(
-            eff_LU_cLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_cLD_t = _make_numeric_interp(
-            eff_LU_cLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_cSR_t = _make_numeric_interp(
-            eff_LU_cSR_s, t_eval, "1", extrapolate=False
+        drivers_t = _make_packed_numeric_interp(
+            [
+                CflxNPP_s,
+                CflxLPR_s,
+                CflxLUgrs_s,
+                eff_dT_cLP_s,
+                eff_dT_cLD_s,
+                eff_dT_cSR_s,
+                eff_N_cLP_s,
+                eff_N_cLD_s,
+                eff_N_cSR_s,
+                eff_LU_cLP_s,
+                eff_LU_cLD_s,
+                eff_LU_cSR_s,
+            ],
+            t_eval,
+            [
+                "GtC/yr",
+                "GtC/yr",
+                "GtC/yr",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+            ],
         )
 
         calc_turnover = self.calc_c_turnover
@@ -1129,6 +1133,7 @@ class CarbonCycleModel:
                 Time derivatives [dCplsP/dt, dCplsL/dt, dCplsS/dt] in GtC/yr (unitless)
             """
 
+            d = drivers_t(t)
             turnover = calc_turnover.calculate_numeric(
                 CplsP_GtC=y[0],
                 CplsL_GtC=y[1],
@@ -1136,25 +1141,25 @@ class CarbonCycleModel:
                 tau_CplsP_yr=tau_CplsP_yr,
                 tau_CplsL_yr=tau_CplsL_yr,
                 tau_CplsS_yr=tau_CplsS_yr,
-                eff_dT_cLP=eff_dT_cLP_t(t),
-                eff_dT_cLD=eff_dT_cLD_t(t),
-                eff_dT_cSR=eff_dT_cSR_t(t),
-                eff_N_cLP=eff_N_cLP_t(t),
-                eff_N_cLD=eff_N_cLD_t(t),
-                eff_N_cSR=eff_N_cSR_t(t),
-                eff_LU_cLP=eff_LU_cLP_t(t),
-                eff_LU_cLD=eff_LU_cLD_t(t),
-                eff_LU_cSR=eff_LU_cSR_t(t),
+                eff_dT_cLP=d[3],
+                eff_dT_cLD=d[4],
+                eff_dT_cSR=d[5],
+                eff_N_cLP=d[6],
+                eff_N_cLD=d[7],
+                eff_N_cSR=d[8],
+                eff_LU_cLP=d[9],
+                eff_LU_cLD=d[10],
+                eff_LU_cSR=d[11],
             )
 
             dydt = (
                 calc_c_cycle.calculate_dCpls_dt_numeric(
-                    CflxNPP_GtC_yr=CflxNPP_t(t),
-                    CflxLPR_GtC_yr=CflxLPR_t(t),
+                    CflxNPP_GtC_yr=d[0],
+                    CflxLPR_GtC_yr=d[1],
                     CflxLP_GtC_yr=turnover["CflxLP"],
                     CflxLD_GtC_yr=turnover["CflxLD"],
                     CflxSR_GtC_yr=turnover["CflxSR"],
-                    CflxLUgrs_GtC_yr=CflxLUgrs_t(t),
+                    CflxLUgrs_GtC_yr=d[2],
                     frc_NPP2P=frc_NPP2P,
                     frc_NPP2L=frc_NPP2L,
                     frc_cLP2L=frc_cLP2L,

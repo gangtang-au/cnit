@@ -105,7 +105,7 @@ import xarray as xr
 import pint
 
 from ..utils.units import check_units, Q
-from ..utils.maths import _make_numeric_interp, SolveError
+from ..utils.maths import _make_numeric_interp, _make_packed_numeric_interp, SolveError
 from ..utils.data_utils import make_dataset_from_var_dict
 
 
@@ -1758,40 +1758,36 @@ class NitrogenCycleModel:
         """
 
         t_eval = time_axis.to("yr").m
-        NflxPU_t = _make_numeric_interp(NflxPU_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxBNF_t = _make_numeric_interp(NflxBNF_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxAD_t = _make_numeric_interp(NflxAD_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxFT_t = _make_numeric_interp(NflxFT_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxLUgrs_t = _make_numeric_interp(
-            NflxLUgrs_s, t_eval, "GtN/yr", extrapolate=True
-        )
-        NflxLUmin_t = _make_numeric_interp(
-            NflxLUmin_s, t_eval, "GtN/yr", extrapolate=True
-        )
-
-        eff_dT_nLP_t = _make_numeric_interp(
-            eff_dT_nLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_nLD_t = _make_numeric_interp(
-            eff_dT_nLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_nSR_t = _make_numeric_interp(
-            eff_dT_nSR_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_nLSgas_t = _make_numeric_interp(
-            eff_dT_nLSgas_s, t_eval, "1", extrapolate=False
-        )
-        eff_N_nLP_t = _make_numeric_interp(eff_N_nLP_s, t_eval, "1", extrapolate=False)
-        eff_N_nLD_t = _make_numeric_interp(eff_N_nLD_s, t_eval, "1", extrapolate=False)
-        eff_N_nSR_t = _make_numeric_interp(eff_N_nSR_s, t_eval, "1", extrapolate=False)
-        eff_LU_nLP_t = _make_numeric_interp(
-            eff_LU_nLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_nLD_t = _make_numeric_interp(
-            eff_LU_nLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_nSR_t = _make_numeric_interp(
-            eff_LU_nSR_s, t_eval, "1", extrapolate=False
+        drivers_pls_t = _make_packed_numeric_interp(
+            [
+                NflxPU_s,
+                NflxBNF_s,
+                NflxLUgrs_s,
+                eff_dT_nLP_s,
+                eff_dT_nLD_s,
+                eff_dT_nSR_s,
+                eff_N_nLP_s,
+                eff_N_nLD_s,
+                eff_N_nSR_s,
+                eff_LU_nLP_s,
+                eff_LU_nLD_s,
+                eff_LU_nSR_s,
+            ],
+            t_eval,
+            [
+                "GtN/yr",
+                "GtN/yr",
+                "GtN/yr",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+            ],
         )
 
         calc_turnover = self.calc_n_turnover
@@ -1829,6 +1825,7 @@ class NitrogenCycleModel:
             list
                 Time derivatives [dNplsP/dt, dNplsL/dt, dNplsS/dt] in GtN/yr (unitless)
             """
+            d = drivers_pls_t(t)
             turnover = calc_turnover.calculate_nLPLDSR_numeric(
                 NplsP_GtN=y[0],
                 NplsL_GtN=y[1],
@@ -1836,24 +1833,24 @@ class NitrogenCycleModel:
                 tau_NplsP_yr=tau_NplsP_yr,
                 tau_NplsL_yr=tau_NplsL_yr,
                 tau_NplsS_yr=tau_NplsS_yr,
-                eff_dT_nLP=eff_dT_nLP_t(t),
-                eff_dT_nLD=eff_dT_nLD_t(t),
-                eff_dT_nSR=eff_dT_nSR_t(t),
-                eff_N_nLP=eff_N_nLP_t(t),
-                eff_N_nLD=eff_N_nLD_t(t),
-                eff_N_nSR=eff_N_nSR_t(t),
-                eff_LU_nLP=eff_LU_nLP_t(t),
-                eff_LU_nLD=eff_LU_nLD_t(t),
-                eff_LU_nSR=eff_LU_nSR_t(t),
+                eff_dT_nLP=d[3],
+                eff_dT_nLD=d[4],
+                eff_dT_nSR=d[5],
+                eff_N_nLP=d[6],
+                eff_N_nLD=d[7],
+                eff_N_nSR=d[8],
+                eff_LU_nLP=d[9],
+                eff_LU_nLD=d[10],
+                eff_LU_nSR=d[11],
             )
             dydt = (
                 calc_cycle.calculate_dNplsPLS_dt_numeric(
-                    NflxPU_GtN_yr=NflxPU_t(t),
-                    NflxBNF_GtN_yr=NflxBNF_t(t),
+                    NflxPU_GtN_yr=d[0],
+                    NflxBNF_GtN_yr=d[1],
                     NflxLP_GtN_yr=turnover["NflxLP"],
                     NflxLD_GtN_yr=turnover["NflxLD"],
                     NflxSR_GtN_yr=turnover["NflxSR"],
-                    NflxLUgrs_GtN_yr=NflxLUgrs_t(t),
+                    NflxLUgrs_GtN_yr=d[2],
                     frc_PU2P=frc_PU2P,
                     frc_PU2L=frc_PU2L,
                     frc_BNF2P=frc_BNF2P,
@@ -1885,19 +1882,20 @@ class NitrogenCycleModel:
             list
                 Time derivative [dNplsM/dt] in GtN/yr (unitless)
             """
+            d = drivers_m_t(t)
             turnover = calc_turnover.calculate_nLS_numeric(
                 NplsM_GtN=y[0],
                 tau_NplsM_yr=tau_NplsM_yr,
                 frc_nLSgas=frc_nLSgas,
-                eff_dT_nLSgas=eff_dT_nLSgas_t(t),
+                eff_dT_nLSgas=d[5],
             )
             dydt = calc_cycle.calculate_dNplsM_dt_numeric(
-                NflxPU_GtN_yr=NflxPU_t(t),
-                NflxNetMIN_GtN_yr=NflxNetMIN_t(t),
+                NflxPU_GtN_yr=d[0],
+                NflxNetMIN_GtN_yr=d[1],
                 NflxLS_GtN_yr=turnover["NflxLS"],
-                NflxAD_GtN_yr=NflxAD_t(t),
-                NflxFT_GtN_yr=NflxFT_t(t),
-                NflxLUmin_GtN_yr=NflxLUmin_t(t),
+                NflxAD_GtN_yr=d[2],
+                NflxFT_GtN_yr=d[3],
+                NflxLUmin_GtN_yr=d[4],
             )
             if np.all(np.abs(dydt) < 1e-12):
                 dydt[:] = 0
@@ -1954,8 +1952,24 @@ class NitrogenCycleModel:
                 * eff_LU_nSR_s
             )
             NflxNetMIN = NflxLD2M + NflxSR
-            NflxNetMIN_t = _make_numeric_interp(
-                NflxNetMIN, t_eval, "GtN/yr", extrapolate=True
+            drivers_m_t = _make_packed_numeric_interp(
+                [
+                    NflxPU_s,
+                    NflxNetMIN,
+                    NflxAD_s,
+                    NflxFT_s,
+                    NflxLUmin_s,
+                    eff_dT_nLSgas_s,
+                ],
+                t_eval,
+                [
+                    "GtN/yr",
+                    "GtN/yr",
+                    "GtN/yr",
+                    "GtN/yr",
+                    "GtN/yr",
+                    "1",
+                ],
             )
 
             raw = scipy.integrate.solve_ivp(
