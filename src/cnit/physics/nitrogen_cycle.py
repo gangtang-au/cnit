@@ -105,7 +105,7 @@ import xarray as xr
 import pint
 
 from ..utils.units import check_units, Q
-from ..utils.maths import _make_numeric_interp, _make_packed_numeric_interp, SolveError
+from ..utils.maths import _make_packed_numeric_interp, SolveError
 from ..utils.data_utils import make_dataset_from_var_dict
 
 
