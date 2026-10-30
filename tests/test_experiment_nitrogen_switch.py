@@ -29,15 +29,10 @@ def _experiment(name, switch_N):
 
 
 @pytest.mark.parametrize(
-    ("model_switch", "expected_experiment_switches"),
-    [
-        (0, [0, 0]),
-        (1, [0, 1]),
-    ],
+    "model_switch",
+    [0, 1],
 )
-def test_run_experiments_combines_switches_without_mutating_model(
-    model_switch, expected_experiment_switches
-):
+def test_run_experiments_uses_experiment_switch_without_mutating_model(model_switch):
     model = CarbonNitrogenCycleModel.from_config(CarbonNitrogenCycleModelConfig())
     model.switch_N = Q(model_switch, "1")
     model_switch_before = model.switch_N
@@ -56,7 +51,7 @@ def test_run_experiments_combines_switches_without_mutating_model(
     with patch.object(CarbonNitrogenCycleModel, "run", run_stub):
         result = model.run_experiments(experiments)
 
-    assert observed_switches == expected_experiment_switches
+    assert observed_switches == [0, 1]
     assert model.switch_N == model_switch_before
     assert all(experiment_model is not model for experiment_model in observed_models)
     assert all(

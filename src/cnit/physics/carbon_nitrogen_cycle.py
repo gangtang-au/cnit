@@ -188,10 +188,9 @@ class CarbonNitrogenCycleModel:
     )
     """Switch indicating whether this model includes the nitrogen cycle [dimensionless].
 
-    A model with nitrogen disabled always runs in carbon-only mode. For experiments
-    run with :meth:`run_experiments`, this model-level switch is combined with each
-    experiment's switch, so an experiment can disable nitrogen even when there is a 
-     nitrogen cycle in the model.
+    For :meth:`run_experiments`, each experiment's switch is applied to a shallow
+    copy of the model. This lets experiments enable or disable nitrogen independently
+    without changing this model instance.
 
     - 1: Nitrogen cycle is included in the model (default)
     - 0: Nitrogen cycle is not included in the model
@@ -404,8 +403,8 @@ class CarbonNitrogenCycleModel:
         ----------
         experiments
             List of experiment configurations. Each experiment specifies input data,
-            nitrogen switch setting, and a name for identification. Nitrogen is active
-            only when both the model-level and experiment-level switches are enabled.
+            nitrogen switch setting, and a name for identification. Each experiment's
+            switch controls nitrogen for that run without changing this model instance.
 
         Returns
         -------
