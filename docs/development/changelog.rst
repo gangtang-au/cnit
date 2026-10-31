@@ -6,6 +6,22 @@ All notable changes to CNit will be documented here.
 The format follows `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+Version 2.4.0 (2026-10-31)
+--------------------------
+
+**Changed**
+
+* Replaced the mineral nitrogen pool's ODE solve with an analytical interval update
+  using linearly interpolated net input and a harmonic-mean effective turnover time.
+* Improved interpolation performance by packing synchronized numeric series into a
+  shared linear interpolator.
+* ``run_experiments()`` now applies each experiment's nitrogen switch to a copy of the
+  model, leaving the original model unchanged.
+* Pool switches are now validated as fixed-length binary sequences and stored as
+  immutable tuples.
+* Model parameters and experiment input series are checked for finite values during
+  configuration validation.
+
 Version 2.3.0 (2026-10-25)
 --------------------------
 
