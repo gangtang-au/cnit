@@ -15,6 +15,11 @@ Version 2.4.0 (2026-10-31)
   using linearly interpolated net input and a harmonic-mean effective turnover time.
 * Improved interpolation performance by packing synchronized numeric series into a
   shared linear interpolator.
+* Significantly improved model computational performance. For example, running the
+  TRENDY S0–S3 experiments (1700–2020) for 20 DGVMs now takes approximately 1 second,
+  while running the 1pctCO2 (1850–2000), hist_ssp245 (1850–2100), and hist_ssp585
+  (1850–2100) experiments for 16 CMIP6 ESMs takes approximately 1.2 seconds (see the
+  example notebooks in the documentation).
 * ``run_experiments()`` now applies each experiment's nitrogen switch to a copy of the
   model, leaving the original model unchanged.
 * Pool switches are now validated as fixed-length binary sequences and stored as
