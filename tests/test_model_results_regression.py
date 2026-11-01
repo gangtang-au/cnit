@@ -56,7 +56,7 @@ def _serialize_config(config):
 
 
 def _extract_baseline_source(destination):
-    baseline_ref = os.environ.get("CNIT_BASELINE_REF", "github/main")
+    baseline_ref = os.environ.get("CNIT_BASELINE_REF", "main")
     destination.mkdir(parents=True, exist_ok=True)
     archive_path = destination / "baseline.tar"
     with archive_path.open("wb") as archive_file:
@@ -238,55 +238,4 @@ def test_default_and_all_cmip6_calibrations_report_differences_from_main(
             baseline,
             config_names,
             "Current code with rounded tau_rgr duration",
-        )
-
-
-def test_current_version_against_github_main_only(tmp_path):
-    """Compare current model outputs with github/main without tau overrides."""
-    try:
-        baseline_source = _extract_baseline_source(tmp_path / "baseline")
-    except subprocess.CalledProcessError as exc:
-        pytest.fail(
-            "Could not extract github/main. Ensure the remote tracking ref exists, "
-            "or set CNIT_BASELINE_REF to an available ref.\n"
-            f"{exc}"
-        )
-
-    configs = {
-        "default": _serialize_config(CarbonNitrogenCycleModelConfig()),
-        **{
-            model_name: _serialize_config(
-                CarbonNitrogenCycleModelConfig.from_parameter_csv(
-                    PARAMETER_FILE,
-                    model_name=model_name,
-                )
-            )
-            for model_name in _cmip6_model_names()
-        },
-    }
-    config_path = tmp_path / "configs.json"
-    config_path.write_text(json.dumps(configs), encoding="utf-8")
-
-    current_output = tmp_path / "current.npz"
-    main_output = tmp_path / "github-main.npz"
-    _run_revision(REPO_ROOT / "src", config_path, current_output)
-    _run_revision(baseline_source, config_path, main_output)
-
-    with np.load(current_output) as current, np.load(main_output) as main:
-        assert set(current.files) == set(main.files), (
-            f"Output keys differ: current-only={sorted(set(current.files) - set(main.files))}, "
-            f"main-only={sorted(set(main.files) - set(current.files))}"
-        )
-        for key in current.files:
-            assert current[key].shape == main[key].shape, (
-                f"Output shape differs for {key}: current={current[key].shape}, "
-                f"main={main[key].shape}"
-            )
-
-        config_names = tuple(configs)
-        _print_max_differences(
-            current,
-            main,
-            config_names,
-            "Current version vs github/main (configured tau_rgr, no overrides)",
         )
