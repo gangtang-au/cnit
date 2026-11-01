@@ -6,15 +6,18 @@ All notable changes to CNit will be documented here.
 The format follows `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
-Version 2.4.0 (2026-10-31)
+Version 2.4.0 (2026-11-01)
 --------------------------
 
 **Changed**
 
 * Replaced the mineral nitrogen pool's ODE solve with an analytical interval update
   using linearly interpolated net input and a harmonic-mean effective turnover time.
-* Improved interpolation performance by packing synchronized numeric series into a
-  shared linear interpolator.
+* Replaced per-series SciPy ``interp1d`` instances with a packed numeric linear
+  interpolator for synchronized series, improving interpolation performance.
+  Numerical differences from previous versions may occur because interpolation is
+  now evaluated by the packed implementation; see the model-results regression test
+  to compare results with a selected previous-version baseline.
 * Significantly improved model computational performance. For example, running the
   TRENDY S0–S3 experiments (1700–2020) for 20 DGVMs now takes approximately 1 second,
   while running the 1pctCO2 (1850–2000), hist_ssp245 (1850–2100), and hist_ssp585

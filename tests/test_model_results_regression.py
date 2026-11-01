@@ -1,4 +1,4 @@
-"""Compare default and calibrated model results with the implementation on ``main``."""
+"""Compare default and calibrated model results with a selected Git baseline."""
 
 import csv
 import json
@@ -55,8 +55,7 @@ def _serialize_config(config):
     return values
 
 
-def _extract_baseline_source(destination):
-    baseline_ref = os.environ.get("CNIT_BASELINE_REF", "main")
+def _extract_baseline_source(destination, baseline_ref):
     destination.mkdir(parents=True, exist_ok=True)
     archive_path = destination / "baseline.tar"
     with archive_path.open("wb") as archive_file:
@@ -112,7 +111,7 @@ def _print_max_differences(current, baseline, config_names, duration_label):
                 baseline_values = np.asarray(baseline[key], dtype=float)
                 assert current_values.shape == baseline_values.shape, (
                     f"Output shape differs for {key}: current={current_values.shape}, "
-                    f"main={baseline_values.shape}"
+                    f"baseline={baseline_values.shape}"
                 )
 
                 absolute_difference = np.abs(current_values - baseline_values)
@@ -133,8 +132,8 @@ def _print_max_differences(current, baseline, config_names, duration_label):
                         metric["rel_case"] = f"{config_name}::{experiment}"
 
     print(
-        f"\n{duration_label} maximum differences from main across default and "
-        "CMIP6 configurations (relative differences use nonzero main values):"
+        f"\n{duration_label} maximum differences across default and CMIP6 "
+        "configurations (relative differences use nonzero baseline values):"
     )
     print(
         f"{'Output':<14} {'Max absolute':>14} {'Case':<32} "
@@ -148,10 +147,13 @@ def _print_max_differences(current, baseline, config_names, duration_label):
         )
 
 
-def test_default_and_all_cmip6_calibrations_report_differences_from_main(tmp_path):
-    """Report key output differences from ``main`` for all model configurations."""
+def test_all_configs_report_differences_from_baseline(tmp_path):
+    """Report key output differences from the selected baseline."""
+    baseline_ref = os.environ.get("CNIT_BASELINE_REF", "main")
     try:
-        baseline_source = _extract_baseline_source(tmp_path / "baseline")
+        baseline_source = _extract_baseline_source(
+            tmp_path / "baseline", baseline_ref
+        )
     except subprocess.CalledProcessError as exc:
         pytest.fail(
             "Could not extract the baseline source. Ensure the baseline ref "
@@ -190,17 +192,18 @@ def test_default_and_all_cmip6_calibrations_report_differences_from_main(tmp_pat
         baseline_keys = set(baseline.files)
         assert current_keys == baseline_keys, (
             f"Output keys differ: current-only={sorted(current_keys - baseline_keys)}, "
-            f"main-only={sorted(baseline_keys - current_keys)}"
+            f"baseline-only={sorted(baseline_keys - current_keys)}"
         )
 
         config_names = ("default", *calibrated_configs)
         print(
-            "\nCurrent version uses the packed numerical linear interpolator; "
-            "main uses scipy.interpolate.interp1d."
+            "\nCurrent version uses the packed numerical linear interpolator. "
+            f"Selected comparison baseline: {baseline_ref}."
         )
         _print_max_differences(
             current,
             baseline,
             config_names,
-            "Current version vs main (same configurations and inputs)",
+            f"Current version vs baseline {baseline_ref} "
+            "(same configurations and inputs)",
         )

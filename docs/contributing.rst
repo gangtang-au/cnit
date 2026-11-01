@@ -67,18 +67,25 @@ executed as part of the regular tests to catch example drift. The documentation
 build renders the notebooks with execution disabled, so notebook outputs should
 be saved in the notebook files.
 
-The model-results regression test compares the default model configuration with
-the local ``main`` branch using the ``1pctCO2`` and ``hist_ssp585`` input
-experiments. It also runs a calibrated ACCESS-ESM1-5 configuration and reports
+The model-results regression test runs the default configuration and all calibrated
+CMIP6 configurations with the ``1pctCO2`` and ``hist_ssp585`` inputs. It compares
+the current code with a previous-version baseline selected by Git ref and reports
 maximum absolute and relative differences for selected carbon and nitrogen
-diagnostics. To show those diagnostic values locally, run:
+diagnostics. The comparison is report-only: it checks that output names and shapes
+match, but does not apply a threshold to the numerical differences. The current
+implementation uses a packed numeric linear interpolator, while earlier versions
+used SciPy's ``scipy.interpolate.interp1d``; this implementation change can cause
+numerical differences. To compare the current code with the previous release
+``v2.3.0`` and print the diagnostics locally, run:
 
 .. code-block:: bash
 
-   CNIT_BASELINE_REF=origin/main python -m pytest tests/test_model_results_regression.py -q -s
+   CNIT_BASELINE_REF=v2.3.0 python -m pytest tests/test_model_results_regression.py -q -s
 
-Set ``CNIT_BASELINE_REF`` to another available Git ref when comparing against a
-different baseline.
+The test extracts the selected baseline from the local Git repository, so the tag
+or commit must be available locally. Replace ``v2.3.0`` with the tag or commit for
+the previous version you want to compare against. If ``CNIT_BASELINE_REF`` is
+unset, the test uses the local ``main`` ref.
 
 The repository-level ``notebooks/`` directory contains the notebook sources
 used by the documentation build, which stages them in a temporary Sphinx
