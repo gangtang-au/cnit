@@ -71,6 +71,17 @@ def _extract_baseline_source(destination, baseline_ref):
     return destination / "src"
 
 
+def _describe_baseline_ref(baseline_ref):
+    """Return the nearest tag and commit description for a baseline ref."""
+    return subprocess.run(
+        ["git", "describe", "--tags", "--always", baseline_ref],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
 def _run_revision(source, config_path, output_path):
     command = [
         sys.executable,
@@ -151,6 +162,15 @@ def test_all_configs_report_differences_from_baseline(tmp_path):
     """Report key output differences from the selected baseline."""
     baseline_ref = os.environ.get("CNIT_BASELINE_REF", "main")
     try:
+        baseline_description = _describe_baseline_ref(baseline_ref)
+    except subprocess.CalledProcessError as exc:
+        pytest.fail(
+            f"Could not describe baseline ref {baseline_ref!r}. Ensure the ref "
+            "exists locally.\n"
+            f"{exc}"
+        )
+
+    try:
         baseline_source = _extract_baseline_source(
             tmp_path / "baseline", baseline_ref
         )
@@ -198,12 +218,13 @@ def test_all_configs_report_differences_from_baseline(tmp_path):
         config_names = ("default", *calibrated_configs)
         print(
             "\nCurrent version uses the packed numerical linear interpolator. "
-            f"Selected comparison baseline: {baseline_ref}."
+            f"Selected comparison baseline: {baseline_ref} "
+            f"({baseline_description})."
         )
         _print_max_differences(
             current,
             baseline,
             config_names,
-            f"Current version vs baseline {baseline_ref} "
+            f"Current version vs baseline {baseline_ref} ({baseline_description}) "
             "(same configurations and inputs)",
         )

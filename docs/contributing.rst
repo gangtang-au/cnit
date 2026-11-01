@@ -71,7 +71,8 @@ The model-results regression test runs the default configuration and all calibra
 CMIP6 configurations with the ``1pctCO2`` and ``hist_ssp585`` inputs. It compares
 the current code with a previous-version baseline selected by Git ref and reports
 maximum absolute and relative differences for selected carbon and nitrogen
-diagnostics. The comparison is report-only: it checks that output names and shapes
+diagnostics. Its output identifies the selected Git ref and its nearest tag/commit
+description. The comparison is report-only: it checks that output names and shapes
 match, but does not apply a threshold to the numerical differences. The current
 implementation uses a packed numeric linear interpolator, while earlier versions
 used SciPy's ``scipy.interpolate.interp1d``; this implementation change can cause
@@ -84,8 +85,8 @@ numerical differences. To compare the current code with the previous release
 
 The test extracts the selected baseline from the local Git repository, so the tag
 or commit must be available locally. Replace ``v2.3.0`` with the tag or commit for
-the previous version you want to compare against. If ``CNIT_BASELINE_REF`` is
-unset, the test uses the local ``main`` ref.
+the previous version you want to compare against. The documented command sets the
+baseline explicitly so the comparison is reproducible.
 
 The repository-level ``notebooks/`` directory contains the notebook sources
 used by the documentation build, which stages them in a temporary Sphinx
@@ -100,5 +101,5 @@ Pull request checklist
   request.
 
 CNit is released under the BSD 3-Clause License. See the
-:doc:`License <../project_info/license>` page or the repository's LICENSE file
+:doc:`License <project_info/license>` page or the repository's LICENSE file
 for details.
