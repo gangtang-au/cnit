@@ -24,7 +24,11 @@ from cnit.utils.units import Q
 def test_analytic_mineral_nitrogen_matches_high_accuracy_ode_reference(
     tau_npls_m, gas_effect, relative_tolerance
 ):
-    """Compare the interval update with a tight ODE solution of the same balance."""
+    """Compare the interval update with a tight ODE solution of the same balance.
+
+    The cases cover fast turnover, the small-decay limit, and modestly varying
+    temperature effects.
+    """
     time = np.arange(1850.0, 1856.0)
     gas_effect = np.asarray(gas_effect, dtype=float)
     uptake = np.array([0.04, 0.06, 0.05, 0.08, 0.07, 0.09])

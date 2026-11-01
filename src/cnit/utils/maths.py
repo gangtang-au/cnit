@@ -25,7 +25,7 @@ class PackedLinearInterpolator:
             )
         self.dt = (self.t_eval[-1] - self.t_eval[0]) / (self.n_times - 1)
         self.is_uniform = np.allclose(
-            np.diff(self.t_eval), self.dt, rtol=1e-5, atol=1e-8
+            np.diff(self.t_eval), self.dt, rtol=1e-10, atol=1e-12
         )
         self.data = np.asarray(data, dtype=float)
 
