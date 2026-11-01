@@ -72,7 +72,7 @@ def _extract_baseline_source(destination):
     return destination / "src"
 
 
-def _run_revision(source, config_path, output_path, *, truncate_tau_rgr=False):
+def _run_revision(source, config_path, output_path):
     command = [
         sys.executable,
         str(RUNNER),
@@ -81,8 +81,6 @@ def _run_revision(source, config_path, output_path, *, truncate_tau_rgr=False):
         str(config_path),
         str(output_path),
     ]
-    if truncate_tau_rgr:
-        command.append("truncate_tau_rgr")
     subprocess.run(
         command,
         cwd=REPO_ROOT,
@@ -150,9 +148,7 @@ def _print_max_differences(current, baseline, config_names, duration_label):
         )
 
 
-def test_default_and_all_cmip6_calibrations_report_differences_from_main(
-    tmp_path,
-):
+def test_default_and_all_cmip6_calibrations_report_differences_from_main(tmp_path):
     """Report key output differences from ``main`` for all model configurations."""
     try:
         baseline_source = _extract_baseline_source(tmp_path / "baseline")
@@ -184,58 +180,27 @@ def test_default_and_all_cmip6_calibrations_report_differences_from_main(
         encoding="utf-8",
     )
 
-    current_legacy_output = tmp_path / "current_legacy_tau.npz"
-    current_rounded_output = tmp_path / "current_rounded_tau.npz"
+    current_output = tmp_path / "current.npz"
     baseline_output = tmp_path / "baseline.npz"
-    _run_revision(
-        REPO_ROOT / "src",
-        config_path,
-        current_legacy_output,
-        truncate_tau_rgr=True,
-    )
-    _run_revision(REPO_ROOT / "src", config_path, current_rounded_output)
+    _run_revision(REPO_ROOT / "src", config_path, current_output)
     _run_revision(baseline_source, config_path, baseline_output)
 
-    with (
-        np.load(current_legacy_output) as current_legacy,
-        np.load(current_rounded_output) as current_rounded,
-        np.load(baseline_output) as baseline,
-    ):
-        current_keys = set(current_legacy.files)
-        rounded_keys = set(current_rounded.files)
+    with np.load(current_output) as current, np.load(baseline_output) as baseline:
+        current_keys = set(current.files)
         baseline_keys = set(baseline.files)
-        assert current_keys == baseline_keys == rounded_keys, (
+        assert current_keys == baseline_keys, (
             f"Output keys differ: current-only={sorted(current_keys - baseline_keys)}, "
-            f"rounded-only={sorted(rounded_keys - baseline_keys)}, "
             f"main-only={sorted(baseline_keys - current_keys)}"
         )
 
         config_names = ("default", *calibrated_configs)
         print(
-            "\nBoth tables compare the current code with `main` using the same "
-            "configurations and input data. The current code uses the "
-            "range-difference land-use calculation in both runs."
-        )
-        print(
-            "Integer-duration run: before simulation, the test replaces "
-            "tau_rgr with int(tau_rgr.to('yr').m) years. This reproduces "
-            "main's truncation for these annual test inputs."
-        )
-        print(
-            "Rounded-duration run: the configured tau_rgr is left unchanged; "
-            "the current code rounds tau_rgr / time_step to a whole number "
-            "of intervals (minimum one). Differences from the integer run "
-            "therefore show the effect of this duration change."
+            "\nCurrent version uses the packed numerical linear interpolator; "
+            "main uses scipy.interpolate.interp1d."
         )
         _print_max_differences(
-            current_legacy,
+            current,
             baseline,
             config_names,
-            "Current code with int-truncated tau_rgr",
-        )
-        _print_max_differences(
-            current_rounded,
-            baseline,
-            config_names,
-            "Current code with rounded tau_rgr duration",
+            "Current version vs main (same configurations and inputs)",
         )

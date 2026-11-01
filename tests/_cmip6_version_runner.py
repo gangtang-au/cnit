@@ -12,7 +12,6 @@ source_path = Path(sys.argv[1])
 forcing_path = Path(sys.argv[2])
 config_path = Path(sys.argv[3])
 output_path = Path(sys.argv[4])
-truncate_tau_rgr = len(sys.argv) > 5 and sys.argv[5] == "truncate_tau_rgr"
 sys.path.insert(0, str(source_path))
 
 from cnit.physics.carbon_nitrogen_cycle import CarbonNitrogenCycleModel  # noqa: E402
@@ -42,8 +41,6 @@ def _load_model(values):
         )
         for name, value in values.items()
     }
-    if truncate_tau_rgr:
-        params["tau_rgr"] = Q(int(params["tau_rgr"].to("yr").m), "yr")
     return CarbonNitrogenCycleModel.from_dict(params)
 
 
