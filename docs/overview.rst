@@ -190,7 +190,7 @@ Two-Stage Nitrogen Solution
 
 The nitrogen cycle is solved in two stages:
 
-1.  Organic nitrogen pools (plant, litter, soil)
+1. Organic nitrogen pools (plant, litter, soil)
 2. Mineral nitrogen pool using net mineralization from stage 1
 
 This approach reflects the coupling between organic matter decomposition and mineral

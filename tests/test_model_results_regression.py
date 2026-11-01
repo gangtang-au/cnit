@@ -1,4 +1,4 @@
-"""Compare default and calibrated model results with the implementation on ``main``."""
+"""Compare default and calibrated model results with a selected Git baseline."""
 
 import csv
 import json
@@ -55,8 +55,7 @@ def _serialize_config(config):
     return values
 
 
-def _extract_baseline_source(destination):
-    baseline_ref = os.environ.get("CNIT_BASELINE_REF", "main")
+def _extract_baseline_source(destination, baseline_ref):
     destination.mkdir(parents=True, exist_ok=True)
     archive_path = destination / "baseline.tar"
     with archive_path.open("wb") as archive_file:
@@ -72,7 +71,18 @@ def _extract_baseline_source(destination):
     return destination / "src"
 
 
-def _run_revision(source, config_path, output_path, *, truncate_tau_rgr=False):
+def _describe_baseline_ref(baseline_ref):
+    """Return the nearest tag and commit description for a baseline ref."""
+    return subprocess.run(
+        ["git", "describe", "--tags", "--always", baseline_ref],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
+
+def _run_revision(source, config_path, output_path):
     command = [
         sys.executable,
         str(RUNNER),
@@ -81,8 +91,6 @@ def _run_revision(source, config_path, output_path, *, truncate_tau_rgr=False):
         str(config_path),
         str(output_path),
     ]
-    if truncate_tau_rgr:
-        command.append("truncate_tau_rgr")
     subprocess.run(
         command,
         cwd=REPO_ROOT,
@@ -114,7 +122,7 @@ def _print_max_differences(current, baseline, config_names, duration_label):
                 baseline_values = np.asarray(baseline[key], dtype=float)
                 assert current_values.shape == baseline_values.shape, (
                     f"Output shape differs for {key}: current={current_values.shape}, "
-                    f"main={baseline_values.shape}"
+                    f"baseline={baseline_values.shape}"
                 )
 
                 absolute_difference = np.abs(current_values - baseline_values)
@@ -135,8 +143,8 @@ def _print_max_differences(current, baseline, config_names, duration_label):
                         metric["rel_case"] = f"{config_name}::{experiment}"
 
     print(
-        f"\n{duration_label} maximum differences from main across default and "
-        "CMIP6 configurations (relative differences use nonzero main values):"
+        f"\n{duration_label} maximum differences across default and CMIP6 "
+        "configurations (relative differences use nonzero baseline values):"
     )
     print(
         f"{'Output':<14} {'Max absolute':>14} {'Case':<32} "
@@ -150,12 +158,22 @@ def _print_max_differences(current, baseline, config_names, duration_label):
         )
 
 
-def test_default_and_all_cmip6_calibrations_report_differences_from_main(
-    tmp_path,
-):
-    """Report key output differences from ``main`` for all model configurations."""
+def test_all_configs_report_differences_from_baseline(tmp_path):
+    """Report key output differences from the selected baseline."""
+    baseline_ref = os.environ.get("CNIT_BASELINE_REF", "main")
     try:
-        baseline_source = _extract_baseline_source(tmp_path / "baseline")
+        baseline_description = _describe_baseline_ref(baseline_ref)
+    except subprocess.CalledProcessError as exc:
+        pytest.fail(
+            f"Could not describe baseline ref {baseline_ref!r}. Ensure the ref "
+            "exists locally.\n"
+            f"{exc}"
+        )
+
+    try:
+        baseline_source = _extract_baseline_source(
+            tmp_path / "baseline", baseline_ref
+        )
     except subprocess.CalledProcessError as exc:
         pytest.fail(
             "Could not extract the baseline source. Ensure the baseline ref "
@@ -184,58 +202,29 @@ def test_default_and_all_cmip6_calibrations_report_differences_from_main(
         encoding="utf-8",
     )
 
-    current_legacy_output = tmp_path / "current_legacy_tau.npz"
-    current_rounded_output = tmp_path / "current_rounded_tau.npz"
+    current_output = tmp_path / "current.npz"
     baseline_output = tmp_path / "baseline.npz"
-    _run_revision(
-        REPO_ROOT / "src",
-        config_path,
-        current_legacy_output,
-        truncate_tau_rgr=True,
-    )
-    _run_revision(REPO_ROOT / "src", config_path, current_rounded_output)
+    _run_revision(REPO_ROOT / "src", config_path, current_output)
     _run_revision(baseline_source, config_path, baseline_output)
 
-    with (
-        np.load(current_legacy_output) as current_legacy,
-        np.load(current_rounded_output) as current_rounded,
-        np.load(baseline_output) as baseline,
-    ):
-        current_keys = set(current_legacy.files)
-        rounded_keys = set(current_rounded.files)
+    with np.load(current_output) as current, np.load(baseline_output) as baseline:
+        current_keys = set(current.files)
         baseline_keys = set(baseline.files)
-        assert current_keys == baseline_keys == rounded_keys, (
+        assert current_keys == baseline_keys, (
             f"Output keys differ: current-only={sorted(current_keys - baseline_keys)}, "
-            f"rounded-only={sorted(rounded_keys - baseline_keys)}, "
-            f"main-only={sorted(baseline_keys - current_keys)}"
+            f"baseline-only={sorted(baseline_keys - current_keys)}"
         )
 
         config_names = ("default", *calibrated_configs)
         print(
-            "\nBoth tables compare the current code with `main` using the same "
-            "configurations and input data. The current code uses the "
-            "range-difference land-use calculation in both runs."
-        )
-        print(
-            "Integer-duration run: before simulation, the test replaces "
-            "tau_rgr with int(tau_rgr.to('yr').m) years. This reproduces "
-            "main's truncation for these annual test inputs."
-        )
-        print(
-            "Rounded-duration run: the configured tau_rgr is left unchanged; "
-            "the current code rounds tau_rgr / time_step to a whole number "
-            "of intervals (minimum one). Differences from the integer run "
-            "therefore show the effect of this duration change."
+            "\nCurrent version uses the packed numerical linear interpolator. "
+            f"Selected comparison baseline: {baseline_ref} "
+            f"({baseline_description})."
         )
         _print_max_differences(
-            current_legacy,
+            current,
             baseline,
             config_names,
-            "Current code with int-truncated tau_rgr",
-        )
-        _print_max_differences(
-            current_rounded,
-            baseline,
-            config_names,
-            "Current code with rounded tau_rgr duration",
+            f"Current version vs baseline {baseline_ref} ({baseline_description}) "
+            "(same configurations and inputs)",
         )

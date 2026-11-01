@@ -78,7 +78,13 @@ def main() -> int:
             str(staged_docs),
             str(args.output_dir.resolve()),
         ]
-        return subprocess.run(command, cwd=ROOT_DIR, check=False).returncode
+        result = subprocess.run(command, cwd=ROOT_DIR, check=False)
+        if result.returncode == 0:
+            # nbsphinx copies the source notebooks into the HTML output. The
+            # workflow pages link to the canonical notebooks on GitHub instead.
+            for notebook in notebooks:
+                (args.output_dir.resolve() / notebook.name).unlink(missing_ok=True)
+        return result.returncode
 
 
 if __name__ == "__main__":

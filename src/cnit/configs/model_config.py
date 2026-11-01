@@ -5,7 +5,6 @@ The detailed parameter reference and attribute documentation are in
 """
 
 import csv
-import math
 from pathlib import Path
 
 from attrs import define, field, fields
@@ -13,6 +12,7 @@ import numpy as np
 import pint
 
 from ..utils.units import Q, check_units
+from ..utils.switches import check_binary_switches
 
 
 @define
@@ -31,8 +31,8 @@ class CarbonNitrogenCycleModelConfig:
 
     Quantity fields require dimensionally compatible units. The units shown in the
     parameter tables are recommended units; equivalent units are accepted. On creation,
-    the config checks fraction ranges, allocation sums, positive turnover times, and
-    non-negative initial pool sizes.
+    the config checks that all numeric parameters are finite, along with fraction
+    ranges, allocation sums, positive turnover times, and non-negative initial pools.
 
     The tables summarize defaults and parameter meanings. The class attributes below
     provide the detailed attribute documentation, and the physics API documents the
@@ -886,7 +886,7 @@ class CarbonNitrogenCycleModelConfig:
     """Fraction of litter production carbon retained in litter pool [dimensionless].
 
     Represents carbon in plant materials that remain in the litter pool at the end
-    of a model timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
+    of a model timestep as recognizable plant structures. The remainder (1 - frc_cLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
     the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
@@ -972,8 +972,8 @@ class CarbonNitrogenCycleModelConfig:
     NCratio_PUreq: pint.Quantity = field(
         default=Q(0.02, "GtN/GtC"), validator=check_units("GtN/GtC")
     )
-    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC].  Stoichiometric
-    ratio determining nitrogen demand based on carbon uptake.  This represents the
+    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC]. Stoichiometric
+    ratio determining nitrogen demand based on carbon uptake. This represents the
     N:C ratio needed to support new plant biomass production.
     """
 
@@ -989,9 +989,9 @@ class CarbonNitrogenCycleModelConfig:
     sns_NetMIN2dT: pint.Quantity = field(
         default=Q(0, "1/K"), validator=check_units("1/K")
     )
-    """Temperature sensitivity of net mineralization [1/K].  Controls how strongly
+    """Temperature sensitivity of net mineralization [1/K]. Controls how strongly
     mineralization responds to temperature changes. Higher values indicate stronger
-    temperature effect on mineralization rates.  Positive values indicate increased
+    temperature effect on mineralization rates. Positive values indicate increased
     mineralization with warming.
     """
 
@@ -1165,25 +1165,34 @@ class CarbonNitrogenCycleModelConfig:
     When set to 0, the model runs as a carbon-only model with no nitrogen feedbacks.
     """
 
-    switch_Cpls: list = field(factory=lambda: [1, 1, 1])
+    switch_Cpls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(3),
+    )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 
-    Use 1 to enable or 0 to freeze a pool at its initial value. Other numeric values
-    scale that pool's derivative. These switches are useful for diagnostic purposes
-    or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
     - switch_Cpls[2]: Soil pool switch
     """
 
-    switch_Npls: list = field(factory=lambda: [1, 1, 1, 1])
+    switch_Npls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(4),
+    )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 
-    For plant, litter, and soil pools, use 1 to enable or 0 to freeze the pool at its
-    initial value; other numeric values scale its derivative. For the mineral pool,
-    0 disables its dynamics and any non-zero value enables them. These switches are
-    useful for diagnostic purposes or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Npls[0]: Plant pool switch
     - switch_Npls[1]: Litter pool switch
@@ -1192,24 +1201,11 @@ class CarbonNitrogenCycleModelConfig:
     """
 
     def __attrs_post_init__(self) -> None:
-        """Validate physical parameter ranges when the config is created."""
-        for name, expected_length in (("switch_Cpls", 3), ("switch_Npls", 4)):
-            switches = getattr(self, name)
-            if not isinstance(switches, (list, tuple, np.ndarray)):
-                raise TypeError(f"{name} must be a sequence of numeric switches.")
-            try:
-                values = np.asarray(switches)
-            except (TypeError, ValueError) as exc:
-                raise ValueError(
-                    f"{name} must contain {expected_length} finite numeric values."
-                ) from exc
-
-            if values.ndim != 1 or values.size != expected_length:
-                raise ValueError(
-                    f"{name} must contain exactly {expected_length} values."
-                )
-            if values.dtype.kind not in "biuf" or not np.all(np.isfinite(values)):
-                raise ValueError(f"{name} must contain only finite numeric values.")
+        """Validate parameter finiteness and physical ranges on creation."""
+        for item in fields(type(self)):
+            value = getattr(self, item.name)
+            if isinstance(value, pint.Quantity) and not np.all(np.isfinite(value.m)):
+                raise ValueError(f"{item.name} must contain only finite values.")
 
         fraction_names = (
             "frc_rgr",
@@ -1232,7 +1228,7 @@ class CarbonNitrogenCycleModelConfig:
         fractions = {}
         for name in fraction_names:
             value = float(getattr(self, name).to("1").m)
-            if not math.isfinite(value) or not 0 <= value <= 1:
+            if not 0 <= value <= 1:
                 raise ValueError(f"{name} must be finite and between 0 and 1.")
             fractions[name] = value
 
@@ -1259,7 +1255,7 @@ class CarbonNitrogenCycleModelConfig:
         )
         for name in time_names:
             value = float(getattr(self, name).to("yr").m)
-            if not math.isfinite(value) or value <= 0:
+            if value <= 0:
                 raise ValueError(f"{name} must be a positive finite duration in years.")
 
         pool_names = (
@@ -1274,7 +1270,7 @@ class CarbonNitrogenCycleModelConfig:
         for name in pool_names:
             unit = "GtC" if name.startswith("C") else "GtN"
             value = float(getattr(self, name).to(unit).m)
-            if not math.isfinite(value) or value < 0:
+            if value < 0:
                 raise ValueError(f"{name} must be finite and non-negative.")
 
     @classmethod

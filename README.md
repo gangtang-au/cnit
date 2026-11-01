@@ -1,8 +1,12 @@
-<p align="left">
-  <img src="docs/_static/CNit_logo.png" alt="CNit logo" width="100">
-</p>
+<h1>
+  <img src="https://raw.githubusercontent.com/gangtang-au/cnit/main/docs/_static/CNit_logo.png" alt="CNit logo" width="75" align="absmiddle">
+  CNit
+</h1>
 
-# CNit
+[![CI](https://github.com/gangtang-au/cnit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gangtang-au/cnit/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/cnit)](https://pypi.org/project/cnit/)
+[![Documentation](https://img.shields.io/readthedocs/cnit/latest)](https://cnit.readthedocs.io/en/latest/)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/cnit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/cnit)
 
 **CNit** (Carbon-Nitrogen Interactions in Terrestrial ecosystems) is a process-based
 terrestrial biogeochemistry model of coupled carbon and nitrogen cycles. It is the land

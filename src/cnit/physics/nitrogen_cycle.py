@@ -35,12 +35,12 @@ deposition, fertilizer application, and land use change.
 3. **Nitrogen Deficit Feedback**: A key feature is the explicit calculation of nitrogen
    deficit for plant uptake:
 
-   ..  math::
+   .. math::
 
        PUdef = PUreq - PUavail
 
    where nitrogen requirement (PUreq) is based on NPP and stoichiometric N: C ratios, and
-   nitrogen availability (PUavail) comes from mineralization and external inputs.  This
+   nitrogen availability (PUavail) comes from mineralization and external inputs. This
    deficit drives compensatory responses in plant uptake efficiency and biological fixation.
 
 4. **Flux-Based Mineralization**: Net mineralization is parameterized as a flux-based process
@@ -105,8 +105,9 @@ import xarray as xr
 import pint
 
 from ..utils.units import check_units, Q
-from ..utils.maths import _make_numeric_interp, SolveError
+from ..utils.maths import _make_packed_numeric_interp, SolveError
 from ..utils.data_utils import make_dataset_from_var_dict
+from ..utils.switches import check_binary_switches
 
 
 @define
@@ -145,8 +146,8 @@ class NitrogenPUBNFCalculator:
         default=Q(0.02, "GtN/GtC"),
         validator=check_units("GtN/GtC"),
     )
-    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC].  Stoichiometric
-    ratio determining nitrogen demand based on carbon uptake.  This represents the
+    """Required nitrogen-to-carbon ratio for plant uptake [GtN/GtC]. Stoichiometric
+    ratio determining nitrogen demand based on carbon uptake. This represents the
     N:C ratio needed to support new plant biomass production.
     """
 
@@ -164,9 +165,9 @@ class NitrogenPUBNFCalculator:
         default=Q(0, "1/K"),
         validator=check_units("1/K"),
     )
-    """Temperature sensitivity of net mineralization [1/K].  Controls how strongly
+    """Temperature sensitivity of net mineralization [1/K]. Controls how strongly
     mineralization responds to temperature changes. Higher values indicate stronger
-    temperature effect on mineralization rates.  Positive values indicate increased
+    temperature effect on mineralization rates. Positive values indicate increased
     mineralization with warming.
     """
 
@@ -204,10 +205,10 @@ class NitrogenPUBNFCalculator:
         Parameters
         ----------
         eff_dT_PU
-            Temperature effect on plant uptake [dimensionless].  Values > 1 indicate
+            Temperature effect on plant uptake [dimensionless]. Values > 1 indicate
             enhanced uptake with warming, < 1 indicate reduced uptake.
         eff_C_PU
-            Carbon cycle effect on plant uptake [dimensionless].  Represents how
+            Carbon cycle effect on plant uptake [dimensionless]. Represents how
             changes in NPP affect nitrogen uptake capacity. This is a sigmoid function
             of relative NPP change (see ``calculate_eff_C_PUBNF``), where increased
             NPP enhances the ability to take up nitrogen up to a maximum value.
@@ -249,7 +250,7 @@ class NitrogenPUBNFCalculator:
         -----
         The following formulas are used:
 
-        ..  math::
+        .. math::
 
             PU = PU_0 \\times \\epsilon_{T(PU)} \\times \\epsilon_{C(PU)} \\times \\epsilon_{N(PU)}
 
@@ -306,18 +307,18 @@ class NitrogenPUBNFCalculator:
         Parameters
         ----------
         CflxNPP
-            Net primary production carbon flux [GtC/yr].  This should be potential
+            Net primary production carbon flux [GtC/yr]. This should be potential
             NPP (NPPpot) calculated with no nitrogen limitation effect (ε_N(NPP) = 1)
             to properly determine nitrogen requirement independent of current limitation.
         CflxNPP0
             Initial/reference net primary production carbon flux [GtC/yr]. Used
             to normalize NPP changes for long-term mineralization calculation.
         NflxAD
-            Nitrogen deposition flux [GtN/yr].  Atmospheric nitrogen deposition
+            Nitrogen deposition flux [GtN/yr]. Atmospheric nitrogen deposition
             from anthropogenic and natural sources. All deposition is assumed to be
             immediately available for plant uptake.
         NflxFT
-            Nitrogen fertilizer flux [GtN/yr].  Direct fertilizer application
+            Nitrogen fertilizer flux [GtN/yr]. Direct fertilizer application
             (currently not used in calculation but included for future extension).
         dT
             Temperature change relative to reference [K]. Used to calculate
@@ -338,7 +339,7 @@ class NitrogenPUBNFCalculator:
 
         **Nitrogen Required for Plant Uptake:**
 
-        ..  math::
+        .. math::
 
             PUreq = NPPpot \\times NCratio
 
@@ -389,7 +390,7 @@ class NitrogenPUBNFCalculator:
 
         **Plant Uptake Deficit:**
 
-        ..  math::
+        .. math::
 
             PUdef = PUreq - PUavail
 
@@ -435,7 +436,7 @@ class NitrogenPUBNFCalculator:
 
         While the full ecosystem mineral nitrogen budget is usually balanced over long
         timescales (annual in CNit), short-term imbalances are the key that
-        determines nutrient limitation on processes.  To represent this effect, we
+        determines nutrient limitation on processes. To represent this effect, we
         transform the mineral nitrogen availability from a pool size basis to a flux
         basis by estimating the net mineralization fluxes that would be available for
         plant uptake over a year. This flux-based approach allows us to compare nitrogen
@@ -470,7 +471,7 @@ class NitrogenTurnoverCalculator:
 
     This calculator determines nitrogen fluxes between different pools in the
     terrestrial nitrogen cycle based on pool sizes, turnover times, and
-    environmental effects.  The turnover processes include:
+    environmental effects. The turnover processes include:
 
     - Plant nitrogen turnover (nLP): Transfer from plant to litter pool
     - Litter nitrogen decomposition (nLD): Transfer from litter to soil pool
@@ -670,16 +671,16 @@ class NitrogenTurnoverCalculator:
 
         This method calculates total nitrogen loss from the mineral pool through
         two pathways: gaseous losses (denitrification and volatilization) and
-        leaching.  Only gaseous losses are assumed to be temperature-sensitive.
+        leaching. Only gaseous losses are assumed to be temperature-sensitive.
 
         Parameters
         ----------
         NplsM
-            Mineral nitrogen pool size [GtN].  Total plant-available mineral
+            Mineral nitrogen pool size [GtN]. Total plant-available mineral
             nitrogen in the soil.
         eff_dT_nLSgas
             Temperature effect on gaseous nitrogen loss from mineral pool [dimensionless].
-            Values > 1 indicate enhanced gaseous losses with warming.  Only affects
+            Values > 1 indicate enhanced gaseous losses with warming. Only affects
             the gaseous component of total losses.
 
         Returns
@@ -711,7 +712,7 @@ class NitrogenTurnoverCalculator:
 
         1. **Gaseous losses** (:math:`f_{gas}` fraction): Temperature-sensitive
            losses through denitrification (conversion to N₂, N₂O, NO) and ammonia
-           volatilization.  These processes are enhanced by warming.
+           volatilization. These processes are enhanced by warming.
 
         2. **Leaching losses** (:math:`1 - f_{gas}` fraction): Temperature-insensitive
            losses through nitrate leaching and dissolved organic nitrogen export.
@@ -777,7 +778,7 @@ class NitrogenCycleCalculator:
 
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of nitrogen through different pathways in the
-    terrestrial biosphere.  These fractions account for the cascade of nitrogen through
+    terrestrial biosphere. These fractions account for the cascade of nitrogen through
     multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
@@ -902,7 +903,7 @@ class NitrogenCycleCalculator:
         Parameters
         ----------
         NflxPU
-            Plant nitrogen uptake flux [GtN/yr].  Total uptake from mineral pool.
+            Plant nitrogen uptake flux [GtN/yr]. Total uptake from mineral pool.
         NflxBNF
             Biological nitrogen fixation flux [GtN/yr]. New nitrogen entering system
             from atmospheric N₂.
@@ -916,7 +917,7 @@ class NitrogenCycleCalculator:
             Soil respiration flux [GtN/yr]. Nitrogen release from soil organic matter
             through decomposition (also called soil turnover).
         NflxLUgrs
-            Gross deforestation nitrogen flux [GtN/yr].  Nitrogen lost from system
+            Gross deforestation nitrogen flux [GtN/yr]. Nitrogen lost from system
             due to land conversion.
 
         Returns
@@ -1073,21 +1074,21 @@ class NitrogenCycleCalculator:
         Parameters
         ----------
         NflxPU
-            Plant nitrogen uptake flux [GtN/yr].  Removal of mineral N by plants.
+            Plant nitrogen uptake flux [GtN/yr]. Removal of mineral N by plants.
         NflxNetMIN
             Net mineralization flux [GtN/yr]. Release of mineral nitrogen from
             organic matter decomposition (mineralization minus microbial immobilization).
         NflxLS
-            Nitrogen loss flux from mineral pool [GtN/yr].  Combined gaseous and
+            Nitrogen loss flux from mineral pool [GtN/yr]. Combined gaseous and
             leaching losses.
         NflxAD
             Atmospheric deposition flux [GtN/yr]. External input from wet and dry
             deposition.
         NflxFT
-            Fertilizer application flux [GtN/yr].  Anthropogenic input from agricultural
+            Fertilizer application flux [GtN/yr]. Anthropogenic input from agricultural
             fertilization.
         NflxLUmin
-            Direct mineral nitrogen loss from land use change [GtN/yr].  Mineral N
+            Direct mineral nitrogen loss from land use change [GtN/yr]. Mineral N
             lost during land conversion events.
 
         Returns
@@ -1168,7 +1169,7 @@ class NitrogenCycleCalculator:
         Calculate all nitrogen fluxes and their partitioning in the system.
 
         This method computes the complete set of nitrogen fluxes including all
-        partitioned flows between pools.  Useful for detailed budget analysis and
+        partitioned flows between pools. Useful for detailed budget analysis and
         diagnostic output.
 
         Parameters
@@ -1429,7 +1430,7 @@ class NitrogenCycleModelResult:
         -------
         xr.Dataset
             Complete model results as xarray Dataset with time dimension and all
-            variables labeled with descriptive names and units.  The Dataset includes:
+            variables labeled with descriptive names and units. The Dataset includes:
 
             **State Variables:**
 
@@ -1622,15 +1623,17 @@ class NitrogenCycleModel:
     (1850).
     """
 
-    switch_Npls: list[int] = field(
-        factory=lambda: [1, 1, 1, 1],
+    switch_Npls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(4),
     )
     """Nitrogen pool switches for [plant, litter, soil, mineral] [dimensionless].
 
-    For plant, litter, and soil pools, use 1 to enable or 0 to freeze the pool at its
-    initial value; other numeric values scale its derivative. For the mineral pool,
-    0 disables its dynamics and any non-zero value enables them. These switches are
-    useful for diagnostic purposes or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Npls[0]: Plant pool switch
     - switch_Npls[1]: Litter pool switch
@@ -1693,7 +1696,7 @@ class NitrogenCycleModel:
             If time_axis starts before time0. The simulation cannot run backwards
             from the initialization time.
         SolveError
-            If the numerical ODE solver fails to converge.  This can occur due to
+            If the numerical ODE solver fails to converge. This can occur due to
             numerical instability, runaway feedbacks, or inappropriate tolerance settings.
 
         Notes
@@ -1748,7 +1751,7 @@ class NitrogenCycleModel:
 
         **Pool Switches:**
 
-        Pool dynamics can be selectively disabled using switch_Npls.  When a switch
+        Pool dynamics can be selectively disabled using switch_Npls. When a switch
         is set to 0, the corresponding pool's rate of change is forced to zero,
         effectively freezing that pool at its initial value throughout the simulation.
         If the mineral pool switch is 0, the mineral pool is set to zero throughout.
@@ -1758,40 +1761,37 @@ class NitrogenCycleModel:
         """
 
         t_eval = time_axis.to("yr").m
-        NflxPU_t = _make_numeric_interp(NflxPU_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxBNF_t = _make_numeric_interp(NflxBNF_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxAD_t = _make_numeric_interp(NflxAD_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxFT_t = _make_numeric_interp(NflxFT_s, t_eval, "GtN/yr", extrapolate=True)
-        NflxLUgrs_t = _make_numeric_interp(
-            NflxLUgrs_s, t_eval, "GtN/yr", extrapolate=True
-        )
-        NflxLUmin_t = _make_numeric_interp(
-            NflxLUmin_s, t_eval, "GtN/yr", extrapolate=True
-        )
-
-        eff_dT_nLP_t = _make_numeric_interp(
-            eff_dT_nLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_nLD_t = _make_numeric_interp(
-            eff_dT_nLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_nSR_t = _make_numeric_interp(
-            eff_dT_nSR_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_nLSgas_t = _make_numeric_interp(
-            eff_dT_nLSgas_s, t_eval, "1", extrapolate=False
-        )
-        eff_N_nLP_t = _make_numeric_interp(eff_N_nLP_s, t_eval, "1", extrapolate=False)
-        eff_N_nLD_t = _make_numeric_interp(eff_N_nLD_s, t_eval, "1", extrapolate=False)
-        eff_N_nSR_t = _make_numeric_interp(eff_N_nSR_s, t_eval, "1", extrapolate=False)
-        eff_LU_nLP_t = _make_numeric_interp(
-            eff_LU_nLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_nLD_t = _make_numeric_interp(
-            eff_LU_nLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_nSR_t = _make_numeric_interp(
-            eff_LU_nSR_s, t_eval, "1", extrapolate=False
+        # Pack the fluxes and environmental effect factors into a unified interpolator
+        flux_and_effect_t = _make_packed_numeric_interp(
+            [
+                NflxPU_s,
+                NflxBNF_s,
+                NflxLUgrs_s,
+                eff_dT_nLP_s,
+                eff_dT_nLD_s,
+                eff_dT_nSR_s,
+                eff_N_nLP_s,
+                eff_N_nLD_s,
+                eff_N_nSR_s,
+                eff_LU_nLP_s,
+                eff_LU_nLD_s,
+                eff_LU_nSR_s,
+            ],
+            t_eval,
+            [
+                "GtN/yr",
+                "GtN/yr",
+                "GtN/yr",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+            ],
         )
 
         calc_turnover = self.calc_n_turnover
@@ -1829,6 +1829,25 @@ class NitrogenCycleModel:
             list
                 Time derivatives [dNplsP/dt, dNplsL/dt, dNplsS/dt] in GtN/yr (unitless)
             """
+            # Interpolate all fluxes and effect multipliers at continuous time t
+            fluxes_and_effects = flux_and_effect_t(t)
+
+            # Unpack fluxes [GtN/yr]
+            NflxPU_GtN_yr = fluxes_and_effects[0]
+            NflxBNF_GtN_yr = fluxes_and_effects[1]
+            NflxLUgrs_GtN_yr = fluxes_and_effects[2]
+
+            # Unpack environmental effects [1]
+            eff_dT_nLP = fluxes_and_effects[3]
+            eff_dT_nLD = fluxes_and_effects[4]
+            eff_dT_nSR = fluxes_and_effects[5]
+            eff_N_nLP = fluxes_and_effects[6]
+            eff_N_nLD = fluxes_and_effects[7]
+            eff_N_nSR = fluxes_and_effects[8]
+            eff_LU_nLP = fluxes_and_effects[9]
+            eff_LU_nLD = fluxes_and_effects[10]
+            eff_LU_nSR = fluxes_and_effects[11]
+
             turnover = calc_turnover.calculate_nLPLDSR_numeric(
                 NplsP_GtN=y[0],
                 NplsL_GtN=y[1],
@@ -1836,24 +1855,24 @@ class NitrogenCycleModel:
                 tau_NplsP_yr=tau_NplsP_yr,
                 tau_NplsL_yr=tau_NplsL_yr,
                 tau_NplsS_yr=tau_NplsS_yr,
-                eff_dT_nLP=eff_dT_nLP_t(t),
-                eff_dT_nLD=eff_dT_nLD_t(t),
-                eff_dT_nSR=eff_dT_nSR_t(t),
-                eff_N_nLP=eff_N_nLP_t(t),
-                eff_N_nLD=eff_N_nLD_t(t),
-                eff_N_nSR=eff_N_nSR_t(t),
-                eff_LU_nLP=eff_LU_nLP_t(t),
-                eff_LU_nLD=eff_LU_nLD_t(t),
-                eff_LU_nSR=eff_LU_nSR_t(t),
+                eff_dT_nLP=eff_dT_nLP,
+                eff_dT_nLD=eff_dT_nLD,
+                eff_dT_nSR=eff_dT_nSR,
+                eff_N_nLP=eff_N_nLP,
+                eff_N_nLD=eff_N_nLD,
+                eff_N_nSR=eff_N_nSR,
+                eff_LU_nLP=eff_LU_nLP,
+                eff_LU_nLD=eff_LU_nLD,
+                eff_LU_nSR=eff_LU_nSR,
             )
             dydt = (
                 calc_cycle.calculate_dNplsPLS_dt_numeric(
-                    NflxPU_GtN_yr=NflxPU_t(t),
-                    NflxBNF_GtN_yr=NflxBNF_t(t),
+                    NflxPU_GtN_yr=NflxPU_GtN_yr,
+                    NflxBNF_GtN_yr=NflxBNF_GtN_yr,
                     NflxLP_GtN_yr=turnover["NflxLP"],
                     NflxLD_GtN_yr=turnover["NflxLD"],
                     NflxSR_GtN_yr=turnover["NflxSR"],
-                    NflxLUgrs_GtN_yr=NflxLUgrs_t(t),
+                    NflxLUgrs_GtN_yr=NflxLUgrs_GtN_yr,
                     frc_PU2P=frc_PU2P,
                     frc_PU2L=frc_PU2L,
                     frc_BNF2P=frc_BNF2P,
@@ -1864,40 +1883,6 @@ class NitrogenCycleModel:
                     frc_nLUgrs2L=frc_nLUgrs2L,
                 )
                 * pool_switches
-            )
-            if np.all(np.abs(dydt) < 1e-12):
-                dydt[:] = 0
-            return dydt
-
-        def func_to_solve_NplsM(t: float, y: np.ndarray) -> np.ndarray:
-            """
-            ODE system function for mineral nitrogen pool (stage 2).
-
-            Parameters
-            ----------
-            t
-                Current time [yr] (unitless for solver)
-            y
-                Current state vector [NplsM] in GtN (unitless for solver)
-
-            Returns
-            -------
-            list
-                Time derivative [dNplsM/dt] in GtN/yr (unitless)
-            """
-            turnover = calc_turnover.calculate_nLS_numeric(
-                NplsM_GtN=y[0],
-                tau_NplsM_yr=tau_NplsM_yr,
-                frc_nLSgas=frc_nLSgas,
-                eff_dT_nLSgas=eff_dT_nLSgas_t(t),
-            )
-            dydt = calc_cycle.calculate_dNplsM_dt_numeric(
-                NflxPU_GtN_yr=NflxPU_t(t),
-                NflxNetMIN_GtN_yr=NflxNetMIN_t(t),
-                NflxLS_GtN_yr=turnover["NflxLS"],
-                NflxAD_GtN_yr=NflxAD_t(t),
-                NflxFT_GtN_yr=NflxFT_t(t),
-                NflxLUmin_GtN_yr=NflxLUmin_t(t),
             )
             if np.all(np.abs(dydt) < 1e-12):
                 dydt[:] = 0
@@ -1938,6 +1923,16 @@ class NitrogenCycleModel:
         }
 
         if self.switch_Npls[-1] != 0:
+            # Stage 2: Solve the mineral nitrogen pool analytically.
+            #
+            # Governing equation:
+            #     dNplsM/dt = net_inflow(t) - NplsM(t) / tau_NplsM_eff(t)
+            #
+            # Assume a constant effective turnover time (harmonic mean) and
+            # linearly varying net inflow within each time step. The analytical
+            # solution avoids numerical stiffness for rapid mineral N turnover.
+
+            # Mineralisation from litter and soil [GtN/yr]
             NflxLD2M = (
                 res_NplsPLS["NplsL"]
                 / self.calc_n_turnover.tau_NplsL
@@ -1954,27 +1949,57 @@ class NitrogenCycleModel:
                 * eff_LU_nSR_s
             )
             NflxNetMIN = NflxLD2M + NflxSR
-            NflxNetMIN_t = _make_numeric_interp(
-                NflxNetMIN, t_eval, "GtN/yr", extrapolate=True
+
+            # Net inflow to the mineral N pool [GtN/yr]
+            net_inflow = (
+                NflxAD_s.to("GtN/yr").m
+                + NflxFT_s.to("GtN/yr").m
+                + NflxNetMIN.to("GtN/yr").m
+                - NflxPU_s.to("GtN/yr").m
+                - NflxLUmin_s.to("GtN/yr").m
             )
 
-            raw = scipy.integrate.solve_ivp(
-                func_to_solve_NplsM,
-                t_span=t_span,
-                t_eval=t_eval,
-                y0=(self.NplsM0.to("GtN").m,),
-                atol=1e-6,
-                rtol=1e-3,
-                max_step=2,
-                # method='LSODA',
+            # Effective mineral N turnover time [yr]
+            tau_NplsM_eff = tau_NplsM_yr / (
+                frc_nLSgas * eff_dT_nLSgas_s.to("1").m + (1.0 - frc_nLSgas)
             )
 
-            if not raw.success:
-                raise SolveError(
-                    f"Model failed to solve (possible runaway feedback)\n{raw}"
+            # Initialise mineral N pool [GtN]
+            NplsM = np.empty(len(t_eval), dtype=float)
+            NplsM[0] = self.NplsM0.to("GtN").m
+
+            # Analytical integration over each time interval
+            for k in range(len(t_eval) - 1):
+                dt = t_eval[k + 1] - t_eval[k]
+
+                # Harmonic mean of effective turnover times [yr]
+                tau_eff = 2.0 / (1.0 / tau_NplsM_eff[k] + 1.0 / tau_NplsM_eff[k + 1])
+
+                # Fraction of mineral N remaining after turnover
+                decay = dt / tau_eff
+                survival = np.exp(-decay)
+
+                # Integrating-factor coefficients for constant and linear inflow
+                if decay > 1e-4:
+                    coeff_constant = tau_eff * (1.0 - survival)
+                    coeff_linear = tau_eff * (dt - coeff_constant)
+                else:
+                    # Taylor expansions for small decay
+                    coeff_constant = dt * (1.0 - 0.5 * decay)
+                    coeff_linear = 0.5 * dt**2 * (1.0 - decay / 3.0)
+
+                # Linear interpolation of net inflow
+                inflow_start = net_inflow[k]
+                inflow_slope = (net_inflow[k + 1] - inflow_start) / dt
+
+                # Analytical update of mineral N pool
+                NplsM[k + 1] = (
+                    NplsM[k] * survival
+                    + inflow_start * coeff_constant
+                    + inflow_slope * coeff_linear
                 )
 
-            res_NplsM = {"NplsM": Q(raw.y[0, :], "GtN")}
+            res_NplsM = {"NplsM": Q(NplsM, "GtN")}
 
         else:
             res_NplsM = {"NplsM": Q(np.zeros_like(time_axis), "GtN")}

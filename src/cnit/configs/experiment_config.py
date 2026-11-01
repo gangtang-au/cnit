@@ -27,10 +27,11 @@ class CarbonNitrogenCycleExperimentConfig:
 
     Field validators check unit compatibility. On construction, the config checks that
     ``time_axis`` has at least two finite, strictly increasing, evenly spaced
-    coordinates and that every input series has exactly the same shape as the axis.
-    It does not check input-series values for finiteness or require unused net- and
-    gross-land-use series to be zero; the model's land-use method settings determine
-    which series are used.
+    coordinates and that every input series has exactly the same shape as the axis
+    and contains only finite values. This includes unused input series: supply finite
+    placeholders (for example, zeros) for those inputs. Unused net- and gross-land-use
+    series need not be zero; the model's land-use method settings determine which
+    series are used.
 
     Annual time axes are used in the supplied examples and calibration files. Evenly
     spaced subannual axes are also supported, and allocation fractions apply within
@@ -136,7 +137,7 @@ class CarbonNitrogenCycleExperimentConfig:
     as an input to the model."""
 
     def __attrs_post_init__(self) -> None:
-        """Check time-axis regularity and input-series lengths.
+        """Check time-axis regularity, input-series lengths and finite values.
 
         Field validators check unit compatibility before this method runs.
         """
@@ -171,6 +172,8 @@ class CarbonNitrogenCycleExperimentConfig:
                     f"{name} has shape {values.shape}, but time_axis has shape "
                     f"{self.time_axis.shape}."
                 )
+            if not np.all(np.isfinite(values.m)):
+                raise ValueError(f"{name} must contain only finite values.")
 
     def to_input_dict(self):
         """Return the model inputs stored in this experiment config.

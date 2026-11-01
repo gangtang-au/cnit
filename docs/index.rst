@@ -16,6 +16,10 @@ and nitrogen through plant, litter, soil, and mineral pools, with explicit repre
 of carbon-nitrogen feedbacks, environmental effects (CO₂ fertilization, temperature, land
 use change), and nitrogen limitation on carbon uptake.
 
+.. image:: https://static.pepy.tech/personalized-badge/cnit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads
+   :target: https://pepy.tech/projects/cnit
+   :alt: PyPI downloads
+
 **Key Features:**
 
 * Explicit carbon-nitrogen coupling with nitrogen limitation feedbacks

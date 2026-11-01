@@ -2,6 +2,7 @@
 MAGICC Coupled Carbon-Nitrogen Cycle Model (CNit) Implementation
 """
 
+from copy import copy
 from typing import Dict, List
 from attrs import define, field
 import numpy as np
@@ -42,7 +43,7 @@ class CarbonNitrogenCycleModel:
     """MAGICC's coupled terrestrial carbon-nitrogen cycle model (CNit).
 
     This is the top-level model class that integrates the carbon and nitrogen cycles
-    with their environmental drivers and feedback mechanisms.  The model simulates the
+    with their environmental drivers and feedback mechanisms. The model simulates the
     full terrestrial biogeochemistry system including:
 
     - Carbon cycle dynamics (3 pools: plant, litter, soil)
@@ -114,7 +115,7 @@ class CarbonNitrogenCycleModel:
     """Calculator for land use fluxes.
 
     Processes land use change emissions (gross deforestation, net emissions) and
-    regrowth for both carbon and nitrogen cycles.  Tracks cumulative land use changes
+    regrowth for both carbon and nitrogen cycles. Tracks cumulative land use changes
     for calculating land use effects on productivity.
     """
 
@@ -185,13 +186,14 @@ class CarbonNitrogenCycleModel:
     switch_N: pint.Quantity = field(
         default=Q(1, "1"),
     )
-    """Switch to enable/disable nitrogen cycle [dimensionless].
+    """Switch indicating whether this model includes the nitrogen cycle [dimensionless].
 
-    Controls whether nitrogen limitation effects are applied to carbon cycle:
-    - 1: Full carbon-nitrogen coupling (default)
-    - 0: Carbon cycle only (no nitrogen limitation)
+    For :meth:`run_experiments`, each experiment's switch is applied to a shallow
+    copy of the model. This lets experiments enable or disable nitrogen independently
+    without changing this model instance.
 
-    When set to 0, the model runs as a carbon-only model with no nitrogen feedbacks.
+    - 1: Nitrogen cycle is included in the model (default)
+    - 0: Nitrogen cycle is not included in the model
     """
 
     @classmethod
@@ -206,8 +208,8 @@ class CarbonNitrogenCycleModel:
         Parameters
         ----------
         params
-            Parameter dictionary for configuring calculators and sub-models.  Keys should
-            match attribute names of calculator/model components.  Unknown keys raise an
+            Parameter dictionary for configuring calculators and sub-models. Keys should
+            match attribute names of calculator/model components. Unknown keys raise an
             error.
 
         Returns
@@ -401,13 +403,14 @@ class CarbonNitrogenCycleModel:
         ----------
         experiments
             List of experiment configurations. Each experiment specifies input data,
-            nitrogen switch setting, and a name for identification.
+            nitrogen switch setting, and a name for identification. Each experiment's
+            switch controls nitrogen for that run without changing this model instance.
 
         Returns
         -------
         xr.Dataset
             Dataset containing results for all experiments, with an 'experiment'
-            dimension for comparison.  Variables are aligned across experiments
+            dimension for comparison. Variables are aligned across experiments
             using outer join (missing values filled with NaN).
 
         Examples
@@ -427,12 +430,11 @@ class CarbonNitrogenCycleModel:
         >>> no_n_npp = results.sel(experiment="no_nitrogen")["CflxNPP"]
         """
 
-        input_dicts = [exp.to_input_dict() for exp in experiments]
-
         results = []
-        for exp, input_dict in zip(experiments, input_dicts):
-            self.switch_N = exp.switch_N
-            res_exp = self.run(**input_dict)
+        for exp in experiments:
+            model = copy(self)
+            model.switch_N = exp.switch_N
+            res_exp = model.run(**exp.to_input_dict())
             res_exp = res_exp.assign_coords(experiment=exp.name).expand_dims(
                 "experiment"
             )
@@ -475,19 +477,19 @@ class CarbonNitrogenCycleModel:
         CO2_s
             Time series of atmospheric CO₂ concentration [ppm].
         CemsLUnet_s
-            Time series of net land use carbon emissions [GtC/yr].  Includes both
+            Time series of net land use carbon emissions [GtC/yr]. Includes both
             gross emissions and regrowth.
         CemsLUgrs_s
-            Time series of gross land use carbon emissions [GtC/yr].  From
+            Time series of gross land use carbon emissions [GtC/yr]. From
             deforestation and land conversion only.
         NflxAD_s
-            Time series of atmospheric nitrogen deposition flux [GtN/yr].  Includes
+            Time series of atmospheric nitrogen deposition flux [GtN/yr]. Includes
             both natural and anthropogenic sources.
         NflxFT_s
             Time series of nitrogen fertilizer application flux [GtN/yr].
             Anthropogenic nitrogen input from agriculture.
         NemsLUnet_s
-            Time series of net land use nitrogen emissions [GtN/yr].  Includes both
+            Time series of net land use nitrogen emissions [GtN/yr]. Includes both
             gross emissions and regrowth.
         NemsLUgrs_s
             Time series of gross land use nitrogen emissions from organic pools [GtN/yr].
@@ -538,7 +540,7 @@ class CarbonNitrogenCycleModel:
 
         When switch_N = 1, nitrogen limitation affects carbon processes through:
 
-        ..  math::
+        .. math::
 
             NPP_{actual} = NPP_{potential} \\times \\epsilon_{N(NPP)}
 
@@ -697,7 +699,7 @@ class CarbonNitrogenCycleModel:
         Calculate coupled carbon and nitrogen fluxes with nitrogen limitation feedback.
 
         This is the core coupling method that implements the nitrogen limitation feedback
-        on NPP.   It follows a two-step approach:
+        on NPP. It follows a two-step approach:
 
         1. **Calculate potential fluxes** (without nitrogen limitation):
 
@@ -926,13 +928,13 @@ class CarbonNitrogenCycleModel:
         Parameters
         ----------
         dT_s
-            Time series of temperature anomaly [K].  Only first value used.
+            Time series of temperature anomaly [K]. Only first value used.
         CO2_s
             Time series of atmospheric CO₂ concentration [ppm]. Only first value used.
         CemsLUnet_s
             Time series of net land use carbon emissions [GtC/yr]. Only first value used.
         CemsLUgrs_s
-            Time series of gross land use carbon emissions [GtC/yr].  Only first value used.
+            Time series of gross land use carbon emissions [GtC/yr]. Only first value used.
         NflxAD_s
             Time series of atmospheric nitrogen deposition [GtN/yr]. Only first value used.
         NflxFT_s
@@ -978,7 +980,7 @@ class CarbonNitrogenCycleModel:
 
         Typical workflow for equilibrium initialization:
 
-        ..  code-block:: python
+        .. code-block:: python
 
             # Calculate equilibrium
             eqm = model.calculate_mdl_eqm0(
@@ -1069,7 +1071,7 @@ class CarbonNitrogenCycleModel:
         CflxNPP
             Net primary production [GtC/yr]. Carbon input to system.
         CflxLPR
-            Litter production respiration [GtC/yr].  Autotrophic respiration.
+            Litter production respiration [GtC/yr]. Autotrophic respiration.
         CflxLUgrs
             Gross land use carbon emissions [GtC/yr]. Carbon output from system.
         CflxLUrgr
@@ -1081,7 +1083,7 @@ class CarbonNitrogenCycleModel:
         NflxBNF
             Biological nitrogen fixation [GtN/yr]. External N input.
         NflxAD
-            Atmospheric nitrogen deposition [GtN/yr].  External N input.
+            Atmospheric nitrogen deposition [GtN/yr]. External N input.
         NflxFT
             Nitrogen fertilizer [GtN/yr]. External N input.
         NflxLUgrs
@@ -1218,7 +1220,7 @@ class CarbonNitrogenCycleModel:
         outflux
             Total output from pool (excluding turnover) [GtC/yr or GtN/yr].
         pool_size_change
-            Rate of change of pool size [GtC/yr or GtN/yr].  Zero at equilibrium.
+            Rate of change of pool size [GtC/yr or GtN/yr]. Zero at equilibrium.
 
         Returns
         -------
@@ -1269,9 +1271,9 @@ class CarbonNitrogenCycleModel:
         CflxNPP
             Net primary production [GtC/yr]. Carbon input flux.
         CflxLPR
-            Litter production respiration [GtC/yr].  Autotrophic respiration.
+            Litter production respiration [GtC/yr]. Autotrophic respiration.
         CflxLUgrs
-            Gross land use carbon emissions [GtC/yr].  Carbon output flux.
+            Gross land use carbon emissions [GtC/yr]. Carbon output flux.
         eff_dT_cLP, eff_dT_cLD, eff_dT_cSR
             Temperature effects on carbon processes [dimensionless].
         eff_N_cLP, eff_N_cLD, eff_N_cSR
@@ -1279,7 +1281,7 @@ class CarbonNitrogenCycleModel:
         eff_LU_cLP, eff_LU_cLD, eff_LU_cSR
             Land use effects on carbon processes [dimensionless].
         CplsP, CplsL, CplsS
-            Current carbon pool sizes [GtC].  If None, uses initial values from model.
+            Current carbon pool sizes [GtC]. If None, uses initial values from model.
         dCplsP_dt, dCplsL_dt, dCplsS_dt
             Pool size changes [GtC/yr]. Zero for equilibrium calculation.
 
@@ -1449,7 +1451,7 @@ class CarbonNitrogenCycleModel:
         NflxBNF
             Biological nitrogen fixation [GtN/yr]. External input.
         NflxAD
-            Atmospheric deposition [GtN/yr].  External input.
+            Atmospheric deposition [GtN/yr]. External input.
         NflxFT
             Fertilizer application [GtN/yr]. External input.
         NflxLUgrs
@@ -1463,7 +1465,7 @@ class CarbonNitrogenCycleModel:
         eff_LU_nLP, eff_LU_nLD, eff_LU_nSR
             Land use effects on nitrogen processes [dimensionless].
         NplsP, NplsL, NplsS, NplsM
-            Current nitrogen pool sizes [GtN].  If None, uses initial values from model.
+            Current nitrogen pool sizes [GtN]. If None, uses initial values from model.
         dNplsP_dt, dNplsL_dt, dNplsS_dt, dNplsM_dt
             Pool size changes [GtN/yr]. Zero for equilibrium calculation.
 

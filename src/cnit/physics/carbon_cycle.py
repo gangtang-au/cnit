@@ -72,8 +72,9 @@ import xarray as xr
 import pint
 
 from ..utils.units import check_units, Q
-from ..utils.maths import SolveError, _make_numeric_interp
+from ..utils.maths import SolveError, _make_packed_numeric_interp
 from ..utils.data_utils import make_dataset_from_var_dict
+from ..utils.switches import check_binary_switches
 
 
 @define
@@ -160,7 +161,7 @@ class CarbonTurnoverCalculator:
 
     This calculator determines carbon fluxes between different pools in the
     terrestrial carbon cycle based on pool sizes, turnover times, and
-    environmental effects.  The turnover processes include:
+    environmental effects. The turnover processes include:
 
     - Litter production (cLP): Transfer from plant to litter pool
     - Litter decomposition (cLD): Transfer from litter to soil pool
@@ -213,7 +214,7 @@ class CarbonTurnoverCalculator:
         Parameters
         ----------
         CplsP
-            Plant carbon pool size [GtC].  Total carbon contained in living
+            Plant carbon pool size [GtC]. Total carbon contained in living
             plant biomass.
         CplsL
             Litter carbon pool size [GtC]. Total carbon contained in dead
@@ -342,7 +343,7 @@ class CarbonCycleCalculator:
 
     Each input flux is partitioned among pools using empirically-derived fractions
     that represent the distribution of carbon through different pathways in the
-    terrestrial biosphere.  These fractions account for the cascade of carbon through
+    terrestrial biosphere. These fractions account for the cascade of carbon through
     multiple pools within the model timestep, capturing both immediate allocation
     and subsequent rapid turnover processes.
     """
@@ -378,7 +379,7 @@ class CarbonCycleCalculator:
     """Fraction of litter production carbon retained in litter pool [dimensionless].
 
     Represents carbon in plant materials that remain in the litter pool at the end
-    of a model timestep as recognizable plant structures.  The remainder (1 - frc_cLP2L)
+    of a model timestep as recognizable plant structures. The remainder (1 - frc_cLP2L)
     goes directly to soil, representing materials that decompose rapidly and enter
     the soil pool within the model timestep, bypassing extended residence in the
     litter stage.
@@ -437,10 +438,10 @@ class CarbonCycleCalculator:
         Parameters
         ----------
         CflxNPP
-            Net primary production carbon flux [GtC/yr].  Total carbon fixation by
+            Net primary production carbon flux [GtC/yr]. Total carbon fixation by
             plants after autotrophic respiration.
         CflxLPR
-            Litter production respiration carbon flux [GtC/yr].  Autotrophic respiration
+            Litter production respiration carbon flux [GtC/yr]. Autotrophic respiration
             associated with plant tissue turnover.
         CflxLP
             Litter production flux [GtC/yr]. Carbon transfer from plant to litter
@@ -452,7 +453,7 @@ class CarbonCycleCalculator:
             Soil respiration flux [GtC/yr]. Carbon release from soil organic matter
             through decomposition (also called soil turnover).
         CflxLUgrs
-            Gross deforestation carbon flux [GtC/yr].  Carbon lost from system
+            Gross deforestation carbon flux [GtC/yr]. Carbon lost from system
             due to land conversion.
 
         Returns
@@ -584,7 +585,7 @@ class CarbonCycleCalculator:
         Calculate all carbon fluxes and their partitioning in the system.
 
         This method computes the complete set of carbon fluxes including all
-        partitioned flows between pools.  Useful for detailed budget analysis and
+        partitioned flows between pools. Useful for detailed budget analysis and
         diagnostic output.
 
         Parameters
@@ -804,7 +805,7 @@ class CarbonCycleModelResult:
         -------
         xr.Dataset
             Complete model results as xarray Dataset with time dimension and all
-            variables labeled with descriptive names and units.  The Dataset includes:
+            variables labeled with descriptive names and units. The Dataset includes:
 
             **State Variables:**
 
@@ -963,14 +964,17 @@ class CarbonCycleModel:
     (1850).
     """
 
-    switch_Cpls: list[int] = field(
-        factory=lambda: [1, 1, 1],
+    switch_Cpls: tuple[int, ...] = field(
+        factory=lambda: (1, 1, 1),
+        converter=tuple,
+        validator=check_binary_switches(3),
     )
     """Carbon pool switches for [plant, litter, soil] [dimensionless].
 
-    Use 1 to enable or 0 to freeze a pool at its initial value. Other numeric values
-    scale that pool's derivative. These switches are useful for diagnostic purposes
-    or simplified model configurations.
+    Use 1 to enable a pool or 0 to freeze it at its initial value. Values other than
+    0 or 1 are invalid. These switches are useful for diagnostic purposes or
+    simplified model configurations. Lists are accepted as input and stored as
+    immutable tuples.
 
     - switch_Cpls[0]: Plant pool switch
     - switch_Cpls[1]: Litter pool switch
@@ -1004,7 +1008,7 @@ class CarbonCycleModel:
         Parameters
         ----------
         time_axis
-            Time points for simulation [yr].  Must start at or after time0.
+            Time points for simulation [yr]. Must start at or after time0.
             These are the time points at which solution is explicitly evaluated.
         CflxNPP_s, CflxLPR_s, CflxLUgrs_s
             Carbon flux series [GtC/yr], aligned with ``time_axis``.
@@ -1027,7 +1031,7 @@ class CarbonCycleModel:
             If time_axis starts before time0. The simulation cannot run backwards
             from the initialization time.
         SolveError
-            If the numerical ODE solver fails to converge.  This can occur due to
+            If the numerical ODE solver fails to converge. This can occur due to
             numerical instability, runaway feedbacks, or inappropriate tolerance settings.
 
         Notes
@@ -1069,32 +1073,37 @@ class CarbonCycleModel:
         """
 
         t_eval = time_axis.to("yr").m
-        CflxNPP_t = _make_numeric_interp(CflxNPP_s, t_eval, "GtC/yr", extrapolate=True)
-        CflxLPR_t = _make_numeric_interp(CflxLPR_s, t_eval, "GtC/yr", extrapolate=True)
-        CflxLUgrs_t = _make_numeric_interp(
-            CflxLUgrs_s, t_eval, "GtC/yr", extrapolate=True
-        )
-
-        eff_dT_cLP_t = _make_numeric_interp(
-            eff_dT_cLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_cLD_t = _make_numeric_interp(
-            eff_dT_cLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_dT_cSR_t = _make_numeric_interp(
-            eff_dT_cSR_s, t_eval, "1", extrapolate=False
-        )
-        eff_N_cLP_t = _make_numeric_interp(eff_N_cLP_s, t_eval, "1", extrapolate=False)
-        eff_N_cLD_t = _make_numeric_interp(eff_N_cLD_s, t_eval, "1", extrapolate=False)
-        eff_N_cSR_t = _make_numeric_interp(eff_N_cSR_s, t_eval, "1", extrapolate=False)
-        eff_LU_cLP_t = _make_numeric_interp(
-            eff_LU_cLP_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_cLD_t = _make_numeric_interp(
-            eff_LU_cLD_s, t_eval, "1", extrapolate=False
-        )
-        eff_LU_cSR_t = _make_numeric_interp(
-            eff_LU_cSR_s, t_eval, "1", extrapolate=False
+        # Pack the fluxes and environmental effect factors into a unified interpolator
+        flux_and_effect_t = _make_packed_numeric_interp(
+            [
+                CflxNPP_s,
+                CflxLPR_s,
+                CflxLUgrs_s,
+                eff_dT_cLP_s,
+                eff_dT_cLD_s,
+                eff_dT_cSR_s,
+                eff_N_cLP_s,
+                eff_N_cLD_s,
+                eff_N_cSR_s,
+                eff_LU_cLP_s,
+                eff_LU_cLD_s,
+                eff_LU_cSR_s,
+            ],
+            t_eval,
+            [
+                "GtC/yr",
+                "GtC/yr",
+                "GtC/yr",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+                "1",
+            ],
         )
 
         calc_turnover = self.calc_c_turnover
@@ -1128,6 +1137,24 @@ class CarbonCycleModel:
             list
                 Time derivatives [dCplsP/dt, dCplsL/dt, dCplsS/dt] in GtC/yr (unitless)
             """
+            # Interpolate all fluxes and effect multipliers at continuous time t
+            fluxes_and_effects = flux_and_effect_t(t)
+
+            # Unpack carbon fluxes [GtC/yr]
+            CflxNPP_GtC_yr = fluxes_and_effects[0]
+            CflxLPR_GtC_yr = fluxes_and_effects[1]
+            CflxLUgrs_GtC_yr = fluxes_and_effects[2]
+
+            # Unpack environmental effects [1]
+            eff_dT_cLP = fluxes_and_effects[3]
+            eff_dT_cLD = fluxes_and_effects[4]
+            eff_dT_cSR = fluxes_and_effects[5]
+            eff_N_cLP = fluxes_and_effects[6]
+            eff_N_cLD = fluxes_and_effects[7]
+            eff_N_cSR = fluxes_and_effects[8]
+            eff_LU_cLP = fluxes_and_effects[9]
+            eff_LU_cLD = fluxes_and_effects[10]
+            eff_LU_cSR = fluxes_and_effects[11]
 
             turnover = calc_turnover.calculate_numeric(
                 CplsP_GtC=y[0],
@@ -1136,25 +1163,25 @@ class CarbonCycleModel:
                 tau_CplsP_yr=tau_CplsP_yr,
                 tau_CplsL_yr=tau_CplsL_yr,
                 tau_CplsS_yr=tau_CplsS_yr,
-                eff_dT_cLP=eff_dT_cLP_t(t),
-                eff_dT_cLD=eff_dT_cLD_t(t),
-                eff_dT_cSR=eff_dT_cSR_t(t),
-                eff_N_cLP=eff_N_cLP_t(t),
-                eff_N_cLD=eff_N_cLD_t(t),
-                eff_N_cSR=eff_N_cSR_t(t),
-                eff_LU_cLP=eff_LU_cLP_t(t),
-                eff_LU_cLD=eff_LU_cLD_t(t),
-                eff_LU_cSR=eff_LU_cSR_t(t),
+                eff_dT_cLP=eff_dT_cLP,
+                eff_dT_cLD=eff_dT_cLD,
+                eff_dT_cSR=eff_dT_cSR,
+                eff_N_cLP=eff_N_cLP,
+                eff_N_cLD=eff_N_cLD,
+                eff_N_cSR=eff_N_cSR,
+                eff_LU_cLP=eff_LU_cLP,
+                eff_LU_cLD=eff_LU_cLD,
+                eff_LU_cSR=eff_LU_cSR,
             )
 
             dydt = (
                 calc_c_cycle.calculate_dCpls_dt_numeric(
-                    CflxNPP_GtC_yr=CflxNPP_t(t),
-                    CflxLPR_GtC_yr=CflxLPR_t(t),
+                    CflxNPP_GtC_yr=CflxNPP_GtC_yr,
+                    CflxLPR_GtC_yr=CflxLPR_GtC_yr,
                     CflxLP_GtC_yr=turnover["CflxLP"],
                     CflxLD_GtC_yr=turnover["CflxLD"],
                     CflxSR_GtC_yr=turnover["CflxSR"],
-                    CflxLUgrs_GtC_yr=CflxLUgrs_t(t),
+                    CflxLUgrs_GtC_yr=CflxLUgrs_GtC_yr,
                     frc_NPP2P=frc_NPP2P,
                     frc_NPP2L=frc_NPP2L,
                     frc_cLP2L=frc_cLP2L,
